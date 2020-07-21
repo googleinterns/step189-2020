@@ -1,0 +1,36 @@
+name: Build Angular on GitHub Actions
+
+on:
+  push:
+    branches: 
+      - github-actions
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v1
+
+      - name: Use Node 12.x
+        uses: actions/setup-node@v1
+
+      - name: Lint
+        working-directory: web
+        run: |
+          npm ci
+          npm run lint
+          
+      - name: Test
+        working-directory: test
+        run: |
+          npm ci
+          npm run test -- --watch=false
+      
+      - name: E2E
+        working-directory: web
+        run: |
+          npm ci
+          npm run e2e
