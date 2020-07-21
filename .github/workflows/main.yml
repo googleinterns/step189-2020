@@ -24,7 +24,7 @@ jobs:
           npm run lint
           
       - name: Test
-        working-directory: test
+        working-directory: web
         run: |
           npm ci
           npm run test -- --watch=false
