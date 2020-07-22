@@ -8,7 +8,7 @@ import { OnePushComponent } from './pages/one-push/one-push.component';
 /**
  * Matcher for the URLs for individual pushes.
  *
- * EXample: /test/razvanm/helloworld/@20180503-163004.520847
+ * Example: /test/razvanm/helloworld/@20180503-163004.520847
  */
 export function onePushMatcher(segments: UrlSegment[]): UrlMatchResult {
   const noMatch = {consumed: []};
