@@ -1,0 +1,26 @@
+dist: xenial
+
+language: node_js
+
+node_js:
+  - node
+
+sudo: false
+
+addons:
+  - chrome: stable
+
+branch:
+  only:
+    - zc-travis-ci
+
+install:
+  - npm install web
+
+script:
+  - npm ci --prefix=./web/
+  - npm run --prefix=./web/ lint
+  - npm ci --prefix=./web/
+  - npm run --prefix=./web/ test -- --watch=false
+  - npm ci --prefix=./web/
+  - npm run --prefix=./web/ e2e
