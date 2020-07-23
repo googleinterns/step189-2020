@@ -3,7 +3,7 @@ dist: xenial
 language: node_js
 
 node_js:
-  - 10.12.0
+  - 10.21.0
 
 sudo: false
 
@@ -17,7 +17,5 @@ install:
 script:
   - npm ci
   - npm run lint
-  - npm ci
   - npm run test -- --watch=false
-  - npm ci 
   - npm run e2e
