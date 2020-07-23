@@ -10,7 +10,7 @@ sudo: false
 addons:
   - chrome: stable
 
-before install: cd web
+before_install: cd web
 install:
   - npm install
 
