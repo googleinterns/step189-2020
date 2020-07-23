@@ -7,8 +7,11 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Lint, Test, E2E
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
 
     steps:
       - name: Check out
@@ -16,6 +19,9 @@ jobs:
 
       - name: Use Node 12.x
         uses: actions/setup-node@v1
+        with:
+          node-version:
+            ${{ matrix.node-version }}
 
       - name: Lint
         working-directory: web
