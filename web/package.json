@@ -4,11 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "postinstall": "node_modules/.bin/webdriver-manager update --versions.chrome=84.0.4147.89 && ng build",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e --webdriverUpdate=false",
+    "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89"
   },
   "private": true,
   "dependencies": {

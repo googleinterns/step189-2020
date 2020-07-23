@@ -20,4 +20,4 @@ script:
   - npm ci
   - npm run test -- --watch=false
   - npm ci 
-  - npm run e2e --webdriverUpdate=false
+  - npm run e2e
