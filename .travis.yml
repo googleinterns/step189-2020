@@ -12,10 +12,9 @@ addons:
 
 before_install: cd web
 install:
-  - npm install
+  - npm ci
 
 script:
-  - npm ci
   - npm run lint
   - npm run test -- --watch=false
   - npm run e2e
