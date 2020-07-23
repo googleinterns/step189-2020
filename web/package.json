@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "postinstall": "node_modules/.bin/webdriver-manager update --versions.chrome=84.0.4147.89 && ng build",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
