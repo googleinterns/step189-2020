@@ -19,20 +19,18 @@ jobs:
         with:
           node-version: '10.21'
 
+      - name: Install node_modules
+        working-directory: web
+        run: npm ci
+
       - name: Lint
         working-directory: web
-        run: |
-          npm ci
-          npm run lint
+        run: npm run lint
           
       - name: Test
         working-directory: web
-        run: |
-          npm ci
-          npm run test -- --watch=false
+        run: npm run test -- --watch=false
       
       - name: E2E
         working-directory: web
-        run: |
-          npm ci
-          npm run e2e
+        run: npm run e2e
