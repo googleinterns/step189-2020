@@ -26,14 +26,10 @@ describe('protractor-image-comparison desktop', () => {
   beforeEach(async () => {
     await browser.get(browser.baseUrl);
   });
-  
-  it('should save some screenshots', async() => {
-  	// Save a screen
-  	await browser.imageComparison.saveScreen('welcomePage');
-	});
-  
-  it('should compare successful with a baseline', async() => {
-  	// Check a screen
-  	expect(await browser.imageComparison.checkScreen('welcomePage')).toEqual(0);
+
+  it('should be the same as the baseline', async() => {
+    // Check a screen
+    expect(await browser.imageComparison.checkScreen('welcomePage')).toEqual(0);
   });
 });
+

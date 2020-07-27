@@ -36,5 +36,19 @@ exports.config = {
         displayStacktrace: StacktraceOption.PRETTY
       }
     }));
-  }
+  },
+  plugins: [
+      {
+       // The module name
+       package: 'protractor-image-comparison',
+       // Some options, see the docs for more
+       options: {
+            baselineFolder: join(process.cwd(), './baseline/'),
+            formatImageName: `{tag}-{logName}-{width}x{height}`,
+            screenshotPath: join(process.cwd(), 'screenshots/'),
+            savePerInstance: true,
+            autoSaveBaseline: true
+       },
+      },
+    ]
 };
