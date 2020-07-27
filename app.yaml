@@ -1,0 +1,21 @@
+runtime: nodejs10
+ 
+handlers:
+- url: /
+  static_files: web/src/index.html
+  upload: web/src/.*
+
+- url: /(.*\.js)
+  redirect_http_response_code: 301
+  static_files: web/src/\1
+  upload: web/src/.*\.js
+
+- url: /(.*\.scss)
+  redirect_http_response_code: 301
+  static_files: web/src/\1
+  mime_type: web/src/scss
+  upload: web/src/.*\.scss
+
+- url: /.*
+  static_files: web/src/index.html
+  upload: web/src/.*
