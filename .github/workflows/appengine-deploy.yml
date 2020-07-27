@@ -52,3 +52,15 @@ jobs:
       - id: test
         name: Test the deloyed URL
         run: curl --fail "${{ steps.deploy.outputs.url }}"
+        
+      - name: Happo
+        working-directory: web
+        run: npm run happo-ci-github-actions
+        env:
+          PREVIOUS_SHA: 490c6fa004074f6cf23649f5336f1e9004f4574d
+          CURRENT_SHA: ${{ github.event.pull_request.head.sha }}
+          CHANGE_URL: ${{ github.event.pull_request.html_url }}
+          HAPPO_API_KEY: ${{ secrets.HAPPO_API_KEY }}
+          HAPPO_API_SECRET: ${{ secrets.HAPPO_API_TOKEN }}
+          URL: https://${{ env.APPENGINE_VERSION_PREFIX }}-${{ env.SHA_SHORT }}-dot-step189-2020.uc.r.appspot.com/
+

@@ -1,5 +1,5 @@
 import { AppPage } from './app.po';
-import { browser, logging } from 'protractor';
+import { $, browser, logging } from 'protractor';
 
 describe('workspace-project App', () => {
   let page: AppPage;
@@ -21,3 +21,15 @@ describe('workspace-project App', () => {
     } as logging.Entry));
   });
 });
+
+describe('protractor-image-comparison desktop', () => {
+  beforeEach(async () => {
+    await browser.get(browser.baseUrl);
+  });
+
+  it('should be the same as the baseline', async () => {
+    // Check a screen
+    expect(await browser.imageComparison.checkScreen('welcomePage')).toEqual(0);
+  });
+});
+
