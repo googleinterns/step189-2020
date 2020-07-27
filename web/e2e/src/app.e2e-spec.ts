@@ -8,7 +8,7 @@ describe('pix-diff-img-comparison', () => {
   beforeEach(() => {
     browser.pixDiff = new PixDiff({
       basePath: join(process.cwd(), '/e2e/screenshots/'),
-      diffPath: join(process.cwd(), '/e2e/screenshots/diff'),
+      diffPath: join(process.cwd(), '/e2e/screenshots/'),
       baseline: true
     });
     browser.get(browser.baseUrl);
