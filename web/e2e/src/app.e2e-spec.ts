@@ -1,5 +1,5 @@
 import { AppPage } from './app.po';
-import { browser, logging } from 'protractor';
+import { $, browser, logging } from 'protractor';
 
 describe('workspace-project App', () => {
   let page: AppPage;
@@ -19,5 +19,21 @@ describe('workspace-project App', () => {
     expect(logs).not.toContain(jasmine.objectContaining({
       level: logging.Level.SEVERE,
     } as logging.Entry));
+  });
+});
+
+describe('protractor-image-comparison desktop', () => {
+  beforeEach(async () => {
+    await browser.get(browser.baseUrl);
+  });
+  
+  it('should save some screenshots', async() => {
+  	// Save a screen
+  	await browser.imageComparison.saveScreen('welcomePage');
+	});
+  
+  it('should compare successful with a baseline', async() => {
+  	// Check a screen
+  	expect(await browser.imageComparison.checkScreen('welcomePage')).toEqual(0);
   });
 });
