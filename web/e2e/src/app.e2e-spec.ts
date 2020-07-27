@@ -1,5 +1,26 @@
 import { AppPage } from './app.po';
 import { browser, logging } from 'protractor';
+import { join } from 'path';
+
+const PixDiff = require('pix-diff');
+
+describe("pix-diff-img-comparison", () => {
+  beforeEach(() => {
+    browser.pixDiff = new PixDiff({
+      basePath: join(process.cwd(), '/e2e/screenshots/'),
+      diffPath: join(process.cwd(), '/e2e/screenshots/diff'),
+      baseline: true
+    });
+    browser.get(browser.baseUrl);
+  });
+
+  // it("should match the page", () => {
+  //   browser.pixDiff.checkScreen('homepage')
+  //     .then(result => {
+  //       expect(result.code).toEqual(PixDiff.RESULT_IDENTICAL);
+  //     });
+  // });
+});
 
 describe('workspace-project App', () => {
   let page: AppPage;
