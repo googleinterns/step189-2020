@@ -29,3 +29,6 @@ jobs:
           name: e2e
           working_directory: web
           command: npm run e2e
+      
+      - store_artifacts:
+          path: /home/circleci/project/web/screenshots/diff/desktop_chrome/

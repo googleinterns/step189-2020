@@ -27,7 +27,7 @@ describe('protractor-image-comparison desktop', () => {
     await browser.get(browser.baseUrl);
   });
 
-  it('should be the same as the baseline', async() => {
+  it('should be the same as the baseline', async () => {
     // Check a screen
     expect(await browser.imageComparison.checkScreen('welcomePage')).toEqual(0);
   });
