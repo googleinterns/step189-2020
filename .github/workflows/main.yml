@@ -1,0 +1,36 @@
+name: Build Angular on GitHub Actions
+
+on:
+  push:
+    branches: 
+      - github-actions
+
+jobs:
+  build:
+    name: Lint, Test, E2E
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v1
+
+      - name: Use Node 10.21
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.21'
+
+      - name: Install node_modules
+        working-directory: web
+        run: npm ci
+
+      - name: Lint
+        working-directory: web
+        run: npm run lint
+          
+      - name: Test
+        working-directory: web
+        run: npm run test -- --watch=false
+      
+      - name: E2E
+        working-directory: web
+        run: npm run e2e
