@@ -1,0 +1,20 @@
+dist: xenial
+
+language: node_js
+
+node_js:
+  - 10.21.0
+
+sudo: false
+
+addons:
+  - chrome: stable
+
+before_install: cd web
+install:
+  - npm ci
+
+script:
+  - npm run lint
+  - npm run test -- --watch=false
+  - npm run e2e
