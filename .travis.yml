@@ -18,3 +18,9 @@ script:
   - npm run lint
   - npm run test -- --watch=false
   - npm run e2e
+
+addons:
+  artifacts:
+    paths:
+      - /home/travis/build/googleinterns/step189-2020/web/screenshots/diff/desktop_chrome/
+  
