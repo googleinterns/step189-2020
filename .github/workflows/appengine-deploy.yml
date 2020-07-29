@@ -28,7 +28,7 @@ jobs:
 
       - name: Set APPENGINE_VERSION to current PR
         if: github.ref != 'refs/heads/main'
-        run: echo '::set-env name=APPENGINE_VERSION::${{ github.event.pull_request.number }}'
+        run: echo '::set-env name=APPENGINE_VERSION::pr${{ github.event.pull_request.number }}'
 
         # Use Google Cloud credentails to deploy an App Engine Application:
         # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
@@ -39,7 +39,7 @@ jobs:
           credentials: ${{ secrets.APPENGINE_SA_KEY_B64 }}
           project_id: ${{ secrets.PROJECT_ID }}
           deliverables: ${{ github.workspace }}/app.yaml
-          version: pr${{ env.APPENGINE_VERSION }}-${{ steps.vars.outputs.sha_short}}
+          version: ${{ env.APPENGINE_VERSION }}-${{ steps.vars.outputs.sha_short}}
           promote: false
       
       - id: test
