@@ -1,3 +1,11 @@
 <p>all-pushes works!</p>
 
-<a routerLink='@timestamp'>timestamp</a>
+<p>
+    Push def: {{ pushDefName | async }}
+</p>
+
+<ol *ngIf='pushInfos | async as pushInfos'>
+    <li *ngFor='let i of pushInfos'>
+        <a routerLink='{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
+    </li>
+</ol>

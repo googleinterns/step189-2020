@@ -13,6 +13,7 @@ addons:
 before_install: cd web
 install:
   - npm ci
+  - npm run genproto
 
 script:
   - npm run lint

@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { EMPTY } from 'rxjs';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { AllPushesComponent } from './all-pushes.component';
+import { ActivatedRoute } from '@angular/router';
 
 describe('AllPushesComponent', () => {
   let component: AllPushesComponent;
@@ -8,7 +11,16 @@ describe('AllPushesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AllPushesComponent ]
+      declarations: [ AllPushesComponent ],
+      imports: [ HttpClientTestingModule ],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            url: EMPTY
+          },
+        },
+      ],
     })
     .compileComponents();
   }));

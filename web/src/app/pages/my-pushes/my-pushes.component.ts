@@ -5,11 +5,16 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './my-pushes.component.html',
   styleUrls: ['./my-pushes.component.scss']
 })
-export class MyPushesComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
+export class MyPushesComponent {
+  // These push names need corresponding .pb files in the src/assets/ dir.
+  readonly pushDefsNames = [
+    '50974993f48e',
+    '42465163e7e9',
+    '42465163e7e9-all',
+    '4089ddf3a6d4',
+    'c65c37c6e1fb',
+    '34c2a696eb6b',
+    '28a1555e453f',
+    '7f4535707267',
+  ];
 }
