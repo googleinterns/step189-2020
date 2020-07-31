@@ -29,7 +29,11 @@ jobs:
         if: github.ref != 'refs/heads/main'
         run: echo '::set-env name=APPENGINE_VERSION::pr${{ github.event.pull_request.number }}'
 
-        # Use Google Cloud credentails to deploy an App Engine Application:
+      - name: Build
+        working-directory: web
+        run: npm run build
+
+        # Use Google Cloud credentials to deploy an App Engine Application:
         # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
       - id: deploy
         name: Deploy to App Engine for the current PR
