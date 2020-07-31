@@ -2,20 +2,27 @@ runtime: nodejs10
  
 handlers:
 - url: /
-  static_files: web/src/index.html
-  upload: web/src/.*
+  static_files: dist/index.html
+  upload: dist/.*
 
 - url: /(.*\.js)
   redirect_http_response_code: 301
-  static_files: web/src/\1
-  upload: web/src/.*\.js
+  static_files: dist/\1
+  upload: dist/.*\.js
 
 - url: /(.*\.scss)
   redirect_http_response_code: 301
-  static_files: web/src/\1
-  mime_type: web/src/scss
-  upload: web/src/.*\.scss
+  static_files: dist/\1
+  mime_type: dist/scss
+  upload: dist/.*\.scss
+
+- url: /((?:assets|docs)/.*|favicon\.ico)
+  redirect_http_response_code: 301
+  static_files: dist/\1
+  upload: dist/.*
+
 
 - url: /.*
-  static_files: web/src/index.html
-  upload: web/src/.*
+  redirect_http_response_code: 301
+  static_files: dist/index.html
+  upload: dist/.*

@@ -1,6 +1,9 @@
-name: Lint, Test, E2E
+name: Build Angular on GitHub Actions
 
-on: [push, pull_request]
+on:
+  push:
+    branches: 
+      - github-actions
 
 jobs:
   build:
@@ -11,7 +14,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v1
 
-      - name: Use Node.js 10.21
+      - name: Use Node 10.21
         uses: actions/setup-node@v1
         with:
           node-version: '10.21'

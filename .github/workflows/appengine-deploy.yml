@@ -8,6 +8,7 @@ on:
 
 env:
   APPENGINE_VERSION: invalid
+  SHA_SHORT: invalid
 
 jobs:
   appengine-deploy:
@@ -17,10 +18,8 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
-      - id: vars
-        name: Declare sha_short as a variable
-        shell: bash
-        run: echo "::set-output name=sha_short::$(git rev-parse --short=7 ${{ github.sha }})"
+      - name: Set SHA_SHORT to short commit sha
+        run: echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.sha }})"
 
       - name: Set APPENGINE_VERSION to main
         if: github.ref == 'refs/heads/main'
@@ -39,7 +38,7 @@ jobs:
           credentials: ${{ secrets.APPENGINE_SA_KEY_B64 }}
           project_id: ${{ secrets.PROJECT_ID }}
           deliverables: ${{ github.workspace }}/app.yaml
-          version: ${{ env.APPENGINE_VERSION }}-${{ steps.vars.outputs.sha_short}}
+          version: ${{ env.APPENGINE_VERSION }}-${{ env.SHA_SHORT }}
           promote: false
       
       - id: test
