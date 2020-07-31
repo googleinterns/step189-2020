@@ -31,7 +31,9 @@ jobs:
 
       - name: Build
         working-directory: web
-        run: npm run build
+        run: |
+          npm ci
+          npm run build
 
         # Use Google Cloud credentials to deploy an App Engine Application:
         # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
@@ -47,4 +49,4 @@ jobs:
       
       - id: test
         name: Test the deloyed URL
-        run: curl "${{ steps.deploy.outputs.url }}"
+        run: curl --fail "${{ steps.deploy.outputs.url }}"
