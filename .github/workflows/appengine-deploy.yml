@@ -1,4 +1,4 @@
-name: App Engine Deploy Integration
+name: Deploy to App Engine
 
 on: 
   push:
@@ -7,27 +7,27 @@ on:
   pull_request:
 
 env:
-  APPENGINE_VERSION: invalid
+  APPENGINE_VERSION_PREFIX: invalid
   SHA_SHORT: invalid
 
 jobs:
   appengine-deploy:
-    name: App Engine Deploy Integration
+    name: Deploy to App Engine
     runs-on: ubuntu-latest
     steps:
       - name: Check out
         uses: actions/checkout@v2
 
-      - name: Set SHA_SHORT to short commit sha
+      - name: Set SHA_SHORT
         run: echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
 
-      - name: Set APPENGINE_VERSION to main
+      - name: Set APPENGINE_VERSION_PREFIX to main
         if: github.ref == 'refs/heads/main'
-        run: echo '::set-env name=APPENGINE_VERSION::main'
+        run: echo '::set-env name=APPENGINE_VERSION_PREFIX::main'
 
-      - name: Set APPENGINE_VERSION to current PR
+      - name: Set APPENGINE_VERSION_PREFIX to current PR
         if: github.ref != 'refs/heads/main'
-        run: echo '::set-env name=APPENGINE_VERSION::pr${{ github.event.pull_request.number }}'
+        run: echo '::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}'
 
       - name: Build
         working-directory: web
@@ -38,13 +38,13 @@ jobs:
         # Use Google Cloud credentials to deploy an App Engine Application:
         # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
       - id: deploy
-        name: Deploy to App Engine for the current PR
+        name: Deploy to App Engine
         uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
         with: 
           credentials: ${{ secrets.APPENGINE_SA_KEY_B64 }}
           project_id: ${{ secrets.PROJECT_ID }}
           deliverables: ${{ github.workspace }}/web/app.yaml
-          version: ${{ env.APPENGINE_VERSION }}-${{ env.SHA_SHORT }}
+          version: ${{ env.APPENGINE_VERSION_PREFIX }}-${{ env.SHA_SHORT }}
           promote: false
       
       - id: test
