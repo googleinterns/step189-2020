@@ -3,7 +3,7 @@ name: Build Angular on GitHub Actions
 on:
   push:
     branches: 
-      - github-actions
+      - screenshotTesting
 
 jobs:
   build:
