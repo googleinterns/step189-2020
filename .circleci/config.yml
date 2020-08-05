@@ -1,9 +1,13 @@
 version: 2.1
 
+orbs:
+  node: 'circleci/node:x.y'
+  
 jobs:
   build:
-    machine:
-      image: ubuntu-1604:201903-01
+    executor:
+      name: node/default
+      tag: '13'
 
     steps:
       - checkout
