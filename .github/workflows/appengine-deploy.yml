@@ -18,16 +18,17 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
-      - name: Set SHA_SHORT
-        run: echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
-
-      - name: Set APPENGINE_VERSION_PREFIX to main
+      - name: Set App Engine version for the push to main
         if: github.ref == 'refs/heads/main'
-        run: echo '::set-env name=APPENGINE_VERSION_PREFIX::main'
+        run: |
+          echo "::set-env name=APPENGINE_VERSION_PREFIX::main"
+          echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.sha }})"
 
-      - name: Set APPENGINE_VERSION_PREFIX to current PR
+      - name: Set App Engine version for the pull request
         if: github.ref != 'refs/heads/main'
-        run: echo '::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}'
+        run: |
+          echo "::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}"
+          echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
 
       - name: Build
         working-directory: web
