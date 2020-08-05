@@ -18,13 +18,13 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
-      - name: Set App Engine version for the push to main
+      - name: Set env variables for the push to main
         if: github.ref == 'refs/heads/main'
         run: |
           echo "::set-env name=APPENGINE_VERSION_PREFIX::main"
           echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.sha }})"
 
-      - name: Set App Engine version for the pull request
+      - name: Set env variables for the pull request
         if: github.ref != 'refs/heads/main'
         run: |
           echo "::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}"
