@@ -35,8 +35,8 @@ jobs:
           npm ci
           npm run build
 
-        # Use Google Cloud credentials to deploy an App Engine Application:
-        # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
+      # Use Google Cloud credentials to deploy an App Engine Application:
+      # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
       - id: deploy
         name: Deploy to App Engine
         uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
