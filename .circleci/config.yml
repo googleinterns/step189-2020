@@ -2,10 +2,8 @@ version: 2.1
 
 jobs:
   build:
-    docker:
-      # We cannot use the new cimg/node images because those don't include
-      # any browsers.
-      - image: circleci/node:10.21-browsers
+    machine:
+      image: ubuntu-1604:201903-01
 
     steps:
       - checkout
