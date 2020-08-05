@@ -17,4 +17,5 @@ install:
 script:
   - npm run lint
   - npm run test -- --watch=false
+  - npm run happo-ci-travis
   - npm run e2e
