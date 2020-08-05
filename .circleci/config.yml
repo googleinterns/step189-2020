@@ -30,5 +30,9 @@ jobs:
           working_directory: web
           command: npm run e2e
       
+      - run:
+          name: happo
+          command: npm run happo-ci-circleci
+          
       - store_artifacts:
           path: /home/circleci/project/web/screenshots/diff/desktop_chrome/
