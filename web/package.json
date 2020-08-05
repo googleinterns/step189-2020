@@ -10,7 +10,9 @@
     "e2e": "ng e2e --webdriverUpdate=false",
     "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89",
     "happo": "happo",
-    "happo-ci-circleci": "happo-ci-circleci"
+    "happo-ci-circleci": "happo-ci-circleci",
+    "happo-ci-travis": "happo-ci-travis",
+    "happo-ci-github-actions": "happo-ci-github-actions"
   },
   "private": true,
   "dependencies": {
