@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  happo: happo/happo@latest
+  happo: happo/happo@2.0.1
 
 jobs:
   build:
