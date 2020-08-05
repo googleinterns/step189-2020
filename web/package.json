@@ -8,7 +8,9 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e --webdriverUpdate=false",
-    "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89"
+    "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89",
+    "happo": "happo",
+    "happo-ci-circleci": "happo-ci-circleci"
   },
   "private": true,
   "dependencies": {
