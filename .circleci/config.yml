@@ -24,15 +24,15 @@ jobs:
           name: test
           working_directory: web
           command: npm run test -- --watch=false
-
-      - run:
-          name: e2e
-          working_directory: web
-          command: npm run e2e
       
       - run:
           name: happo
           command: npm run happo-ci-circleci
+          
+      - run:
+          name: e2e
+          working_directory: web
+          command: npm run e2e
           
       - store_artifacts:
           path: /home/circleci/project/web/screenshots/diff/desktop_chrome/
