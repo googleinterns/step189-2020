@@ -9,7 +9,7 @@
     "lint": "ng lint",
     "e2e": "ng e2e --webdriverUpdate=false",
     "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89",
-    "genproto": "pbjs -w es6 -t static-module -o src/proto/step128_2020.js src/proto/step128_2020.proto && pbts -o src/proto/step128_2020.d.ts src/proto/step128_2020.js"
+    "genproto": "pbjs -w es6 -t static-module -o src/proto/step189_2020.js src/proto/step189_2020.proto && pbts -o src/proto/step128_2020.d.ts src/proto/step189_2020.js"
   },
   "private": true,
   "dependencies": {

@@ -8,13 +8,12 @@ import { Component, OnInit } from '@angular/core';
 export class MyPushesComponent {
   // These push names need corresponding .pb files in the src/assets/ dir.
   readonly pushDefsNames = [
-    '50974993f48e',
-    '42465163e7e9',
-    '42465163e7e9-all',
-    '4089ddf3a6d4',
-    'c65c37c6e1fb',
-    '34c2a696eb6b',
     '28a1555e453f',
+    '34c2a696eb6b',
+    '4089ddf3a6d4',
+    '42465163e7e9',
+    '50974993f48e',
     '7f4535707267',
+    'c65c37c6e1fb',
   ];
 }
