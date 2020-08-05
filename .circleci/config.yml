@@ -27,6 +27,7 @@ jobs:
       
       - run:
           name: happo
+          working_directory: web
           command: npm run happo-ci-circleci
           
       - run:
