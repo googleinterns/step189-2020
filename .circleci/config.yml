@@ -1,13 +1,11 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@3.0.1
-  
 jobs:
   build:
-    executor:
-      name: node/default
-      tag: '13'
+    docker:
+      # We cannot use the new cimg/node images because those don't include
+      # any browsers.
+      - image: circleci/node:14.5.0-browsers
       
     steps:
       - checkout
