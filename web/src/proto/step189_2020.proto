@@ -4,12 +4,13 @@ package step189_2020;
 
 message PushInfo {
   string push_handle = 1;
+  int64 last_change_nsec = 2;
 
   message StateInfo {
     int32 state = 1;
     string stage = 2;
-    int64 attempt = 7;
-    int64 start_time = 3;  // epoch nsecs.
+    int64 attempt = 3;
+    int64 start_time_nsec = 4;
   }
 
   repeated StateInfo state_info = 3;
