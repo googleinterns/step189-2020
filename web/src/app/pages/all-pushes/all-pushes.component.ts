@@ -26,7 +26,7 @@ export class AllPushesComponent {
 
       this.pushInfos = this.pushDefName.pipe(flatMap(pushDefName => {
         return this.http.get(`assets/${pushDefName}.pb`, {responseType: 'arraybuffer'})
-          .pipe(map((data: Uint8Array) => {
+          .pipe(map((data: ArrayBuffer) => {
             const pushInfos = step189_2020.PushInfos.decode(new Uint8Array(data));
             console.log(pushInfos);
             return pushInfos.pushInfo;

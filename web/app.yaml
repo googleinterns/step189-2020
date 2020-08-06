@@ -5,7 +5,12 @@ handlers:
   static_files: dist/web/index.html
   upload: dist/web/index.html
 
-
-- url: /(.*)
+# All the content static.
+- url: /(.*\.(html|ico|js|js\.map|pb))$
   static_files: dist/web/\1
   upload: dist/web/.*
+
+# This allows the Angular routing to use the right component based on the URL.
+- url: /.*
+  static_files: dist/web/index.html
+  upload: dist/web/index.html

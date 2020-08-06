@@ -34,6 +34,7 @@ jobs:
         working-directory: web
         run: |
           npm ci
+          npm run genproto
           npm run build
 
       # Use Google Cloud credentials to deploy an App Engine Application:
