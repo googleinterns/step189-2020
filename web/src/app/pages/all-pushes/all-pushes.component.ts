@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { flatMap, map, shareReplay } from 'rxjs/operators';
 
 import { step189_2020 } from '../../../proto/step189_2020';

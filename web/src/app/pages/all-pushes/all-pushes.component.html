@@ -6,6 +6,6 @@
 
 <ol *ngIf='pushInfos | async as pushInfos'>
     <li *ngFor='let i of pushInfos'>
-        <a routerLink='{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
+        <a routerLink='/{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
     </li>
 </ol>
