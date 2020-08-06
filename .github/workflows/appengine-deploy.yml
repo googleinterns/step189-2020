@@ -1,0 +1,53 @@
+name: Deploy to App Engine
+
+on: 
+  push:
+    branches:
+      - main 
+  pull_request:
+
+env:
+  APPENGINE_VERSION_PREFIX: invalid
+  SHA_SHORT: invalid
+
+jobs:
+  appengine-deploy:
+    name: Deploy to App Engine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+
+      - name: Set env variables for the push to main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "::set-env name=APPENGINE_VERSION_PREFIX::main"
+          echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.sha }})"
+
+      - name: Set env variables for the pull request
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}"
+          echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
+
+      - name: Build
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      # Use Google Cloud credentials to deploy an App Engine Application:
+      # https://github.com/GoogleCloudPlatform/github-actions/tree/master/appengine-deploy
+      - id: deploy
+        name: Deploy to App Engine
+        uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
+        with: 
+          credentials: ${{ secrets.APPENGINE_SA_KEY_B64 }}
+          project_id: ${{ secrets.PROJECT_ID }}
+          deliverables: ${{ github.workspace }}/web/app.yaml
+          version: ${{ env.APPENGINE_VERSION_PREFIX }}-${{ env.SHA_SHORT }}
+          promote: false
+      
+      - id: test
+        name: Test the deloyed URL
+        run: curl --fail "${{ steps.deploy.outputs.url }}"
