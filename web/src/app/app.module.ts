@@ -7,6 +7,7 @@ import { AppComponent } from './app.component';
 import { MyPushesComponent } from './pages/my-pushes/my-pushes.component';
 import { AllPushesComponent } from './pages/all-pushes/all-pushes.component';
 import { OnePushComponent } from './pages/one-push/one-push.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { OnePushComponent } from './pages/one-push/one-push.component';
   imports: [
     BrowserModule,
     HttpClientModule,
-    AppRoutingModule
+    AppRoutingModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
