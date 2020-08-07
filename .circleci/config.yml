@@ -16,6 +16,11 @@ jobs:
           command: npm ci
 
       - run:
+          name: genproto
+          working_directory: web
+          command: npm run genproto
+
+      - run:
           name: lint
           working_directory: web
           command: npm run lint

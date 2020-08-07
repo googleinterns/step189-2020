@@ -1,3 +1,7 @@
 <p>my-pushes works!</p>
 
-<a routerLink='push-def'>push-def</a>
+<ul>
+    <li *ngFor='let i of pushDefsNames'>
+        <a routerLink='{{ i }}'>{{ i }}</a>
+    </li>
+</ul>

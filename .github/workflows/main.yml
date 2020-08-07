@@ -24,6 +24,10 @@ jobs:
         working-directory: web
         run: npm ci
 
+      - name: Generate protos
+        working-directory: web
+        run: npm run genproto
+
       - name: Lint
         working-directory: web
         run: npm run lint
