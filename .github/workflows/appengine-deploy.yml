@@ -6,8 +6,9 @@ on:
       - main 
   pull_request:
 
-# The golden hash represents the commit of the baseline images that we want to compare our current app against. 
-# We will need to update the hard-coded hash to be the hash of the most recent commit to main.
+# The golden hash represents the commit of the baseline images that we want to 
+# compare our current app against. If there are visible changes, we will need to 
+# update the hard-coded hash to be the hash of the most recent commit to main.
 env:
   APPENGINE_VERSION_PREFIX: invalid
   SHA_SHORT: invalid
