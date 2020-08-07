@@ -9,6 +9,7 @@ on:
 env:
   APPENGINE_VERSION_PREFIX: invalid
   SHA_SHORT: invalid
+  CURRENT_HASH: invalid
 
 jobs:
   appengine-deploy:
@@ -23,12 +24,15 @@ jobs:
         run: |
           echo "::set-env name=APPENGINE_VERSION_PREFIX::main"
           echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.sha }})"
+          echo "::set-env name=CURRENT_HASH::${{ github.sha }}"
 
       - name: Set env variables for the pull request
         if: github.ref != 'refs/heads/main'
         run: |
           echo "::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}"
           echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
+          echo "::set-env name=CURRENT_HASH::${{ github.event.pull_request.head.sha }}"
+
 
       - name: Build
         working-directory: web
@@ -58,7 +62,7 @@ jobs:
         run: npm run happo-ci-github-actions
         env:
           PREVIOUS_SHA: 490c6fa004074f6cf23649f5336f1e9004f4574d
-          CURRENT_SHA: ${{ github.event.pull_request.head.sha }}
+          CURRENT_SHA: ${{ env.CURRENT_HASH }}
           CHANGE_URL: ${{ github.event.pull_request.html_url }}
           HAPPO_API_KEY: ${{ secrets.HAPPO_API_KEY }}
           HAPPO_API_SECRET: ${{ secrets.HAPPO_API_TOKEN }}
