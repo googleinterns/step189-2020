@@ -33,7 +33,6 @@ jobs:
           echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
           echo "::set-env name=CURRENT_HASH::${{ github.event.pull_request.head.sha }}"
 
-
       - name: Build
         working-directory: web
         run: |
@@ -57,13 +56,13 @@ jobs:
         name: Test the deloyed URL
         run: curl --fail "${{ steps.deploy.outputs.url }}"
         
-      - name: Happo Screenshot Testing
+      - name: Test screenshots using Happo
         working-directory: web
         run: npm run happo-ci-github-actions
         env:
           PREVIOUS_SHA: 490c6fa004074f6cf23649f5336f1e9004f4574d
           CURRENT_SHA: ${{ env.CURRENT_HASH }}
-          CHANGE_URL: ${{ github.event.pull_request.html_url }}
+          CHANGE_URL: https://github.com/googleinterns/step189-2020/commit/${{ env.CURRENT_HASH }}
           HAPPO_API_KEY: ${{ secrets.HAPPO_API_KEY }}
           HAPPO_API_SECRET: ${{ secrets.HAPPO_API_TOKEN }}
           URL: https://${{ env.APPENGINE_VERSION_PREFIX }}-${{ env.SHA_SHORT }}-dot-step189-2020.uc.r.appspot.com/
