@@ -6,10 +6,13 @@ on:
       - main 
   pull_request:
 
+# The golden hash represents the commit of the baseline images that we want to compare our current app against. 
+# We will need to update the hard-coded hash to be the hash of the most recent commit to main.
 env:
   APPENGINE_VERSION_PREFIX: invalid
   SHA_SHORT: invalid
   CURRENT_HASH: invalid
+  GOLDEN_HASH: 490c6fa004074f6cf23649f5336f1e9004f4574d
 
 jobs:
   appengine-deploy:
@@ -60,7 +63,7 @@ jobs:
         working-directory: web
         run: npm run happo-ci-github-actions
         env:
-          PREVIOUS_SHA: 490c6fa004074f6cf23649f5336f1e9004f4574d
+          PREVIOUS_SHA: ${{ env.GOLDEN_HASH }}
           CURRENT_SHA: ${{ env.CURRENT_HASH }}
           CHANGE_URL: https://github.com/googleinterns/step189-2020/commit/${{ env.CURRENT_HASH }}
           HAPPO_API_KEY: ${{ secrets.HAPPO_API_KEY }}
