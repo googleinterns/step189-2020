@@ -37,16 +37,15 @@ exports.config = {
       }
     }));
   },
-  plugins: [
-      {
-       package: 'protractor-image-comparison',
-       options: {
-            baselineFolder: join(process.cwd(), './screenshot/baseline/'),
-            formatImageName: `{tag}-{logName}-{width}x{height}`,
-            screenshotPath: join(process.cwd(), './screenshot/screenshots/'),
-            savePerInstance: true,
-            autoSaveBaseline: true
-       }
-      }
-    ]
+  plugins: [{
+    package: 'protractor-image-comparison',
+    options: {
+      baselineFolder: join(process.cwd(), './screenshot/baseline/'),
+      formatImageName: `{tag}-{logName}-{width}x{height}`,
+      screenshotPath: join(process.cwd(), './screenshot/screenshots/'),
+      savePerInstance: true,
+      autoSaveBaseline: true
+    }
+  }]
 };
+

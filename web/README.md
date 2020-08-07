@@ -24,7 +24,7 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 
 ## Running screenshot tests locally
 
-Run `ng screenshot` to execute the screenshot tests via [protractor-image-comparison](https://www.npmjs.com/package/protractor-image-comparison). If you want to change the baseline images, delete the file in the `baseline/desktop_chrome` directory and run `ng screenshot`. This will automatically populate the baseline image with the current app.
+Run `ng screenshot` to execute the screenshot tests via [protractor-image-comparison](https://www.npmjs.com/package/protractor-image-comparison). If you want to change the baseline images, delete the file in the `screenshot/baseline/desktop_chrome` directory and run `ng screenshot`. This will automatically populate the baseline image with the current app.
 
 ## Further help
 
