@@ -53,7 +53,7 @@ jobs:
         name: Test the deloyed URL
         run: curl --fail "${{ steps.deploy.outputs.url }}"
         
-      - name: Happo
+      - name: Happo Screenshot Testing
         working-directory: web
         run: npm run happo-ci-github-actions
         env:
