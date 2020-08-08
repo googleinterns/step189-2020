@@ -2,3 +2,41 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.page-name {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 2px;
+    font-size: 10px;
+}
+
+div.buttons-row {
+    display: flex;
+    flex-direction: row;
+
+    a {
+        margin-right: 24px;
+    }
+}
+
+table {
+    border-collapse: collapse;
+    margin: 12px 0;
+
+    td, th {
+        border: 1px solid black;
+    }
+
+    td {
+        padding: 2px 8px;
+    }
+
+    th {
+        padding: 4px 8px;
+    }
+
+    a {
+        text-decoration: none;
+    }
+}

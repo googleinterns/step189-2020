@@ -1,12 +1,10 @@
-<p>one-push works!</p>
+<div class='page-name'>one-push</div>
 
-<p>
-    Push handle: {{ pushHandle | async }}
-</p>
-
-<p>
-    Push def: {{ pushDefName | async }}
-</p>
+<div class='buttons-row'>
+    <a routerLink='/' mat-button><mat-icon>home</mat-icon></a>
+    <a routerLink='/{{ pushDefName | async }}' mat-button>{{ pushDefName | async }}</a>
+    <a routerLink='/{{ pushHandle | async }}' mat-button>{{ pushHandle | async }}</a>
+</div>
 
 <table *ngIf='pushInfo | async as pushInfo'>
     <thead>

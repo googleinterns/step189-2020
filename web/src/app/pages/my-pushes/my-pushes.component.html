@@ -1,7 +1,20 @@
-<p>my-pushes works!</p>
+<div class='page-name'>my-pushes</div>
 
-<ul>
-    <li *ngFor='let i of pushDefsNames'>
-        <a routerLink='{{ i }}'>{{ i }}</a>
-    </li>
-</ul>
+<div class='buttons-row'>
+    <a routerLink='/' mat-button><mat-icon>home</mat-icon></a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Push def</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tr *ngFor='let i of pushDefs'>
+        <td>
+            <a routerLink='{{ i.name }}'>{{ i.name }}</a>
+        </td>
+        <td>{{ i.notes }}</td>
+    </tr>
+</table>

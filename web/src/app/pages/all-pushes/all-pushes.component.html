@@ -1,11 +1,21 @@
-<p>all-pushes works!</p>
+<div class='page-name'>all-pushes</div>
 
-<p>
-    Push def: {{ pushDefName | async }}
-</p>
+<div class='buttons-row'>
+    <a routerLink='/' mat-button><mat-icon>home</mat-icon></a>
+    <a routerLink='/{{ pushDefName | async }}' mat-button>{{ pushDefName | async }}</a>
+</div>
 
-<ol *ngIf='pushInfos | async as pushInfos'>
-    <li *ngFor='let i of pushInfos'>
-        <a routerLink='/{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
-    </li>
-</ol>
+<table *ngIf='pushInfos | async as pushInfos'>
+    <thead>
+        <tr>
+            <th>Push handle</th>
+            <th>Last change</th>
+        </tr>
+    </thead>
+    <tr *ngFor='let i of pushInfos'>
+        <td>
+            <a routerLink='/{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
+        </td>
+        <td>{{ i.lastChangeNsec}}</td>
+    </tr>
+</table>
