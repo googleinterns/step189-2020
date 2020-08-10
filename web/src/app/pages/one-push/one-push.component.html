@@ -1,1 +1,26 @@
 <p>one-push works!</p>
+
+<p>
+    Push handle: {{ pushHandle | async }}
+</p>
+
+<p>
+    Push def: {{ pushDefName | async }}
+</p>
+
+<table *ngIf='pushInfo | async as pushInfo'>
+    <thead>
+        <tr>
+            <th>Start time</th>
+            <th>Stage</th>
+            <th>Attempt</th>
+            <th>State</th>
+        </tr>
+    </thead>
+    <tr *ngFor='let i of pushInfo.stateInfo'>
+        <td>{{ formatTimeNsec(i.startTimeNsec) }}</td>
+        <td>{{ i.stage }}</td>
+        <td>{{ i.attempt }}</td>
+        <td>{{ i.state }}</td>
+    </tr>
+</table>
