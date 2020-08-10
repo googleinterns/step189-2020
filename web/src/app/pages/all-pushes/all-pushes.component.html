@@ -1,11 +1,36 @@
-<p>all-pushes works!</p>
+<app-page-name>all-pushes</app-page-name>
 
-<p>
-    Push def: {{ pushDefName | async }}
-</p>
+<app-button-row>
+    <app-button link='/'>home</app-button>
+    <app-button link='/{{ pushDefName | async }}'>{{ pushDefName | async }}</app-button>
+</app-button-row>
 
-<ol *ngIf='pushInfos | async as pushInfos'>
-    <li *ngFor='let i of pushInfos'>
-        <a routerLink='/{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
-    </li>
-</ol>
+<table class='collapse bb bw1 b--black' *ngIf='pushInfos | async as pushInfos'>
+    <thead>
+        <tr class='bb bw1 b--black'>
+            <th class='tl br'>Push handle</th>
+            <th class='br'>Last change</th>
+            <th># states</th>
+        </tr>
+    </thead>
+    <tr class='hover-bg-light-gray hover-cursor-default'
+        *ngFor='let i of pushInfos; first as isFirst; last as isLast'>
+        <td class='br ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            <a routerLink='/{{ i.pushHandle }}'>{{ i.pushHandle }}</a>
+        </td>
+        <td class='br ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            {{ i.lastChangeNsec | dateNsec }}
+        </td>
+        <td class='tr ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            <ng-container *ngIf='i.stateInfo'>
+                {{ i.stateInfo.length }}
+            </ng-container>
+        </td>
+    </tr>
+</table>

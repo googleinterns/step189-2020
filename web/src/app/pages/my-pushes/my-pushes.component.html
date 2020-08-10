@@ -1,7 +1,27 @@
-<p>my-pushes works!</p>
+<app-page-name>my-pushes</app-page-name>
 
-<ul>
-    <li *ngFor='let i of pushDefsNames'>
-        <a routerLink='{{ i }}'>{{ i }}</a>
-    </li>
-</ul>
+<app-button-row>
+    <app-button link='/'>home</app-button>
+</app-button-row>
+
+<table class='collapse bb bw1 b--black'>
+    <thead>
+        <tr class='bb bw1 b--black'>
+            <th class='tl br'>Push def</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tr class='hover-bg-light-gray hover-cursor-default'
+        *ngFor='let i of pushDefs; first as isFirst; last as isLast'>
+        <td class='br ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            <a routerLink='{{ i.name }}'>{{ i.name }}</a>
+        </td>
+        <td class='tr ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            {{ i.notes }}
+        </td>
+    </tr>
+</table>
