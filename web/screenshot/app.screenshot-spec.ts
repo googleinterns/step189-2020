@@ -1,5 +1,5 @@
 import { AppPage } from './app.po';
-import { $, browser, logging } from 'protractor';
+import { browser} from 'protractor';
 
 describe('protractor-image-comparison desktop', () => {
   it('should be the same as the baseline', async () => {

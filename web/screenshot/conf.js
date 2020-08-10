@@ -42,7 +42,7 @@ exports.config = {
     options: {
       baselineFolder: join(process.cwd(), './screenshot/baseline/'),
       formatImageName: `{tag}-{logName}-{width}x{height}`,
-      screenshotPath: join(process.cwd(), './screenshot/screenshots/'),
+      screenshotPath: join(process.cwd(), './screenshot/.tmp/'),
       savePerInstance: true,
       autoSaveBaseline: true
     }
