@@ -13,7 +13,7 @@ env:
   APPENGINE_VERSION_PREFIX: invalid
   SHA_SHORT: invalid
   CURRENT_HASH: invalid
-  GOLDEN_HASH: 490c6fa004074f6cf23649f5336f1e9004f4574d
+  GOLDEN_HASH: invalid
 
 jobs:
   appengine-deploy:
@@ -36,7 +36,11 @@ jobs:
           echo "::set-env name=APPENGINE_VERSION_PREFIX::pr${{ github.event.pull_request.number }}"
           echo "::set-env name=SHA_SHORT::$(git rev-parse --short=7 ${{ github.event.pull_request.head.sha }})"
           echo "::set-env name=CURRENT_HASH::${{ github.event.pull_request.head.sha }}"
-
+      
+      - name: Set golden hash
+        run: |
+          echo "::set-env name=GOLDEN_HASH::$(git ls-remote git://github.com/googleinterns/step189-2020.git refs/heads/main | cut -f 1)"
+          
       - name: Build
         working-directory: web
         run: |
