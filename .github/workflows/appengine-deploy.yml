@@ -7,8 +7,8 @@ on:
   pull_request:
 
 # The golden hash represents the commit of the baseline images that we want to 
-# compare our current app against. If there are visible changes, we will need to 
-# update the hard-coded hash to be the hash of the most recent commit to main.
+# compare our current app against. It is automatically set as the most recent 
+# commit to main.
 env:
   APPENGINE_VERSION_PREFIX: invalid
   SHA_SHORT: invalid
@@ -39,7 +39,7 @@ jobs:
       
       - name: Set golden hash
         run: |
-          echo "::set-env name=GOLDEN_HASH::$(git ls-remote git://github.com/googleinterns/step189-2020.git refs/heads/main | cut -f 1)"
+          echo "::set-env name=GOLDEN_HASH::$(git rev parse origin/main)"
           
       - name: Build
         working-directory: web
