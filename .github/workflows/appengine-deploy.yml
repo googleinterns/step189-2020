@@ -39,7 +39,7 @@ jobs:
       
       - name: Set golden hash
         run: |
-          echo "::set-env name=GOLDEN_HASH::$(git rev-parse origin/main)"
+          echo "::set-env name=GOLDEN_HASH::$(git ls-remote git://github.com/googleinterns/step189-2020.git refs/heads/main | cut -f 1)"
           
       - name: Build
         working-directory: web
