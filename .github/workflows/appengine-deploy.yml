@@ -39,7 +39,7 @@ jobs:
       
       - name: Set golden hash
         run: |
-          echo "::set-env name=GOLDEN_HASH::$(git rev parse origin/main)"
+          echo "::set-env name=GOLDEN_HASH::$(git rev-parse origin/main)"
           
       - name: Build
         working-directory: web
