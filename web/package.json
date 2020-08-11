@@ -9,7 +9,9 @@
     "lint": "ng lint",
     "e2e": "ng e2e --webdriverUpdate=false",
     "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89",
-    "genproto": "pbjs -w es6 -t static-module -o src/proto/step189_2020.js src/proto/step189_2020.proto && pbts -o src/proto/step189_2020.d.ts src/proto/step189_2020.js"
+    "genproto": "pbjs -w es6 -t static-module -o src/proto/step189_2020.js src/proto/step189_2020.proto && pbts -o src/proto/step189_2020.d.ts src/proto/step189_2020.js",
+    "happo": "happo",
+    "happo-ci-github-actions": "happo-ci-github-actions"
   },
   "private": true,
   "dependencies": {
@@ -22,6 +24,7 @@
     "@angular/platform-browser-dynamic": "~10.0.4",
     "@angular/router": "~10.0.4",
     "protobufjs": "~6.10.1",
+    "babel-core": "^7.0.0-bridge.0",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.3"
@@ -30,10 +33,17 @@
     "@angular-devkit/build-angular": "~0.1000.3",
     "@angular/cli": "~10.0.3",
     "@angular/compiler-cli": "~10.0.4",
-    "@types/node": "^12.11.1",
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-react": "^7.10.4",
     "@types/jasmine": "~3.5.0",
     "@types/jasminewd2": "~2.0.3",
+    "@types/node": "^12.11.1",
+    "babel-loader": "^8.1.0",
     "codelyzer": "^6.0.0",
+    "happo-plugin-typescript": "^1.0.0",
+    "happo.io": "^5.6.2",
     "jasmine-core": "~3.5.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~5.0.0",
@@ -42,8 +52,13 @@
     "karma-jasmine": "~3.3.0",
     "karma-jasmine-html-reporter": "^1.5.0",
     "protractor": "~7.0.0",
+    "protractor-image-comparison": "^3.9.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "ts-loader": "^8.0.2",
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
-    "typescript": "~3.9.5"
+    "typescript": "~3.9.5",
+    "webpack": "^4.44.1"
   }
 }
