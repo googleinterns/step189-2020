@@ -8,7 +8,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e --webdriverUpdate=false",
-    "postinstall": "node_modules/.bin/webdriver-manager update --gecko false --standalone false --versions.chrome=84.0.4147.89",
+    "postinstall": "./postinstall.sh",
     "genproto": "pbjs -w es6 -t static-module -o src/proto/step189_2020.js src/proto/step189_2020.proto && pbts -o src/proto/step189_2020.d.ts src/proto/step189_2020.js",
     "happo": "happo",
     "happo-ci-github-actions": "happo-ci-github-actions"
@@ -23,8 +23,8 @@
     "@angular/platform-browser": "~10.0.4",
     "@angular/platform-browser-dynamic": "~10.0.4",
     "@angular/router": "~10.0.4",
-    "protobufjs": "~6.10.1",
     "babel-core": "^7.0.0-bridge.0",
+    "protobufjs": "~6.10.1",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.3"
