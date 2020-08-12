@@ -1,26 +1,43 @@
-<p>one-push works!</p>
+<app-page-name>one-pushes</app-page-name>
 
-<p>
-    Push handle: {{ pushHandle | async }}
-</p>
+<app-button-row>
+    <app-button link='/'>Home</app-button>
+    <app-button link='/{{ pushDefName | async }}'>{{ pushDefName | async }}</app-button>
+    <app-button link='/{{ pushHandle | async }}'>{{ pushHandle | async }}</app-button>
+</app-button-row>
 
-<p>
-    Push def: {{ pushDefName | async }}
-</p>
-
-<table *ngIf='pushInfo | async as pushInfo'>
+<table class='collapse bb bw1 b--black' *ngIf='pushInfo | async as pushInfo'>
     <thead>
-        <tr>
-            <th>Start time</th>
-            <th>Stage</th>
-            <th>Attempt</th>
-            <th>State</th>
+        <tr class='bb bw1 b--black'>
+            <th class='tl br ph1'>Start time</th>
+            <th class='br ph1'>Stage</th>
+            <th class='br ph1'>Attempt</th>
+            <th class='ph1'>State</th>
         </tr>
     </thead>
-    <tr *ngFor='let i of pushInfo.stateInfo'>
-        <td>{{ formatTimeNsec(i.startTimeNsec) }}</td>
-        <td>{{ i.stage }}</td>
-        <td>{{ i.attempt }}</td>
-        <td>{{ i.state }}</td>
+    <tr class='hover-bg-light-gray hover-cursor-default'
+        *ngFor='let i of pushInfo.stateInfo; first as isFirst; last as isLast'>
+        <td class='br ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            {{ i.startTimeNsec | dateNsec }}
+        </td>
+        <td class='br ph1'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            {{ i.stage }}
+        </td>
+        <td class='br ph1 tr'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            <ng-container *ngIf='i.attempt'>
+                {{ i.attempt }}
+            </ng-container>
+        </td>
+        <td class='ph1 tr'
+            [class.pt2]='isFirst'
+            [class.pb2]='isLast'>
+            {{ i.state }}
+        </td>
     </tr>
 </table>

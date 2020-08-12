@@ -1,1 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
+
+// We disable the underlining for all the URLs because most of our links look
+// better this way.
+a {
+    text-decoration: none;
+}
+
+// In some cases the text selection cursor doesn't look that great. This allows
+// forcing the default arrow cursor.
+.hover-cursor-default:hover {
+    cursor: default;
+}

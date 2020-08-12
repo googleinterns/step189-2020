@@ -5,7 +5,7 @@ export class AppPage {
     return browser.get(browser.baseUrl) as Promise<unknown>;
   }
 
-  getTitleText(): Promise<string> {
-    return element(by.css('app-root p')).getText() as Promise<string>;
+  getPageNameText(): Promise<string> {
+    return element(by.css('app-page-name div')).getText() as Promise<string>;
   }
 }
