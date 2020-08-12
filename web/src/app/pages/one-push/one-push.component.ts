@@ -1,7 +1,6 @@
 import { ActivatedRoute } from '@angular/router';
 import { Component } from '@angular/core';
 import { flatMap, map, shareReplay } from 'rxjs/operators';
-import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, combineLatest } from 'rxjs';
 
@@ -46,12 +45,5 @@ export class OnePushComponent {
           return pushInfos.filter(pushInfo => pushInfo.pushHandle === pushHandle)[0];
         }),
         shareReplay(1));
-  }
-
-  formatTimeNsec(ts: number | Long | null | undefined): string {
-    if (typeof ts === 'number') {
-      return formatDate(ts / 1000 / 1000, 'yyyy-MM-dd HH:mm:ss.SSS zzzz', 'en-US');
-    }
-    return '';
   }
 }
