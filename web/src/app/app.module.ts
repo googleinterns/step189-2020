@@ -11,6 +11,7 @@ import { ButtonRowComponent } from './components/button-row/button-row.component
 import { ButtonComponent } from './components/button/button.component';
 import { PageNameComponent } from './components/page-name/page-name.component';
 import { DateNsecPipe } from './pipes/date-nsec.pipe';
+import { CdfComponent } from './components/cdf/cdf.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { DateNsecPipe } from './pipes/date-nsec.pipe';
     ButtonRowComponent,
     ButtonComponent,
     PageNameComponent,
-    DateNsecPipe
+    DateNsecPipe,
+    CdfComponent
   ],
   imports: [
     BrowserModule,
