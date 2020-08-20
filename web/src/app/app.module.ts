@@ -11,22 +11,24 @@ import { ButtonRowComponent } from './components/button-row/button-row.component
 import { ButtonComponent } from './components/button/button.component';
 import { PageNameComponent } from './components/page-name/page-name.component';
 import { DateNsecPipe } from './pipes/date-nsec.pipe';
+import { BarChartComponent } from './components/bar-chart/bar-chart.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    MyPushesComponent,
     AllPushesComponent,
-    OnePushComponent,
+    BarChartComponent,
     ButtonRowComponent,
     ButtonComponent,
-    PageNameComponent,
-    DateNsecPipe
+    DateNsecPipe,
+    MyPushesComponent,
+    OnePushComponent,
+    PageNameComponent
   ],
   imports: [
+    AppRoutingModule,
     BrowserModule,
-    HttpClientModule,
-    AppRoutingModule
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

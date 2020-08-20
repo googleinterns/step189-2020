@@ -1,0 +1,21 @@
+.barchart {
+    height: 420px;
+    width: 1000px;
+}
+
+.selectButton {
+    float: right;
+}
+
+.tooltip:after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+}
