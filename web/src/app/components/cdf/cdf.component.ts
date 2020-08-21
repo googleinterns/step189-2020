@@ -1,71 +1,79 @@
-import { Component, OnInit, OnChanges, Input, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
 
-interface cdfData {
+interface CdfData {
   duration: number;
   probability: number;
 }
+
+type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
 
 @Component({
   selector: 'app-cdf',
   templateUrl: './cdf.component.html',
   styleUrls: ['./cdf.component.scss']
 })
+
 export class CdfComponent implements OnInit, OnChanges {
   @ViewChild('cdf') private cdfContainer!: ElementRef;
-  @Input() pushInfos!: step189_2020.IPushInfo[];
-  @Input() currentPush!: step189_2020.IPushInfo;
+  @Input() pushInfos!: step189_2020.IPushInfo[] | null;
+  @Input() currentPush!: step189_2020.IPushInfo | null;
 
-  private data: cdfData[] = [];
-  private svg!: any;
+  private data: CdfData[] = [];
+  private graphData: CdfData[] = [];
+  private svg!: d3SVG;
   private height!: number;
   private width!: number;
   private xScale!: d3.ScaleLinear<number, number>;
   private yScale!: d3.ScaleLinear<number, number>;
 
-
-  private readonly NANO_TO_MINUTES: number = 10**9 * 60;
+  private readonly NANO_TO_MINUTES: number = (10 ** 9) * 60;
+  private readonly COMPLETED_BLUE: string = '#00bfa5';
+  private readonly COMPLETED_STATE_NUMBER: number = 5;
 
   private parseData(pushInfos: step189_2020.IPushInfo[]): void {
     if (!pushInfos) { return; }
 
-    let durations: number[] = [];
+    const durations: number[] = [];
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
       const pushes = pushInfo.stateInfo;
       if (!pushes) { return; }
       const pushesStartTime = pushes[0].startTimeNsec;
       if (!pushesStartTime) { return; }
-      const pushesEndTime = pushes[pushes.length-1].startTimeNsec;
+      const pushesEndTime = pushes[pushes.length - 1].startTimeNsec;
       if (!pushesEndTime) { return; }
       const pushID = pushInfo.pushHandle;
       if (!pushID) { return; }
-      const state = pushes[pushes.length-1].state;
+      const state = pushes[pushes.length - 1].state;
       if (!state) { return; }
-      
-      if (state == 5) {
-        // Convert the duration into minutes
-        // The unary operator coerces the value to number type.
-        let firstStateStart: number | Long = -1
-        for (let i = 0; i < pushes.length; i++) {
-          let stateInfo = pushes[i];
+
+      if (state === this.COMPLETED_STATE_NUMBER) {
+        let firstStateStart: number | Long = -1;
+        for (const stateInfo of pushes) {
           if (stateInfo.stage) {
-            firstStateStart = stateInfo.startTimeNsec;
-            break;
+            if (stateInfo.startTimeNsec) {
+              firstStateStart = stateInfo.startTimeNsec;
+              break;
+            }
           }
         }
-        const duration = (+pushesEndTime - +firstStateStart) / this.NANO_TO_MINUTES;
-        durations.push(duration)
+        if (firstStateStart !== -1) {
+          const duration = (+pushesEndTime - +firstStateStart) / this.NANO_TO_MINUTES;
+          durations.push(duration);
+        }
       }
-    })
-    durations.sort();
-    const durationLength = durations.length;
+    });
+
+    const sortedArray: number[] = durations.sort((n1, n2) => n1 - n2);
+
+    const durationLength = sortedArray.length;
     for (let i = 0; i < durationLength; i++) {
-      const duration = durations[i];
-      const probability = (i+1) / durationLength;
-      const cdfDatum: cdfData = {
+      const duration = sortedArray[i];
+      const probability = (i + 1) / durationLength;
+      const cdfDatum: CdfData = {
         duration,
         probability
       };
@@ -76,10 +84,7 @@ export class CdfComponent implements OnInit, OnChanges {
   ngOnInit(): void {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Since ngOnChanges() runs before the view can be initialized, any
-    // attempts to access our @ViewChild will result in null. Thus, we
-    // bypass the first change that occurs in order to first render the view.
-    if (!changes['pushInfos'].isFirstChange()) {
+    if (!changes.pushInfos.isFirstChange()) {
       this.updateChart(changes.pushInfos.currentValue, changes.currentPush.currentValue);
     }
   }
@@ -87,8 +92,7 @@ export class CdfComponent implements OnInit, OnChanges {
   private createChart(pushInfos: step189_2020.IPushInfo[]): void {
 
     this.parseData(pushInfos);
-    // CHANGE
-    const startValue = 100;
+
     const element = this.cdfContainer.nativeElement;
     element.classList.add('cdf-chart');
     const elementWidth = element.clientWidth;
@@ -99,82 +103,94 @@ export class CdfComponent implements OnInit, OnChanges {
     this.width = elementWidth - margin.left - margin.right;
     this.height = elementHeight - margin.top - margin.bottom;
 
-    
-    // Establish the x-axis
+    const maxDuration = d3.max(this.data, d => d.duration);
+    if (!maxDuration) { return; }
+
     this.xScale = d3
       .scaleLinear()
-      .domain([0, d3.max(this.data, d => d.duration)+1])
+      .domain([0, maxDuration + 1])
       .rangeRound([0, this.width])
-      .nice()
+      .nice();
 
     this.yScale = d3
       .scaleLinear()
-      .domain(d3.extent(this.data, d => d.probability))
-      .rangeRound([this.height, 0])
+      .domain([0, 1])
+      .rangeRound([this.height, 0]);
 
-    this.svg = d3
+    this.graphData = Array.from(this.data);
+    this.graphData.push({duration: this.xScale.ticks()[this.xScale.ticks().length - 1], probability: 1});
+
+    this.svg = (d3
       .select(element)
-      .append('svg')
+      .append('svg') as d3SVG)
       .attr('width', elementWidth)
       .attr('height', elementHeight);
-      //.on('mousemove', moveRuler);
-    
-    const defs = this.svg.append('defs');
 
-    const clipRect = defs
-      .append('clipPath')
-      .attr('id', 'area-clip')
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("width", this.xScale(startValue))
-      .attr("height", this.height);
-    
     const cdfChart = this.svg
       .append('g')
       .attr('id', 'chart')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
-  
+
     const yAxisLeft = cdfChart
       .append('g')
       .attr('class', 'y-axis-left')
-      .call(
-        d3
-          .axisLeft(this.yScale)
-          .ticks(10)
-          .tickFormat(d3.format(",.1f"))
-      )
-      .call(g => g.select(".domain")
-          .remove());
-    
-        
-  const yAxisRight = cdfChart
-    .append('g')
-    .attr('class', 'axis axis_y_right')
-    .attr("transform", "translate(" + (this.width) + ",0)")
-    .call(
-      d3
+      .call(d3
+        .axisLeft(this.yScale)
+        .ticks(10)
+        .tickFormat(d3.format(',.1f'))
+      );
+
+    yAxisLeft.select('.domain').remove();
+
+    this.svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0)
+      .attr('x', -elementHeight / 2)
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .text('Probability');
+
+    const yAxisRight = cdfChart
+      .append('g')
+      .attr('class', 'y-axis-right')
+      .attr('transform', `translate(${this.width}, 0)`)
+      .call(d3
         .axisRight(this.yScale)
         .ticks(10)
-        .tickFormat(d3.format(",.1f"))
-    )
-    .call(g => g.select(".domain")
-        .remove());
+        .tickFormat(d3.format(',.1f'))
+      );
 
-  const xAxis = cdfChart
-    .append('g')
-    .attr('class', 'x-axis')
-    .attr('transform', `translate(0, ${this.height})`)
-    .call(d3.axisBottom(this.xScale));
+    yAxisRight.select('.domain').remove();
 
+    const xAxis = cdfChart
+      .append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', `translate(0, ${this.height})`)
+      .call(d3.axisBottom(this.xScale));
+
+    this.svg.append('text')
+      .attr('transform',
+            `translate(${this.width / 2}, ${elementHeight - margin.left / 3})`)
+      .style('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .text('Duration (minutes)');
+
+    cdfChart
+      .datum(this.graphData)
+      .append('path')
+      .attr('fill', this.COMPLETED_BLUE)
+      .attr('d', d3.area<CdfData>()
+        .x(d => this.xScale(d.duration))
+        .y1(d => this.yScale(d.probability))
+        .y0(this.yScale(0))
+        .curve(d3.curveStepAfter)
+      );
   }
 
   private updateChart(pushInfos: step189_2020.IPushInfo[], currentPush: step189_2020.IPushInfo): void{
     if (!this.svg) {
-      //console.log(pushInfos);
-      console.log(currentPush);
       this.createChart(pushInfos);
-      //console.log(this.data)
       return;
     }
   }
