@@ -194,5 +194,4 @@ export class CdfComponent implements OnInit, OnChanges {
       return;
     }
   }
-
 }
