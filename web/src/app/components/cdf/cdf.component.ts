@@ -2,6 +2,7 @@ import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
+import { generate } from 'rxjs';
 
 interface Item {
   duration: number; // Minutes between completed stage and first non-empty stage
@@ -120,6 +121,9 @@ export class CDFComponent implements AfterViewInit {
     const maxDuration = d3.max(this.data, d => d.duration);
     if (!maxDuration) { return; }
 
+    const minDuration = d3.min(this.data, d => d.duration);
+    if (!minDuration) { return; }
+
     const xScale = d3
       .scaleLinear()
       .domain([0, maxDuration + 1])
@@ -157,14 +161,12 @@ export class CDFComponent implements AfterViewInit {
         .tickFormat(d3.format(',.1f'))
       );
 
-    // Remove axis's vertical line and keeps the tick marks.
     yAxisLeft.select('.domain').remove();
 
-    cdfChart.append('text')
-      .attr('class', 'y-axis-left-label')
+    this.svg.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('y', -margin.left)
-      .attr('x', -height / 2)
+      .attr('y', 0)
+      .attr('x', -elementHeight / 2)
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
@@ -180,35 +182,24 @@ export class CDFComponent implements AfterViewInit {
         .tickFormat(d3.format(',.1f'))
       );
 
-    // Remove axis's vertical line and keeps the tick marks.
     yAxisRight.select('.domain').remove();
 
-    const xAxis = this.svg
+    const xAxis = cdfChart
       .append('g')
       .attr('class', 'x-axis')
-      .attr('transform', `translate(${margin.left}, ${height + margin.top})`)
+      .attr('transform', `translate(0, ${height})`)
       .call(d3.axisBottom(xScale));
 
     this.svg.append('text')
-      .attr('class', 'x-axis-label')
       .attr('transform',
-            `translate(${(elementWidth) / 2}, ${elementHeight - margin.bottom / 2})`)
+            `translate(${width / 2}, ${elementHeight - margin.left / 3})`)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Duration (minutes)');
 
-    this.svg.append('text')
-      .attr('class', 'graph-title')
-      .attr('x', elementWidth / 2)
-      .attr('y', margin.top / 2)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '16px')
-      .text('CDF of completed push durations');
-
     cdfChart
       .datum(this.graphData)
       .append('path')
-      .attr('class', 'cdf-curve')
       .attr('fill', CDFComponent.COMPLETED_BLUE)
       .attr('d', d3.area<Item>()
         .x(d => xScale(d.duration))
@@ -216,5 +207,110 @@ export class CDFComponent implements AfterViewInit {
         .y0(yScale(0))
         .curve(d3.curveStepAfter)
       );
+
+    const quantileLines = this.svg
+      .append('g')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+    const percentileLines = [0.1, 0.5, 0.9];
+    const quantiles =  this.generateQuantiles(percentileLines, xScale);
+
+    quantileLines
+      .selectAll('.quantile-lines')
+      .data(quantiles)
+      .enter()
+      .append('line')
+      .attr('class', 'y-guideline')
+      .attr('stroke', 'lightgrey')
+      .attr('stroke-dasharray', '5,2')
+      .attr('x1', (d: Item) => xScale(d.duration))
+      .attr('y1', height)
+      .attr('x2', (d: Item) => xScale(d.duration))
+      .attr('y2', 0);
+
+    quantileLines
+      .selectAll('.quantile-lines')
+      .data(quantiles)
+      .enter()
+      .append('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', (d: Item) => xScale(d.duration))
+      .attr('y', 0)
+      .attr('id', 'quantile-text')
+      .attr('font-size', '10px')
+      .text((d: Item) => `${d.probability * 100}%`);
+
+    const dotplotContainer = this.svg
+      .append('g')
+      .attr('id', 'dotplot-container')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+    let radius = 2.5;
+    let yPosition = this.generateYPosition(radius * 2 + 0.1, xScale);
+    if (d3.max(yPosition, d => d.y) > height) {
+      radius = 1.4;
+      yPosition = this.generateYPosition(radius * 2 + 0.1, xScale);
+    }
+    for (let i = 0; i < this.data.length; i++) {
+      const cx = xScale(this.data[i].duration);
+      const cy = height - yPosition[i].y - radius;
+      dotplotContainer.append('circle')
+          .attr('cx', cx)
+          .attr('r', radius)
+          .attr('cy', cy)
+          .attr('fill', 'black');
+    }
+  }
+
+  private getXforPercentage(prob): number {
+    const yVals = this.data.map(d => d.probability);
+    const left = this.data[d3.bisectLeft(yVals, prob) - 1];
+    const right = this.data[d3.bisectRight(yVals, prob)];
+    return ((prob - left.probability) * (right.duration - left.duration) /
+      (right.probability - left.probability)) + left.duration;
+  }
+
+  private generateQuantiles(percentileLines, xScale): Item[] {
+    if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
+      return [percentileLines[1]].map(d => ({
+        duration: this.getXforPercentage(d),
+        probability: d} as Item));
+    }
+    let quantiles = percentileLines.map(d => ({
+      duration: this.getXforPercentage(d),
+      probability: d} as Item));
+
+    const differences = [xScale(quantiles[1].duration - quantiles[0].duration), xScale(quantiles[2].duration - quantiles[1].duration)];
+    if (differences[0] < 15 || differences[1] < 15) {
+      quantiles = this.generateQuantiles([percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01], xScale);
+    }
+    return quantiles;
+  }
+
+  private generateYPosition(radius, xScale): Object[] {
+    const radius2 = radius ** 2;
+    const bisect = d3.bisector((d: Item) => d.duration);
+    const yPosition = [];
+    const xVals = this.data.map(d => d.duration);
+    for (const val of xVals) {
+      const x = xScale(val);
+      const left = bisect.left(yPosition, x - radius);
+      const right = bisect.right(yPosition, x + radius, left);
+      let y = 0;
+      for (let i = left; i < right; ++i) {
+        const { x: xi, y: yi } = yPosition[i];
+        const x2 = (xi - x) ** 2;
+        const y2 = (yi - y) ** 2;
+        if (radius2 > x2 + y2) {
+          y = yi + Math.sqrt(radius2 - x2) + 1e-6;
+          i = left - 1;
+          continue;
+        }
+      }
+      yPosition.splice(bisect.left(yPosition, x, left, right), 0, { x, y });
+    }
+    // Values are added to the front of the array, making the array in a
+    // backwards order. We need to reverse it to maintain the correct indices.
+    return yPosition.reverse();
   }
 }
