@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
@@ -16,7 +16,7 @@ type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CdfComponent implements OnInit, OnChanges {
+export class CdfComponent implements OnChanges {
   @ViewChild('cdf') private cdfContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[] | null;
   @Input() currentPush!: step189_2020.IPushInfo | null;
@@ -39,29 +39,23 @@ export class CdfComponent implements OnInit, OnChanges {
     const durations: number[] = [];
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
-      const pushes = pushInfo.stateInfo;
-      if (!pushes) { return; }
-      const pushesStartTime = pushes[0].startTimeNsec;
-      if (!pushesStartTime) { return; }
-      const pushesEndTime = pushes[pushes.length - 1].startTimeNsec;
-      if (!pushesEndTime) { return; }
-      const pushID = pushInfo.pushHandle;
-      if (!pushID) { return; }
-      const state = pushes[pushes.length - 1].state;
-      if (!state) { return; }
+      const states = pushInfo.stateInfo;
+      if (!states) { return; }
+      const pushEndTime = states[states.length - 1].startTimeNsec;
+      if (!pushEndTime) { return; }
+      const finalState = states[states.length - 1].state;
+      if (!finalState) { return; }
 
-      if (state === this.COMPLETED_STATE_NUMBER) {
+      if (finalState === this.COMPLETED_STATE_NUMBER) {
         let firstStateStart: number | Long = -1;
-        for (const stateInfo of pushes) {
-          if (stateInfo.stage) {
-            if (stateInfo.startTimeNsec) {
-              firstStateStart = stateInfo.startTimeNsec;
-              break;
-            }
+        for (const state of states) {
+          if (state.stage && state.startTimeNsec) {
+            firstStateStart = state.startTimeNsec;
+            break;
           }
         }
         if (firstStateStart !== -1) {
-          const duration = (+pushesEndTime - +firstStateStart) / this.NANO_TO_MINUTES;
+          const duration = (+pushEndTime - +firstStateStart) / this.NANO_TO_MINUTES;
           durations.push(duration);
         }
       }
@@ -80,8 +74,6 @@ export class CdfComponent implements OnInit, OnChanges {
       this.data.push(cdfDatum);
     }
   }
-
-  ngOnInit(): void {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes.pushInfos.isFirstChange()) {
@@ -118,7 +110,10 @@ export class CdfComponent implements OnInit, OnChanges {
       .rangeRound([this.height, 0]);
 
     this.graphData = Array.from(this.data);
-    this.graphData.push({duration: this.xScale.ticks()[this.xScale.ticks().length - 1], probability: 1});
+    this.graphData.push({
+      duration: this.xScale.ticks()[this.xScale.ticks().length - 1],
+      probability: 1
+    });
 
     this.svg = (d3
       .select(element)
@@ -171,10 +166,17 @@ export class CdfComponent implements OnInit, OnChanges {
 
     this.svg.append('text')
       .attr('transform',
-            `translate(${this.width / 2}, ${elementHeight - margin.left / 3})`)
+            `translate(${elementWidth / 2}, ${elementHeight - margin.left / 3})`)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Duration (minutes)');
+
+    this.svg.append('text')
+      .attr('x', elementWidth / 2)
+      .attr('y', margin.top / 2)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .text('CDF');
 
     cdfChart
       .datum(this.graphData)
@@ -188,7 +190,7 @@ export class CdfComponent implements OnInit, OnChanges {
       );
   }
 
-  private updateChart(pushInfos: step189_2020.IPushInfo[], currentPush: step189_2020.IPushInfo): void{
+  private updateChart(pushInfos: step189_2020.IPushInfo[], currentPush: step189_2020.IPushInfo): void {
     if (!this.svg) {
       this.createChart(pushInfos);
       return;
