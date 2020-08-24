@@ -3,11 +3,17 @@ import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
 
-interface CdfData {
+interface Item {
   duration: number; // Minutes between completed stage and first non-empty stage
   probability: number; // Rank of the duration divided by number of points
 }
 
+/**
+ * Defines the type of the d3 SVG. The d3.Selection has a generic type
+ * Selection<GElement, Datum, PElement, PDatum>. We want our svg element to have
+ * the interface SVGSVGElement. Datum, PElement, and PDatum are unused and thus,
+ * assigned to undefined or null.
+ */
 type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
 
 @Component({
@@ -25,27 +31,20 @@ export class CdfComponent implements AfterViewInit {
   @Input() pushInfos!: step189_2020.IPushInfo[] | null;
   @Input() currentPush!: step189_2020.IPushInfo | null;
 
-  /*
-   * The non-null assertion operator (!) indicates to the compiler that the
-   * variables will always be declared and will never be null or undefined.
-   */
-  private data: CdfData[] = [];
-  private graphData: CdfData[] = [];
-  private svg!: d3SVG;
-  private height!: number;
-  private width!: number;
-  private xScale!: d3.ScaleLinear<number, number>;
-  private yScale!: d3.ScaleLinear<number, number>;
+  private data: Item[] = [];
+  private graphData: Item[] = [];
+  private svg: d3SVG | undefined;
 
-  /*
+  /**
    * Calculates the duration between the completed stage and the first non-empty
    * stage. Assigns the probability as the rank of the duration value over the
    * total number of points. The duration and probability are defined in an
    * interface and all points stored as an array of CdfData interfaces.
+   * 
+   * @param pushInfos Array of pushes for a single push def
+   * @return Array of Items sorted by increasing duration
    */
-  private populateData(pushInfos: step189_2020.IPushInfo[] | null): void {
-    if (!pushInfos) { return; }
-
+  private static populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
     const durations: number[] = [];
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
@@ -57,7 +56,7 @@ export class CdfComponent implements AfterViewInit {
       if (!finalState) { return; }
 
       if (finalState === CdfComponent.COMPLETED_STATE_TAG) {
-        // Find the start time of the first non-empty stage
+        // Find the start time of the first non-empty stage.
         let firstStateStart: number | Long = -1;
         for (const state of states) {
           if (state.stage && state.startTimeNsec) {
@@ -74,26 +73,35 @@ export class CdfComponent implements AfterViewInit {
 
     const sortedArray: number[] = durations.sort((n1, n2) => n1 - n2);
 
+    const data: Item[] = [];
     const durationLength = sortedArray.length;
     for (let i = 0; i < durationLength; i++) {
       const duration = sortedArray[i];
       const probability = (i + 1) / durationLength;
-      this.data.push({
+      data.push({
         duration,
         probability
-      } as CdfData);
+      } as Item);
     }
+
+    return data;
   }
 
-  /*
+  /**
+   * Creates a CDF chart by plotting the duration of completed pushes against 
+   * the probability of a push taking less time than that duration.
+   * 
    * Structure of the SVG:
    * CdfChart:
-   *     - yAxisLeft, yAxisRight, xAxis
-   *     - Axis labels and title
-   *     - Step function CDF plot
+   *     - y-axis-left, y-axis-right, y-axis-left-label
+   *     - path:
+   *         - cdf-curve
+   * svg:
+   *     - x-axis, x-axis-label, graph-title
    */
   private createChart(): void {
-    this.populateData(this.pushInfos);
+    if (!this.pushInfos) { return; }
+    this.data = CdfComponent.populateData(this.pushInfos);
 
     const element = this.cdfContainer.nativeElement;
     const elementWidth = element.clientWidth;
@@ -101,26 +109,26 @@ export class CdfComponent implements AfterViewInit {
 
     const margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
-    this.width = elementWidth - margin.left - margin.right;
-    this.height = elementHeight - margin.top - margin.bottom;
+    const width = elementWidth - margin.left - margin.right;
+    const height = elementHeight - margin.top - margin.bottom;
 
     const maxDuration = d3.max(this.data, d => d.duration);
     if (!maxDuration) { return; }
 
-    this.xScale = d3
+    const xScale = d3
       .scaleLinear()
       .domain([0, maxDuration + 1])
-      .rangeRound([0, this.width])
+      .rangeRound([0, width])
       .nice();
 
-    this.yScale = d3
+    const yScale = d3
       .scaleLinear()
       .domain([0, 1])
-      .rangeRound([this.height, 0]);
+      .rangeRound([height, 0]);
 
     this.graphData = Array.from(this.data);
     this.graphData.push({
-      duration: this.xScale.ticks()[this.xScale.ticks().length - 1],
+      duration: xScale.ticks()[xScale.ticks().length - 1],
       probability: 1
     });
 
@@ -139,18 +147,19 @@ export class CdfComponent implements AfterViewInit {
       .append('g')
       .attr('class', 'y-axis-left')
       .call(d3
-        .axisLeft(this.yScale)
+        .axisLeft(yScale)
         .ticks(10)
         .tickFormat(d3.format(',.1f'))
       );
 
-    // Removes axis's vertical line and keeps the tick marks
+    // Removes axis's vertical line and keeps the tick marks.
     yAxisLeft.select('.domain').remove();
 
     cdfChart.append('text')
+      .attr('class', 'y-axis-left-label')
       .attr('transform', 'rotate(-90)')
       .attr('y', -margin.left)
-      .attr('x', -this.height / 2)
+      .attr('x', -height / 2)
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
@@ -159,44 +168,47 @@ export class CdfComponent implements AfterViewInit {
     const yAxisRight = cdfChart
       .append('g')
       .attr('class', 'y-axis-right')
-      .attr('transform', `translate(${this.width}, 0)`)
+      .attr('transform', `translate(${width}, 0)`)
       .call(d3
-        .axisRight(this.yScale)
+        .axisRight(yScale)
         .ticks(10)
         .tickFormat(d3.format(',.1f'))
       );
 
-    // Removes axis's vertical line and keeps the tick marks
+    // Removes axis's vertical line and keeps the tick marks.
     yAxisRight.select('.domain').remove();
 
-    const xAxis = cdfChart
+    const xAxis = this.svg
       .append('g')
       .attr('class', 'x-axis')
-      .attr('transform', `translate(0, ${this.height})`)
-      .call(d3.axisBottom(this.xScale));
+      .attr('transform', `translate(${margin.left}, ${height + margin.top})`)
+      .call(d3.axisBottom(xScale));
 
-    cdfChart.append('text')
+    this.svg.append('text')
+      .attr('class', 'x-axis-label')
       .attr('transform',
-            `translate(${this.width / 2}, ${this.height + margin.bottom / 2})`)
+            `translate(${(elementWidth) / 2}, ${elementHeight - margin.bottom / 2})`)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Duration (minutes)');
 
-    cdfChart.append('text')
-      .attr('x', this.width / 2)
-      .attr('y', -margin.top / 2)
+    this.svg.append('text')
+      .attr('class', 'graph-title')
+      .attr('x', elementWidth / 2)
+      .attr('y', margin.top / 2)
       .attr('text-anchor', 'middle')
       .style('font-size', '16px')
-      .text('CDF');
-
+      .text('CDF of completed push durations');
+      
     cdfChart
       .datum(this.graphData)
       .append('path')
+      .attr('class', 'cdf-curve')
       .attr('fill', CdfComponent.COMPLETED_BLUE)
-      .attr('d', d3.area<CdfData>()
-        .x(d => this.xScale(d.duration))
-        .y1(d => this.yScale(d.probability))
-        .y0(this.yScale(0))
+      .attr('d', d3.area<Item>()
+        .x(d => xScale(d.duration))
+        .y1(d => yScale(d.probability))
+        .y0(yScale(0))
         .curve(d3.curveStepAfter)
       );
   }
@@ -206,7 +218,5 @@ export class CdfComponent implements AfterViewInit {
    * created. Since the pushInfos are static, we do not need to create the chart
    * at every change.
    */
-  ngAfterViewInit(): void {
-    this.createChart();
-  }
+  ngAfterViewInit(): void { this.createChart(); }
 }
