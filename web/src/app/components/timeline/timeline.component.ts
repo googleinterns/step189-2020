@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } from 'humanize-duration-ts';
 import * as d3 from 'd3';
 
@@ -21,7 +21,7 @@ interface Item {
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss']
 })
-export class TimelineComponent implements OnInit, OnChanges {
+export class TimelineComponent implements AfterViewInit {
   /**
    * Private data variables. 
    * 
@@ -46,7 +46,6 @@ export class TimelineComponent implements OnInit, OnChanges {
   private static readonly LANG_SERVICE: HumanizeDurationLanguage = new HumanizeDurationLanguage();
   private static readonly HUMANIZER: HumanizeDuration = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
   private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
-  private static readonly PUSH_INFOS: string = 'pushInfos'
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
   private static readonly STATE_TO_COLOR: { [index: number]: string } = {
@@ -63,19 +62,15 @@ export class TimelineComponent implements OnInit, OnChanges {
     19: '#eee'
   };
 
-  ngOnInit(): void { }
-
   /**
    * Draws the initial timeline and updates it on any change.
    * @param changes Hashtable of changes
    */
-  ngOnChanges(changes: SimpleChanges): void {
+  ngAfterViewInit(): void {
     // Since ngOnChanges() runs before the view can be initialized, any
     // attempts to access our @ViewChild will result in null. Thus, we
     // bypass the first change that occurs in order to first render the view.
-    if (!changes[TimelineComponent.PUSH_INFOS].isFirstChange() && !this.svg) {
-      this.updateTimeline(changes.pushInfos.currentValue);
-    }
+    this.updateTimeline();
   }
 
   /**
@@ -84,8 +79,8 @@ export class TimelineComponent implements OnInit, OnChanges {
    * are collectively stored in an array.
    * @param pushInfos Array of pushes for one push def
    */
-  private populateData(pushInfos: step189_2020.IPushInfo[]): void {
-    if (pushInfos == null) { return; }
+  private populateData(pushInfos: step189_2020.IPushInfo[] | null): void {
+    if (!pushInfos) { return; }
 
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
@@ -127,7 +122,7 @@ export class TimelineComponent implements OnInit, OnChanges {
    * the row by increasing start time, sequentially picking the next interval,
    * and removing all intervals it overlaps with. It thus fits as many intervals
    * as possible in the first row, does so for each row until there are
-   * no more intervals left. The runtime is O(n^2 * log(n)), which results in
+   * no more intervals left. The runtime is O(n * log(n)), which results in
    * the case that all intervals are overlapping.
    */
   private divideIntoRows(): void {
@@ -143,12 +138,10 @@ export class TimelineComponent implements OnInit, OnChanges {
       let lastEndTime = 0;
       overlappingIntervals = [];
       for (const interval of data) {
-        /**
-         * To check for interval overlap with the already determined set of
-         * non-overlapping intervals, we simply need to check if the start time
-         * of the current interval is earlier than the last added end time.
-         * This is a consequence of all events being sorted by start time.
-         */
+        // To check for interval overlap with the already determined set of
+        // non-overlapping intervals, we simply need to check if the start time
+        // of the current interval is earlier than the last added end time.
+        // This is a consequence of all events being sorted by start time.
         if (interval.startTime >= lastEndTime) {
           const intervalInData = this.data.find(({ pushID }) => pushID === interval.pushID);
           if (intervalInData) {
@@ -266,10 +259,10 @@ export class TimelineComponent implements OnInit, OnChanges {
    * color-coded according to its final state.
    * @param pushInfos Holds all pushes for one push def.
    */
-  private updateTimeline(pushInfos: step189_2020.IPushInfo[]): void {
+  private updateTimeline(): void {
     // Filter the data by adding raw protocol buffer data into Item
     // and seperating them into rows by giving them an individual group index.
-    this.populateData(pushInfos);
+    this.populateData(this.pushInfos);
 
     const element = this.timelineContainer.nativeElement;
 

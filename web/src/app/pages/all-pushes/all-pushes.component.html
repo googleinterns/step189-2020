@@ -5,7 +5,7 @@
     <app-button link='/{{ pushDefName | async }}'>{{ pushDefName | async }}</app-button>
 </app-button-row>
 
-<app-timeline [pushInfos]='pushInfos | async'></app-timeline>
+<app-timeline *ngIf = 'pushInfos | async' [pushInfos]='pushInfos | async'></app-timeline>
 
 <table class='collapse bb bw1 b--black' *ngIf='pushInfos | async as pushInfos'>
     <thead>
