@@ -21,24 +21,25 @@ interface Item {
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss']
 })
+
 export class TimelineComponent implements AfterViewInit {
   /**
    * Private data variables. 
    * 
-   * Note that we use the non-null assertion operator
-   * ('!') to indicate to the compiler that variables will always be 
-   * declared and thus to not issue errors about possibilities of them being
-   * `null` or `undefined`.
+   * Note that we use the non-null assertion operator ('!') to indicate to 
+   * the compiler that variables will always be declared and thus to not issue
+   * errors about possibilities of them being `null` or `undefined` since
+   * pushInfos and data are passed-in values.
    */
   @ViewChild('timeline') private timelineContainer!: ElementRef;
   @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
   private data: Item[] = [];
-  private svg!: any;
-  private x!: ScaleLinear<number, number>;
-  private xAxis!: Function;
-  private height!: number;
-  private width!: number;
-  private numRows!: number;
+  private svg: any;
+  private x: ScaleLinear<number, number> = d3.scaleLinear();
+  private xAxis: Function = () => {};
+  private height: number = 0;
+  private width: number = 0;
+  private numRows: number = 0;
 
   /**
    * Constants.
@@ -66,12 +67,7 @@ export class TimelineComponent implements AfterViewInit {
    * Draws the initial timeline and updates it on any change.
    * @param changes Hashtable of changes
    */
-  ngAfterViewInit(): void {
-    // Since ngOnChanges() runs before the view can be initialized, any
-    // attempts to access our @ViewChild will result in null. Thus, we
-    // bypass the first change that occurs in order to first render the view.
-    this.updateTimeline();
-  }
+  ngAfterViewInit(): void { this.createTimeline(); }
 
   /**
    * Extracts the pushID, state, and start and end time for each push
@@ -148,8 +144,7 @@ export class TimelineComponent implements AfterViewInit {
             intervalInData.row = rowIndex;
           }
           lastEndTime = interval.endTime;
-        }
-        else {
+        } else {
           overlappingIntervals.push(interval);
         }
       }
@@ -259,17 +254,12 @@ export class TimelineComponent implements AfterViewInit {
    * color-coded according to its final state.
    * @param pushInfos Holds all pushes for one push def.
    */
-  private updateTimeline(): void {
+  private createTimeline(): void {
     // Filter the data by adding raw protocol buffer data into Item
     // and seperating them into rows by giving them an individual group index.
     this.populateData(this.pushInfos);
 
     const element = this.timelineContainer.nativeElement;
-
-    // Clear out previous SVG element.
-    if (!this.svg) {
-      d3.select('svg').remove();
-    }
 
     // Determine the sizes of the timeline, including domain and range.
     const elementWidth = element.clientWidth;
@@ -304,7 +294,7 @@ export class TimelineComponent implements AfterViewInit {
       .axisBottom(this.x)
       .tickSize(-this.height)
       .tickPadding(10)
-      .tickFormat(this.formatDate);
+      .tickFormat(this.formatDate as (dv: number | { valueOf(): number; }, i:number) => string);
 
     // Set up timeline chart components. The structure of the SVG tree
     // will contain a row with the x-axis on the bottom and rectangles
@@ -383,19 +373,19 @@ export class TimelineComponent implements AfterViewInit {
     element.appendChild(tooltipDiv);
 
     groupIntervalItems
-      .on('mouseover', (d: Item, i: number, nodes: any): void => {
+      .on('mouseover', (d: Item, i: number, nodes: HTMLElement[]): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 0.50);
 
         tooltip
           .html(this.getTooltipContent(d))
           .style('opacity', 1);
       })
-      .on('mouseleave', (d: Item, i: number, nodes: any): void => {
+      .on('mouseleave', (d: Item, i: number, nodes: HTMLElement[]): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 1);
         tooltip.style('opacity', 0);
       });
 
-    this.svg.on('mousemove', (d: Item, i: number, nodes: any): void => {
+    this.svg.on('mousemove', (d: Item, i: number, nodes: HTMLCanvasElement[]): void => {
       let [x, y] = d3.mouse(nodes[i]);
       y += 120; // Set how much below cursor the tooltip will appear
       if (x > nodes[i].width / 2) {
