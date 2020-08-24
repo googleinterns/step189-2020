@@ -1,11 +1,11 @@
-import { Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, AfterViewInit } from '@angular/core';
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
 
 interface CdfData {
-  duration: number;
-  probability: number;
+  duration: number; // Minutes between completed stage and first non-empty stage
+  probability: number; // Rank of the duration divided by number of points
 }
 
 type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
@@ -16,11 +16,19 @@ type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CdfComponent implements OnChanges {
+export class CdfComponent implements AfterViewInit {
+  private static readonly NANO_TO_MINUTES: number = (10 ** 9) * 60;
+  private static readonly COMPLETED_BLUE: string = '#00bfa5';
+  private static readonly COMPLETED_STATE_TAG: number = 5;
+
   @ViewChild('cdf') private cdfContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[] | null;
   @Input() currentPush!: step189_2020.IPushInfo | null;
 
+  /*
+   * The non-null assertion operator (!) indicates to the compiler that the
+   * variables will always be declared and will never be null or undefined.
+   */
   private data: CdfData[] = [];
   private graphData: CdfData[] = [];
   private svg!: d3SVG;
@@ -29,11 +37,13 @@ export class CdfComponent implements OnChanges {
   private xScale!: d3.ScaleLinear<number, number>;
   private yScale!: d3.ScaleLinear<number, number>;
 
-  private readonly NANO_TO_MINUTES: number = (10 ** 9) * 60;
-  private readonly COMPLETED_BLUE: string = '#00bfa5';
-  private readonly COMPLETED_STATE_NUMBER: number = 5;
-
-  private parseData(pushInfos: step189_2020.IPushInfo[]): void {
+  /*
+   * Calculates the duration between the completed stage and the first non-empty
+   * stage. Assigns the probability as the rank of the duration value over the
+   * total number of points. The duration and probability are defined in an
+   * interface and all points stored as an array of CdfData interfaces.
+   */
+  private populateData(pushInfos: step189_2020.IPushInfo[] | null): void {
     if (!pushInfos) { return; }
 
     const durations: number[] = [];
@@ -46,7 +56,8 @@ export class CdfComponent implements OnChanges {
       const finalState = states[states.length - 1].state;
       if (!finalState) { return; }
 
-      if (finalState === this.COMPLETED_STATE_NUMBER) {
+      if (finalState === CdfComponent.COMPLETED_STATE_TAG) {
+        // Find the start time of the first non-empty stage
         let firstStateStart: number | Long = -1;
         for (const state of states) {
           if (state.stage && state.startTimeNsec) {
@@ -55,7 +66,7 @@ export class CdfComponent implements OnChanges {
           }
         }
         if (firstStateStart !== -1) {
-          const duration = (+pushEndTime - +firstStateStart) / this.NANO_TO_MINUTES;
+          const duration = (+pushEndTime - +firstStateStart) / CdfComponent.NANO_TO_MINUTES;
           durations.push(duration);
         }
       }
@@ -67,26 +78,24 @@ export class CdfComponent implements OnChanges {
     for (let i = 0; i < durationLength; i++) {
       const duration = sortedArray[i];
       const probability = (i + 1) / durationLength;
-      const cdfDatum: CdfData = {
+      this.data.push({
         duration,
         probability
-      };
-      this.data.push(cdfDatum);
+      } as CdfData);
     }
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (!changes.pushInfos.isFirstChange()) {
-      this.updateChart(changes.pushInfos.currentValue, changes.currentPush.currentValue);
-    }
-  }
-
-  private createChart(pushInfos: step189_2020.IPushInfo[]): void {
-
-    this.parseData(pushInfos);
+  /*
+   * Structure of the SVG:
+   * CdfChart:
+   *     - yAxisLeft, yAxisRight, xAxis
+   *     - Axis labels and title
+   *     - Step function CDF plot
+   */
+  private createChart(): void {
+    this.populateData(this.pushInfos);
 
     const element = this.cdfContainer.nativeElement;
-    element.classList.add('cdf-chart');
     const elementWidth = element.clientWidth;
     const elementHeight = element.clientHeight;
 
@@ -135,12 +144,13 @@ export class CdfComponent implements OnChanges {
         .tickFormat(d3.format(',.1f'))
       );
 
+    // Removes axis's vertical line and keeps the tick marks
     yAxisLeft.select('.domain').remove();
 
-    this.svg.append('text')
+    cdfChart.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('y', 0)
-      .attr('x', -elementHeight / 2)
+      .attr('y', -margin.left)
+      .attr('x', -this.height / 2)
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
@@ -156,6 +166,7 @@ export class CdfComponent implements OnChanges {
         .tickFormat(d3.format(',.1f'))
       );
 
+    // Removes axis's vertical line and keeps the tick marks
     yAxisRight.select('.domain').remove();
 
     const xAxis = cdfChart
@@ -164,16 +175,16 @@ export class CdfComponent implements OnChanges {
       .attr('transform', `translate(0, ${this.height})`)
       .call(d3.axisBottom(this.xScale));
 
-    this.svg.append('text')
+    cdfChart.append('text')
       .attr('transform',
-            `translate(${elementWidth / 2}, ${elementHeight - margin.left / 3})`)
+            `translate(${this.width / 2}, ${this.height + margin.bottom / 2})`)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Duration (minutes)');
 
-    this.svg.append('text')
-      .attr('x', elementWidth / 2)
-      .attr('y', margin.top / 2)
+    cdfChart.append('text')
+      .attr('x', this.width / 2)
+      .attr('y', -margin.top / 2)
       .attr('text-anchor', 'middle')
       .style('font-size', '16px')
       .text('CDF');
@@ -181,7 +192,7 @@ export class CdfComponent implements OnChanges {
     cdfChart
       .datum(this.graphData)
       .append('path')
-      .attr('fill', this.COMPLETED_BLUE)
+      .attr('fill', CdfComponent.COMPLETED_BLUE)
       .attr('d', d3.area<CdfData>()
         .x(d => this.xScale(d.duration))
         .y1(d => this.yScale(d.probability))
@@ -190,10 +201,12 @@ export class CdfComponent implements OnChanges {
       );
   }
 
-  private updateChart(pushInfos: step189_2020.IPushInfo[], currentPush: step189_2020.IPushInfo): void {
-    if (!this.svg) {
-      this.createChart(pushInfos);
-      return;
-    }
+  /*
+   * After the component's view has been fully initialized, the chart can be
+   * created. Since the pushInfos are static, we do not need to create the chart
+   * at every change.
+   */
+  ngAfterViewInit(): void {
+    this.createChart();
   }
 }
