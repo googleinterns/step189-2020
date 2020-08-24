@@ -27,6 +27,7 @@
     "@types/d3": "^5.7.2",
     "babel-core": "^7.0.0-bridge.0",
     "d3": "^5.16.0",
+    "humanize-duration-ts": "^2.1.1",
     "protobufjs": "~6.10.1",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
