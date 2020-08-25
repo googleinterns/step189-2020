@@ -15,15 +15,15 @@ import { TimelineComponent } from './components/timeline/timeline.component';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    MyPushesComponent,
     AllPushesComponent,
-    OnePushComponent,
-    TimelineComponent,
-    ButtonRowComponent,
+    AppComponent,
     ButtonComponent,
+    ButtonRowComponent,
+    DateNsecPipe,
+    MyPushesComponent,
+    OnePushComponent,
     PageNameComponent,
-    DateNsecPipe
+    TimelineComponent,
   ],
   imports: [
     BrowserModule,

@@ -3,7 +3,6 @@ import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } f
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
-import { ScaleTime, min } from 'd3';
 
 /**
  * Item holds all required data for one interval on the timeline.
@@ -27,15 +26,15 @@ export class TimelineComponent implements AfterViewInit {
    * Private data variables. 
    * 
    * Note that we use the non-null assertion operator ('!') to indicate to 
-   * the compiler that variables will always be declared and thus to not issue
-   * errors about possibilities of them being `null` or `undefined` since
-   * pushInfos and data are passed-in values.
+   * the compiler that variables will always be declared and thus to not 
+   * issue errors about possibilities of them being `null` or `undefined` 
+   * since pushInfos is a passed-in value.
    */
   @ViewChild('timeline') private timelineContainer!: ElementRef;
   @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
   private data: Item[] = [];
   private svg: any;
-  private x: ScaleTime<number, number> = d3.scaleTime();
+  private x: d3.ScaleTime<number, number> = d3.scaleTime();
   private xAxis: Function = () => { };
   private height: number = 0;
   private width: number = 0;
@@ -48,7 +47,7 @@ export class TimelineComponent implements AfterViewInit {
   private static readonly HUMANIZER: HumanizeDuration = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
   private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
-  private static readonly MSEC_PER_MIN: number = 6 * (10 ** 4);
+  private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
   private static readonly STATE_TO_COLOR: { [index: number]: string } = {
     1: '#eee',
