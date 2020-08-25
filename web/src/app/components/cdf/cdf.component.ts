@@ -9,14 +9,21 @@ interface Item {
   probability: number; // Rank of the duration divided by number of points
 }
 
+interface DotItem {
+  x: number; // Minutes between completed stage and first non-empty stage
+  y: number; // Rank of the duration divided by number of points
+}
+
 /**
  * Defines the type of the d3 SVG. The d3.Selection has a generic type
  * Selection<GElement, Datum, PElement, PDatum>. We want our svg element to have
  * the interface SVGSVGElement. Datum, PElement, and PDatum are unused and thus,
  * assigned to undefined or null.
+ * The d3G type is similar to the svg element but SVGGElement refers to a g
+ * element within a svg.
  */
 type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
-
+type d3G = d3.Selection<SVGGElement, undefined, null, undefined>;
 @Component({
   selector: 'app-cdf',
   templateUrl: './cdf.component.html',
@@ -88,25 +95,123 @@ export class CDFComponent implements AfterViewInit {
     return data;
   }
 
+  private static getXforPercentage(data, probability: number): number {
+    const yVals = data.map(d => d.probability);
+    const left = data[d3.bisectLeft(yVals, probability) - 1];
+    const right = data[d3.bisectRight(yVals, probability)];
+    return ((probability - left.probability) * (right.duration - left.duration) /
+      (right.probability - left.probability)) + left.duration;
+  }
+
+  private static generateQuantiles(data, percentileLines: number[], xScale: d3.ScaleLinear<number, number>): Item[] {
+    if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
+      return [percentileLines[1]].map(d => ({
+        duration: this.getXforPercentage(data, d),
+        probability: d} as Item));
+    }
+    let quantiles = percentileLines.map(d => ({
+      duration: this.getXforPercentage(data, d),
+      probability: d} as Item));
+
+    const differences = [xScale(quantiles[1].duration - quantiles[0].duration), xScale(quantiles[2].duration - quantiles[1].duration)];
+    if (differences[0] < 15 || differences[1] < 15) {
+      quantiles = this.generateQuantiles(data, [percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01], xScale);
+    }
+    return quantiles;
+  }
+
+  private static generateYPosition(radius: number, xScale: d3.ScaleLinear<number, number>, xVals: number[]): number[] {
+    const radius2 = radius ** 2;
+    const yPosition = [];
+    for (const val of xVals) {
+      const x = xScale(val);
+      let y = 0;
+      for (const {x: xi, y: yi} of yPosition) {
+        if (!xi) { continue; }
+        const x2 = (xi - x) ** 2;
+        const y2 = (yi - y) ** 2;
+        if (radius2 > x2 + y2) {
+          y = yi + Math.sqrt(radius2 - x2) + 1e-6;
+          continue;
+        }
+      }
+      yPosition.push({x, y});
+    }
+    return yPosition.map(d => d.y);
+  }
+
+  private static addCurrentPushLine(
+                    currentPush: step189_2020.IPushInfo,
+                    currentPushLine: d3G,
+                    xScale: d3.ScaleLinear<number, number>,
+                    height: number): void {
+    const states = currentPush.stateInfo;
+    if (!states) { return; }
+    const pushEndTime = states[states.length - 1].startTimeNsec;
+    if (!pushEndTime) { return; }
+    const finalState = states[states.length - 1].state;
+    if (!finalState) { return; }
+
+    if (finalState !== CDFComponent.COMPLETED_STATE_TAG) { return; }
+
+    // Find the start time of the first non-empty stage.
+    let firstStateStart: number | Long = -1;
+    for (const state of states) {
+      if (state.stage && state.startTimeNsec) {
+        firstStateStart = state.startTimeNsec;
+        break;
+      }
+    }
+    if (firstStateStart !== -1) {
+      const duration = (+pushEndTime - +firstStateStart) / CDFComponent.NANO_TO_MINUTES;
+
+      currentPushLine
+        .append('line')
+        .attr('class', 'current-push-line')
+        .attr('stroke', 'black')
+        .attr('stroke-dasharray', '10 5 5 5')
+        .attr('x1', xScale(duration))
+        .attr('y1', height)
+        .attr('x2', xScale(duration))
+        .attr('y2', 0);
+
+      currentPushLine
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', xScale(duration))
+        .attr('y', 0)
+        .attr('id', 'current-line-text')
+        .attr('font-size', '10px')
+        .text('Current Push');
+    }
+  }
+
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
-   * the probability of a push taking less time than that duration.
+   * the probability of a push taking less time than that duration. Adds lines
+   * at the 10%, 50%, and 90% percentiles if possible. For pushes that are
+   * completed, a black line appears on the chart to visualize how this push
+   * compares to all other pushes in the push def.
    *
    * Structure of the SVG:
    * <svg>
-   *   <g id='chart'>
-   *     <g class='y-axis-left'></g>
-   *     <text class='y-axis-left-label'></text>
-   *     <g class='y-axis-right'></g>
-   *     <path class='cdf-curve'></path>
+   *   <g id='cdf-chart'>
+   *     <g id='y-axis-left'></g>
+   *     <text id='y-axis-left-label'></text>
+   *     <g id='y-axis-right'></g>
+   *     <path id='cdf-curve'></path>
    *   </g>
-   *   <g class='x-axis'></g>
-   *   <text class='x-axis-label'></text>
-   *   <text class='graph-title'></text>
+   *   <g id='x-axis'></g>
+   *   <text id='x-axis-label'></text>
+   *   <text id='graph-title'></text>
+   *   <g id='percentile-lines'></g>
+   *   <g id='current-push-line'></g>
+   *   <g id='dotplot-container'></g>
    * </svg>
    */
   ngAfterViewInit(): void {
     if (!this.pushInfos) { return; }
+    if (!this.currentPush) { return; }
     this.data = CDFComponent.populateData(this.pushInfos);
 
     const element = this.CDFContainer.nativeElement;
@@ -147,14 +252,14 @@ export class CDFComponent implements AfterViewInit {
       .attr('width', elementWidth)
       .attr('height', elementHeight);
 
-    const cdfChart = this.svg
+    const CDFChart = this.svg
       .append('g')
-      .attr('id', 'chart')
+      .attr('id', 'cdf-chart')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const yAxisLeft = cdfChart
+    const yAxisLeft = CDFChart
       .append('g')
-      .attr('class', 'y-axis-left')
+      .attr('id', 'y-axis-left')
       .call(d3
         .axisLeft(yScale)
         .ticks(10)
@@ -163,18 +268,19 @@ export class CDFComponent implements AfterViewInit {
 
     yAxisLeft.select('.domain').remove();
 
-    this.svg.append('text')
+    CDFChart.append('text')
+      .attr('id', 'y-axis-left-label')
       .attr('transform', 'rotate(-90)')
-      .attr('y', 0)
-      .attr('x', -elementHeight / 2)
+      .attr('y', -margin.left)
+      .attr('x', -height / 2)
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Probability');
 
-    const yAxisRight = cdfChart
+    const yAxisRight = CDFChart
       .append('g')
-      .attr('class', 'y-axis-right')
+      .attr('id', 'y-axis-right')
       .attr('transform', `translate(${width}, 0)`)
       .call(d3
         .axisRight(yScale)
@@ -184,20 +290,29 @@ export class CDFComponent implements AfterViewInit {
 
     yAxisRight.select('.domain').remove();
 
-    const xAxis = cdfChart
+    const xAxis = this.svg
       .append('g')
-      .attr('class', 'x-axis')
-      .attr('transform', `translate(0, ${height})`)
+      .attr('id', 'x-axis')
+      .attr('transform', `translate(${margin.left}, ${elementHeight - margin.bottom})`)
       .call(d3.axisBottom(xScale));
 
     this.svg.append('text')
+      .attr('id', 'x-axis-label')
       .attr('transform',
             `translate(${width / 2}, ${elementHeight - margin.left / 3})`)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Duration (minutes)');
 
-    cdfChart
+    this.svg.append('text')
+      .attr('id', 'graph-title')
+      .attr('x', elementWidth / 2)
+      .attr('y', margin.top / 2)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .text('CDF of completed push durations');
+
+    CDFChart
       .datum(this.graphData)
       .append('path')
       .attr('fill', CDFComponent.COMPLETED_BLUE)
@@ -208,19 +323,20 @@ export class CDFComponent implements AfterViewInit {
         .curve(d3.curveStepAfter)
       );
 
-    const quantileLines = this.svg
+    const percentileLines = this.svg
       .append('g')
+      .attr('id', 'percentile-lines')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const percentileLines = [0.1, 0.5, 0.9];
-    const quantiles =  this.generateQuantiles(percentileLines, xScale);
+    const percents = [0.1, 0.5, 0.9];
+    const percentiles =  CDFComponent.generateQuantiles(this.data, percents, xScale);
 
-    quantileLines
-      .selectAll('.quantile-lines')
-      .data(quantiles)
+    percentileLines
+      .selectAll('.percentile-lines')
+      .data(percentiles)
       .enter()
       .append('line')
-      .attr('class', 'y-guideline')
+      .attr('class', 'y-percentile-line')
       .attr('stroke', 'lightgrey')
       .attr('stroke-dasharray', '5,2')
       .attr('x1', (d: Item) => xScale(d.duration))
@@ -228,9 +344,9 @@ export class CDFComponent implements AfterViewInit {
       .attr('x2', (d: Item) => xScale(d.duration))
       .attr('y2', 0);
 
-    quantileLines
-      .selectAll('.quantile-lines')
-      .data(quantiles)
+    percentileLines
+      .selectAll('.percentile-lines')
+      .data(percentiles)
       .enter()
       .append('text')
       .attr('text-anchor', 'middle')
@@ -240,77 +356,35 @@ export class CDFComponent implements AfterViewInit {
       .attr('font-size', '10px')
       .text((d: Item) => `${d.probability * 100}%`);
 
+    const currentPushLine = this.svg
+      .append('g')
+      .attr('id', 'current-push-line')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+    CDFComponent.addCurrentPushLine(this.currentPush, currentPushLine, xScale, height);
+
     const dotplotContainer = this.svg
       .append('g')
       .attr('id', 'dotplot-container')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     let radius = 2.5;
-    let yPosition = this.generateYPosition(radius * 2 + 0.1, xScale);
-    if (d3.max(yPosition, d => d.y) > height) {
+    const xVals = this.data.map(d => d.duration);
+    let yPosition = CDFComponent.generateYPosition(radius * 2 + 0.1, xScale, xVals);
+    const maxYPosition = d3.max(yPosition);
+    if (!maxYPosition) { return; }
+    if (maxYPosition > height) {
       radius = 1.4;
-      yPosition = this.generateYPosition(radius * 2 + 0.1, xScale);
+      yPosition = CDFComponent.generateYPosition(radius * 2 + 0.1, xScale, xVals);
     }
     for (let i = 0; i < this.data.length; i++) {
       const cx = xScale(this.data[i].duration);
-      const cy = height - yPosition[i].y - radius;
+      const cy = height - yPosition[i] - radius;
       dotplotContainer.append('circle')
           .attr('cx', cx)
           .attr('r', radius)
           .attr('cy', cy)
           .attr('fill', 'black');
     }
-  }
-
-  private getXforPercentage(prob): number {
-    const yVals = this.data.map(d => d.probability);
-    const left = this.data[d3.bisectLeft(yVals, prob) - 1];
-    const right = this.data[d3.bisectRight(yVals, prob)];
-    return ((prob - left.probability) * (right.duration - left.duration) /
-      (right.probability - left.probability)) + left.duration;
-  }
-
-  private generateQuantiles(percentileLines, xScale): Item[] {
-    if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
-      return [percentileLines[1]].map(d => ({
-        duration: this.getXforPercentage(d),
-        probability: d} as Item));
-    }
-    let quantiles = percentileLines.map(d => ({
-      duration: this.getXforPercentage(d),
-      probability: d} as Item));
-
-    const differences = [xScale(quantiles[1].duration - quantiles[0].duration), xScale(quantiles[2].duration - quantiles[1].duration)];
-    if (differences[0] < 15 || differences[1] < 15) {
-      quantiles = this.generateQuantiles([percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01], xScale);
-    }
-    return quantiles;
-  }
-
-  private generateYPosition(radius, xScale): Object[] {
-    const radius2 = radius ** 2;
-    const bisect = d3.bisector((d: Item) => d.duration);
-    const yPosition = [];
-    const xVals = this.data.map(d => d.duration);
-    for (const val of xVals) {
-      const x = xScale(val);
-      const left = bisect.left(yPosition, x - radius);
-      const right = bisect.right(yPosition, x + radius, left);
-      let y = 0;
-      for (let i = left; i < right; ++i) {
-        const { x: xi, y: yi } = yPosition[i];
-        const x2 = (xi - x) ** 2;
-        const y2 = (yi - y) ** 2;
-        if (radius2 > x2 + y2) {
-          y = yi + Math.sqrt(radius2 - x2) + 1e-6;
-          i = left - 1;
-          continue;
-        }
-      }
-      yPosition.splice(bisect.left(yPosition, x, left, right), 0, { x, y });
-    }
-    // Values are added to the front of the array, making the array in a
-    // backwards order. We need to reverse it to maintain the correct indices.
-    return yPosition.reverse();
   }
 }
