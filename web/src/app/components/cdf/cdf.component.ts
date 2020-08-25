@@ -9,11 +9,6 @@ interface Item {
   probability: number; // Rank of the duration divided by number of points
 }
 
-interface DotItem {
-  x: number; // Minutes between completed stage and first non-empty stage
-  y: number; // Rank of the duration divided by number of points
-}
-
 /**
  * Defines the type of the d3 SVG. The d3.Selection has a generic type
  * Selection<GElement, Datum, PElement, PDatum>. We want our svg element to have
@@ -95,7 +90,7 @@ export class CDFComponent implements AfterViewInit {
     return data;
   }
 
-  private static getXforPercentage(data, probability: number): number {
+  private static getXforPercentage(data: Item[], probability: number): number {
     const yVals = data.map(d => d.probability);
     const left = data[d3.bisectLeft(yVals, probability) - 1];
     const right = data[d3.bisectRight(yVals, probability)];
@@ -103,7 +98,7 @@ export class CDFComponent implements AfterViewInit {
       (right.probability - left.probability)) + left.duration;
   }
 
-  private static generateQuantiles(data, percentileLines: number[], xScale: d3.ScaleLinear<number, number>): Item[] {
+  private static generateQuantiles(data: Item[], percentileLines: number[], xScale: d3.ScaleLinear<number, number>): Item[] {
     if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
       return [percentileLines[1]].map(d => ({
         duration: this.getXforPercentage(data, d),
@@ -122,11 +117,11 @@ export class CDFComponent implements AfterViewInit {
 
   private static generateYPosition(radius: number, xScale: d3.ScaleLinear<number, number>, xVals: number[]): number[] {
     const radius2 = radius ** 2;
-    const yPosition = [];
+    const coordinates = [];
     for (const val of xVals) {
       const x = xScale(val);
       let y = 0;
-      for (const {x: xi, y: yi} of yPosition) {
+      for (const {x: xi, y: yi} of coordinates) {
         if (!xi) { continue; }
         const x2 = (xi - x) ** 2;
         const y2 = (yi - y) ** 2;
@@ -135,9 +130,9 @@ export class CDFComponent implements AfterViewInit {
           continue;
         }
       }
-      yPosition.push({x, y});
+      coordinates.push({x, y});
     }
-    return yPosition.map(d => d.y);
+    return coordinates.map(d => d.y);
   }
 
   private static addCurrentPushLine(
@@ -328,8 +323,7 @@ export class CDFComponent implements AfterViewInit {
       .attr('id', 'percentile-lines')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const percents = [0.1, 0.5, 0.9];
-    const percentiles =  CDFComponent.generateQuantiles(this.data, percents, xScale);
+    const percentiles = CDFComponent.generateQuantiles(this.data, [0.1, 0.5, 0.9], xScale);
 
     percentileLines
       .selectAll('.percentile-lines')
@@ -371,12 +365,15 @@ export class CDFComponent implements AfterViewInit {
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
     let yPosition = CDFComponent.generateYPosition(radius * 2 + 0.1, xScale, xVals);
+
     const maxYPosition = d3.max(yPosition);
     if (!maxYPosition) { return; }
+
     if (maxYPosition > height) {
       radius = 1.4;
       yPosition = CDFComponent.generateYPosition(radius * 2 + 0.1, xScale, xVals);
     }
+
     for (let i = 0; i < this.data.length; i++) {
       const cx = xScale(this.data[i].duration);
       const cy = height - yPosition[i] - radius;
