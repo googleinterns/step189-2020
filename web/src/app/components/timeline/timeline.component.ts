@@ -75,6 +75,7 @@ export class TimelineComponent implements AfterViewInit {
    * Extracts the pushID, state, and start and end time for each push
    * in pushInfos and inserts them into Item interfaces, which
    * are collectively stored in an array.
+   * 
    * @param pushInfos Array of pushes for one push def
    */
   private populateData(pushInfos: step189_2020.IPushInfo[] | null): void {
@@ -161,6 +162,7 @@ export class TimelineComponent implements AfterViewInit {
    * Converts the date (in milliseconds) to a datetime string. The returned
    * date will have a format of YYYY-MM-DD hh-mm, with single digits padded
    * with a leading zero.
+   * 
    * @param d Holds one interval's data on the timeline.
    */
   private formatDate = (d: any) => {
@@ -178,6 +180,7 @@ export class TimelineComponent implements AfterViewInit {
 
   /**
    * Composes content of the tooltip that will appear on hover.
+   * 
    * @param d Holds one interval's data on the timeline.
    */
   private getTooltipContent = (d: Item) => {
@@ -206,6 +209,7 @@ export class TimelineComponent implements AfterViewInit {
 
   /**
    * Create tooltip to display each interval's content.
+   * 
    * @param el Encasing element that holds the tooltip
    */
   private createTooltip = (el: any) => { // TODO: tachyons?
@@ -247,6 +251,7 @@ export class TimelineComponent implements AfterViewInit {
    *   </svg>
    *   <div/> // tooltip
    * </div>
+   * 
    * @param pushInfos Holds all pushes for one push def.
    */
   ngAfterViewInit(): void {
@@ -297,7 +302,7 @@ export class TimelineComponent implements AfterViewInit {
     // at most 5 second increments for any size data set.
     const maxZoomIn = (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
     const zoom = d3.zoom()
-      .scaleExtent([0.75, (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN]) // Limit zoom out.
+      .scaleExtent([0.75, maxZoomIn]) // Limit zoom out.
       .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
       .on('zoom', () => {
         const transform = d3.event.transform;
