@@ -16,19 +16,19 @@ import { CDFComponent } from './components/cdf/cdf.component';
 @NgModule({
   declarations: [
     AppComponent,
-    MyPushesComponent,
     AllPushesComponent,
-    OnePushComponent,
-    ButtonRowComponent,
     ButtonComponent,
-    PageNameComponent,
+    ButtonRowComponent,
+    CDFComponent,
     DateNsecPipe,
-    CDFComponent
+    MyPushesComponent,
+    OnePushComponent,
+    PageNameComponent
   ],
   imports: [
+    AppRoutingModule,
     BrowserModule,
     HttpClientModule,
-    AppRoutingModule
   ],
   providers: [],
   bootstrap: [AppComponent]
