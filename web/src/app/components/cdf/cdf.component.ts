@@ -22,12 +22,12 @@ type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CdfComponent implements AfterViewInit {
+export class CDFComponent implements AfterViewInit {
   private static readonly NANO_TO_MINUTES: number = (10 ** 9) * 60;
   private static readonly COMPLETED_BLUE: string = '#00bfa5';
   private static readonly COMPLETED_STATE_TAG: number = 5;
 
-  @ViewChild('cdf') private cdfContainer!: ElementRef;
+  @ViewChild('cdf') private CDFContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[] | null;
   @Input() currentPush!: step189_2020.IPushInfo | null;
 
@@ -55,7 +55,7 @@ export class CdfComponent implements AfterViewInit {
       const finalState = states[states.length - 1].state;
       if (!finalState) { return; }
 
-      if (finalState === CdfComponent.COMPLETED_STATE_TAG) {
+      if (finalState === CDFComponent.COMPLETED_STATE_TAG) {
         // Find the start time of the first non-empty stage.
         let firstStateStart: number | Long = -1;
         for (const state of states) {
@@ -65,7 +65,7 @@ export class CdfComponent implements AfterViewInit {
           }
         }
         if (firstStateStart !== -1) {
-          const duration = (+pushEndTime - +firstStateStart) / CdfComponent.NANO_TO_MINUTES;
+          const duration = (+pushEndTime - +firstStateStart) / CDFComponent.NANO_TO_MINUTES;
           durations.push(duration);
         }
       }
@@ -106,9 +106,9 @@ export class CdfComponent implements AfterViewInit {
    */
   ngAfterViewInit(): void {
     if (!this.pushInfos) { return; }
-    this.data = CdfComponent.populateData(this.pushInfos);
+    this.data = CDFComponent.populateData(this.pushInfos);
 
-    const element = this.cdfContainer.nativeElement;
+    const element = this.CDFContainer.nativeElement;
     const elementWidth = element.clientWidth;
     const elementHeight = element.clientHeight;
 
@@ -209,7 +209,7 @@ export class CdfComponent implements AfterViewInit {
       .datum(this.graphData)
       .append('path')
       .attr('class', 'cdf-curve')
-      .attr('fill', CdfComponent.COMPLETED_BLUE)
+      .attr('fill', CDFComponent.COMPLETED_BLUE)
       .attr('d', d3.area<Item>()
         .x(d => xScale(d.duration))
         .y1(d => yScale(d.probability))

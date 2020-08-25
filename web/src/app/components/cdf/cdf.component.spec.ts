@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CdfComponent } from './cdf.component';
+import { CDFComponent } from './cdf.component';
 
-describe('CdfComponent', () => {
-  let component: CdfComponent;
-  let fixture: ComponentFixture<CdfComponent>;
+describe('CDFComponent', () => {
+  let component: CDFComponent;
+  let fixture: ComponentFixture<CDFComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CdfComponent ]
+      declarations: [ CDFComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CdfComponent);
+    fixture = TestBed.createComponent(CDFComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
