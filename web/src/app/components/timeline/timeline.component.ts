@@ -23,24 +23,6 @@ interface Item {
 
 export class TimelineComponent implements AfterViewInit {
   /**
-   * Private data variables. 
-   * 
-   * Note that we use the non-null assertion operator ('!') to indicate to 
-   * the compiler that variables will always be declared and thus to not 
-   * issue errors about possibilities of them being `null` or `undefined` 
-   * since pushInfos is a passed-in value.
-   */
-  @ViewChild('timeline') private timelineContainer!: ElementRef;
-  @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
-  private data: Item[] = [];
-  private svg: any;
-  private x: d3.ScaleTime<number, number> = d3.scaleTime();
-  private xAxis: Function = () => { };
-  private height: number = 0;
-  private width: number = 0;
-  private numRows: number = 0;
-
-  /**
    * Constants.
    */
   private static readonly LANG_SERVICE: HumanizeDurationLanguage = new HumanizeDurationLanguage();
@@ -71,10 +53,28 @@ export class TimelineComponent implements AfterViewInit {
   };
 
   /**
+   * Private data variables.
+   *
+   * Note that we use the non-null assertion operator ('!') to indicate to
+   * the compiler that variables will always be declared and thus to not
+   * issue errors about possibilities of them being `null` or `undefined`
+   * since pushInfos is a passed-in value.
+   */
+  @ViewChild('timeline') private timelineContainer!: ElementRef;
+  @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
+  private data: Item[] = [];
+  private svg: any;
+  private x: d3.ScaleTime<number, number> = d3.scaleTime();
+  private xAxis: Function = () => { };
+  private height: number = 0;
+  private width = 0;
+  private numRows = 0;
+
+  /**
    * Extracts the pushID, state, and start and end time for each push
    * in pushInfos and inserts them into Item interfaces, which
    * are collectively stored in an array.
-   * 
+   *
    * @param pushInfos Array of pushes for one push def
    */
   private populateData(pushInfos: step189_2020.IPushInfo[] | null): void {
@@ -161,7 +161,7 @@ export class TimelineComponent implements AfterViewInit {
    * Converts the date (in milliseconds) to a datetime string. The returned
    * date will have a format of YYYY-MM-DD hh-mm, with single digits padded
    * with a leading zero.
-   * 
+   *
    * @param d Holds one interval's data on the timeline.
    */
   private formatDate = (d: any) => {
@@ -173,24 +173,32 @@ export class TimelineComponent implements AfterViewInit {
       hour: '2-digit',
       minute: '2-digit'
     });
-    const [{ value: month }, , { value: day }, , { value: year }, , { value: hour }, , { value: minute }] = dateTimeFormat['formatToParts'](date);
+
+    const formatToParts = 'formatToParts';
+    const [{ value: month }, ,
+           { value: day }, ,
+           { value: year }, ,
+           { value: hour }, ,
+           { value: minute }]
+      = dateTimeFormat[formatToParts](date);
+    
     return `${year}-${month}-${day} ${hour}:${minute}`;
-  };
+  }
 
   /**
    * Composes content of the tooltip that will appear on hover.
-   * 
+   *
    * @param d Holds one interval's data on the timeline.
    */
   private getTooltipContent = (d: Item) => {
     const duration = (d.endTime - d.startTime);
 
     // Convert the duration, currently in milliseconds, to a human readable format
-    // with the largest unit in days and the smallest in seconds (e.g. passing in 
+    // with the largest unit in days and the smallest in seconds (e.g. passing in
     // the value 361000 returns "6 minutes, 1 second")
     const options = ({
       round: true // Get rid of decimal places
-    } as HumanizeDurationOptions)
+    } as HumanizeDurationOptions);
     const output = TimelineComponent.HUMANIZER.humanize(duration, options);
 
     // Return HTML representation of all required data.
@@ -203,15 +211,15 @@ export class TimelineComponent implements AfterViewInit {
       <b> End Time: ${this.formatDate(d.endTime)}</b>
       <br/>
       <b>Duration: ${output}</b>
-      `
-  };
+      `;
+  }
 
   /**
    * Create tooltip to display each interval's content.
-   * 
+   *
    * @param el Encasing element that holds the tooltip
    */
-  private createTooltip = (el: any) => { // TODO: tachyons?
+  private createTooltip = (el: any) => {
     el.style('position', 'absolute')
       .style('pointer-events', 'none')
       .style('top', 0)
@@ -222,16 +230,16 @@ export class TimelineComponent implements AfterViewInit {
       .style('padding', '10px')
       .style('line-height', '1.3')
       .style('font', '11px sans-serif');
-  };
+  }
 
   /**
    * Creates a scrollable timeline with bars representing the duration of
    * pushes. Every time this function is called, the previous timeline SVG is
-   * removed and a new one propagated to the screen. Timeline features include 
+   * removed and a new one propagated to the screen. Timeline features include
    * scrolling horizontally on the x-axis, zooming in and out along the x-axis,
-   * and a tooltip display when hovering over intervals. Each interval is 
+   * and a tooltip display when hovering over intervals. Each interval is
    * color-coded according to its final state.
-   * 
+   *
    * The structure of the component is shown below:
    * <div>
    *   <svg>
@@ -250,7 +258,7 @@ export class TimelineComponent implements AfterViewInit {
    *   </svg>
    *   <div/> // tooltip
    * </div>
-   * 
+   *
    * @param pushInfos Holds all pushes for one push def.
    */
   ngAfterViewInit(): void {
@@ -287,12 +295,11 @@ export class TimelineComponent implements AfterViewInit {
     // Establish the timeline's bottom axis.
     this.x = d3.scaleTime()
       .domain([new Date(minTimePoint), new Date(maxTimePoint)])
-      .range([0, this.width])
-      .interpolate(d3.interpolateRound);
+      .range([0, this.width]);
 
     this.xAxis = d3
       .axisBottom(this.x)
-      .tickSize(-this.height)
+      .tickSize(-this.height - 6)
       .tickPadding(10);
 
     // Define the zoom behavior, limiting the scale with which we can zoom in and out
@@ -305,7 +312,6 @@ export class TimelineComponent implements AfterViewInit {
       .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
       .on('zoom', () => {
         const transform = d3.event.transform;
-
         const updatedScale = transform.rescaleX(this.x);
 
         // Redraw the x-axis on every zoom action.
@@ -326,7 +332,7 @@ export class TimelineComponent implements AfterViewInit {
 
     // Set up timeline chart components. The structure of the SVG tree
     // will contain a row with the x-axis on the bottom and rectangles
-    // for each interval, the width of which is determined by its 
+    // for each interval, the width of which is determined by its
     // respective start and end time.
     this.svg = d3.select(element).append('svg')
       .attr('width', this.width + margin.left + margin.right)
@@ -361,7 +367,7 @@ export class TimelineComponent implements AfterViewInit {
       .attr('height', this.height)
       .attr('width', this.width);
 
-    // Insert timeline interval bars with their y-position determined by their 
+    // Insert timeline interval bars with their y-position determined by their
     // row index.
     const groupHeight = this.height / this.numRows;
     this.svg.selectAll('.group-section')
@@ -396,7 +402,7 @@ export class TimelineComponent implements AfterViewInit {
       .attr('rx', 2)
       .attr('ry', 2)
       .attr('y', intervalBarMargin)
-      .attr('x', (d: Item) => this.x(d.endTime));
+      .attr('x', (d: Item) => this.x(d.startTime));
 
     // Create the tooltip and set its opacity to 0 when not hovering over a
     // set of data, such that it only appears when the cursor is directly on top
@@ -428,6 +434,6 @@ export class TimelineComponent implements AfterViewInit {
       tooltip
         .style('left', x + 'px')
         .style('top', y + 'px');
-    })
+    });
   }
-};
+}
