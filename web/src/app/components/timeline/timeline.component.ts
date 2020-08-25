@@ -3,7 +3,7 @@ import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } f
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
-import { ScaleTime, scaleTime } from 'd3';
+import { ScaleTime, min } from 'd3';
 
 /**
  * Item holds all required data for one interval on the timeline.
@@ -36,7 +36,7 @@ export class TimelineComponent implements AfterViewInit {
   private data: Item[] = [];
   private svg: any;
   private x: ScaleTime<number, number> = d3.scaleTime();
-  private xAxis: Function = () => {};
+  private xAxis: Function = () => { };
   private height: number = 0;
   private width: number = 0;
   private numRows: number = 0;
@@ -48,6 +48,7 @@ export class TimelineComponent implements AfterViewInit {
   private static readonly HUMANIZER: HumanizeDuration = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
   private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
+  private static readonly MSEC_PER_MIN: number = 6 * (10 ** 4);
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
   private static readonly STATE_TO_COLOR: { [index: number]: string } = {
     1: '#eee',
@@ -71,12 +72,6 @@ export class TimelineComponent implements AfterViewInit {
   };
 
   /**
-   * Draws the initial timeline and updates it on any change.
-   * @param changes Hashtable of changes
-   */
-  ngAfterViewInit(): void { this.createTimeline(); }
-
-  /**
    * Extracts the pushID, state, and start and end time for each push
    * in pushInfos and inserts them into Item interfaces, which
    * are collectively stored in an array.
@@ -87,21 +82,21 @@ export class TimelineComponent implements AfterViewInit {
 
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
-      const pushes = pushInfo.stateInfo;
-      if (!pushes) { return; }
-      const pushesStartTime = pushes[0].startTimeNsec;
-      if (!pushesStartTime) { return; }
-      const pushesEndTime = pushes[pushes.length - 1].startTimeNsec;
-      if (!pushesEndTime) { return; }
+      const states = pushInfo.stateInfo;
+      if (!states) { return; }
+      const statesStartTime = states[0].startTimeNsec;
+      if (!statesStartTime) { return; }
+      const statesEndTime = states[states.length - 1].startTimeNsec;
+      if (!statesEndTime) { return; }
       const pushID = pushInfo.pushHandle;
       if (!pushID) { return; }
-      const state = pushes[pushes.length - 1].state;
+      const state = states[states.length - 1].state;
       if (!state) { return; }
 
       // Convert the start and end time values to seconds.
       // The unary operator coerces the value to number type.
-      const startTime = +pushesStartTime / TimelineComponent.NSEC_PER_MSEC;
-      const endTime = +pushesEndTime / TimelineComponent.NSEC_PER_MSEC;
+      const startTime = +statesStartTime / TimelineComponent.NSEC_PER_MSEC;
+      const endTime = +statesEndTime / TimelineComponent.NSEC_PER_MSEC;
 
       // Store data points as instances of TimelineBar interface.
       this.data.push({
@@ -187,12 +182,16 @@ export class TimelineComponent implements AfterViewInit {
    */
   private getTooltipContent = (d: Item) => {
     const duration = (d.endTime - d.startTime);
+
+    // Convert the duration, currently in milliseconds, to a human readable format
+    // with the largest unit in days and the smallest in seconds (e.g. passing in 
+    // the value 361000 returns "6 minutes, 1 second")
     const options = ({
-      round: true
+      round: true // Get rid of decimal places
     } as HumanizeDurationOptions)
     const output = TimelineComponent.HUMANIZER.humanize(duration, options);
 
-    // HTML representation of all required data.
+    // Return HTML representation of all required data.
     return `<b>Push ID: ${d.pushID.slice(d.pushID.indexOf('@') + 1)}</b>
       <br/>
       <b>Final State: ${d.state}</b>
@@ -222,35 +221,6 @@ export class TimelineComponent implements AfterViewInit {
       .style('font', '11px sans-serif');
   };
 
-  /** 
-   * Defines the zoom behavior, limiting the scale with which we can zoom in and out
-   * and restricting zoom to the x-axis only. Upon zoom, the x-axis will rescale,
-   * as will the timeline intervals.
-   */
-  private zoom = d3.zoom()
-    .scaleExtent([0.75, 1000]) // Limit zoom out.
-    .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
-    .on('zoom', () => {
-      const transform = d3.event.transform;
-
-      const updatedScale = transform.rescaleX(this.x);
-
-      // Redraw the x-axis.
-      this.xAxis = d3
-        .axisBottom(updatedScale)
-        .tickSize(-this.height - 6)
-        .tickPadding(10);
-
-      this.svg.select('.x.axis')
-        .call(this.xAxis)
-        .selectAll('line')
-        .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
-
-      this.svg.selectAll('rect.interval')
-        .attr('x', (d: Item) => updatedScale(d.startTime))
-        .attr('width', (d: Item) => updatedScale(d.endTime) - updatedScale(d.startTime));
-    });
-
   /**
    * Creates a scrollable timeline with bars representing the duration of
    * pushes. Every time this function is called, the previous timeline SVG is
@@ -279,9 +249,9 @@ export class TimelineComponent implements AfterViewInit {
    * </div>
    * @param pushInfos Holds all pushes for one push def.
    */
-  private createTimeline(): void {
-    // Filter the data by adding raw protocol buffer data into Item
-    // and seperating them into rows by giving them an individual group index.
+  ngAfterViewInit(): void {
+    // Filter the data by first adding protocol buffer data into Item and
+    // then seperating them into rows by giving them an individual row index.
     this.populateData(this.pushInfos);
 
     const element = this.timelineContainer.nativeElement;
@@ -297,13 +267,13 @@ export class TimelineComponent implements AfterViewInit {
       elementHeight = element.clientHeight;
     }
 
-    const minTimePoint = new Date(this.data.reduce((prev, cur) => {
+    const minTimePoint = this.data.reduce((prev, cur) => {
       return (prev.startTime < cur.startTime) ? prev : cur;
-    }).startTime);
+    }).startTime;
 
-    const maxTimePoint = new Date(this.data.reduce((prev, cur) => {
+    const maxTimePoint = this.data.reduce((prev, cur) => {
       return (prev.endTime > cur.endTime) ? prev : cur;
-    }).endTime);
+    }).endTime;
 
     const margin = { top: 0, right: 0, bottom: 20, left: 0 };
 
@@ -312,7 +282,7 @@ export class TimelineComponent implements AfterViewInit {
 
     // Establish the timeline's bottom axis.
     this.x = d3.scaleTime()
-      .domain([minTimePoint, maxTimePoint])
+      .domain([new Date(minTimePoint), new Date(maxTimePoint)])
       .range([0, this.width])
       .interpolate(d3.interpolateRound);
 
@@ -320,6 +290,35 @@ export class TimelineComponent implements AfterViewInit {
       .axisBottom(this.x)
       .tickSize(-this.height)
       .tickPadding(10);
+
+    // Define the zoom behavior, limiting the scale with which we can zoom in and out
+    // and restricting zoom to the x-axis only. Upon zoom, the x-axis will rescale,
+    // as will the timeline intervals. The maxZoomIn value restricts the zoom in to
+    // at most 5 second increments for any size data set.
+    const maxZoomIn = (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
+    const zoom = d3.zoom()
+      .scaleExtent([0.75, (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN]) // Limit zoom out.
+      .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
+      .on('zoom', () => {
+        const transform = d3.event.transform;
+
+        const updatedScale = transform.rescaleX(this.x);
+
+        // Redraw the x-axis on every zoom action.
+        this.xAxis = d3
+          .axisBottom(updatedScale)
+          .tickSize(-this.height - 6)
+          .tickPadding(10);
+
+        this.svg.select('.x.axis')
+          .call(this.xAxis)
+          .selectAll('line')
+          .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
+
+        this.svg.selectAll('rect.interval')
+          .attr('x', (d: Item) => updatedScale(d.startTime))
+          .attr('width', (d: Item) => updatedScale(d.endTime) - updatedScale(d.startTime));
+      });
 
     // Set up timeline chart components. The structure of the SVG tree
     // will contain a row with the x-axis on the bottom and rectangles
@@ -333,7 +332,7 @@ export class TimelineComponent implements AfterViewInit {
       .append('g')
       .attr('transform', `translate(${margin.left} ${margin.top})`);
 
-    this.svg.call(this.zoom);
+    this.svg.call(zoom);
 
     this.svg.append('g')
       .attr('class', 'x axis')
@@ -358,7 +357,8 @@ export class TimelineComponent implements AfterViewInit {
       .attr('height', this.height)
       .attr('width', this.width);
 
-    // Insert timeline interval bars.
+    // Insert timeline interval bars with their y-position determined by their 
+    // row index.
     const groupHeight = this.height / this.numRows;
     this.svg.selectAll('.group-section')
       .data(this.data)
@@ -389,10 +389,14 @@ export class TimelineComponent implements AfterViewInit {
       .attr('class', 'interval pointer')
       .attr('width', (d: Item) => this.x(d.endTime) - this.x(d.startTime))
       .attr('height', intervalBarHeight)
+      .attr('rx', 2)
+      .attr('ry', 2)
       .attr('y', intervalBarMargin)
-      .attr('x', (d: Item) => this.x(d.endTime))
+      .attr('x', (d: Item) => this.x(d.endTime));
 
-    // Set the tooltip display on hover.
+    // Create the tooltip and set its opacity to 0 when not hovering over a
+    // set of data, such that it only appears when the cursor is directly on top
+    // of an interval.
     const tooltipDiv = document.createElement('div');
     const tooltip = d3.select(tooltipDiv).call(this.createTooltip);
     element.appendChild(tooltipDiv);
@@ -407,7 +411,7 @@ export class TimelineComponent implements AfterViewInit {
       })
       .on('mouseleave', (d: Item, i: number, nodes: HTMLElement[]): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 1);
-        tooltip.style('opacity', 0);
+        tooltip.style('opacity', 0); // Hide tooltip
       });
 
     this.svg.on('mousemove', (d: Item, i: number, nodes: HTMLCanvasElement[]): void => {
