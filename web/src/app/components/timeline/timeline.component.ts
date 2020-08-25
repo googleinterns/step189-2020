@@ -3,7 +3,7 @@ import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } f
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
-import { ScaleLinear } from 'd3';
+import { ScaleTime, scaleTime } from 'd3';
 
 /**
  * Item holds all required data for one interval on the timeline.
@@ -35,7 +35,7 @@ export class TimelineComponent implements AfterViewInit {
   @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
   private data: Item[] = [];
   private svg: any;
-  private x: ScaleLinear<number, number> = d3.scaleLinear();
+  private x: ScaleTime<number, number> = d3.scaleTime();
   private xAxis: Function = () => {};
   private height: number = 0;
   private width: number = 0;
@@ -50,9 +50,16 @@ export class TimelineComponent implements AfterViewInit {
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
   private static readonly STATE_TO_COLOR: { [index: number]: string } = {
+    1: '#eee',
+    3: '#2196f3',
+    4: '#d50000',
     5: '#34a853',
     6: '#d50000',
+    7: '#2196f3',
+    8: '#2196f3',
+    9: '#d50000',
     10: '#2196f3',
+    11: '#2196f3',
     12: '#d50000',
     13: '#2196f3',
     14: '#eee',
@@ -232,8 +239,7 @@ export class TimelineComponent implements AfterViewInit {
       this.xAxis = d3
         .axisBottom(updatedScale)
         .tickSize(-this.height - 6)
-        .tickPadding(10)
-        .tickFormat(this.formatDate);
+        .tickPadding(10);
 
       this.svg.select('.x.axis')
         .call(this.xAxis)
@@ -272,13 +278,13 @@ export class TimelineComponent implements AfterViewInit {
       elementHeight = element.clientHeight;
     }
 
-    const minTimePoint = this.data.reduce((prev, cur) => {
+    const minTimePoint = new Date(this.data.reduce((prev, cur) => {
       return (prev.startTime < cur.startTime) ? prev : cur;
-    }).startTime;
+    }).startTime);
 
-    const maxTimePoint = this.data.reduce((prev, cur) => {
+    const maxTimePoint = new Date(this.data.reduce((prev, cur) => {
       return (prev.endTime > cur.endTime) ? prev : cur;
-    }).endTime;
+    }).endTime);
 
     const margin = { top: 0, right: 0, bottom: 20, left: 0 };
 
@@ -286,15 +292,15 @@ export class TimelineComponent implements AfterViewInit {
     this.height = elementHeight - margin.top - margin.bottom;
 
     // Establish the timeline's bottom axis.
-    this.x = d3.scaleLinear()
+    this.x = d3.scaleTime()
       .domain([minTimePoint, maxTimePoint])
-      .range([0, this.width]);
+      .range([0, this.width])
+      .interpolate(d3.interpolateRound);
 
     this.xAxis = d3
       .axisBottom(this.x)
       .tickSize(-this.height)
-      .tickPadding(10)
-      .tickFormat(this.formatDate as (dv: number | { valueOf(): number; }, i:number) => string);
+      .tickPadding(10);
 
     // Set up timeline chart components. The structure of the SVG tree
     // will contain a row with the x-axis on the bottom and rectangles
