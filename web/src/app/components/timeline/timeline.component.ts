@@ -258,6 +258,25 @@ export class TimelineComponent implements AfterViewInit {
    * scrolling horizontally on the x-axis, zooming in and out along the x-axis,
    * and a tooltip display when hovering over intervals. Each interval is 
    * color-coded according to its final state.
+   * 
+   * The structure of the component is shown below:
+   * <div>
+   *   <svg>
+   *     <g>
+   *       <g>
+   *         <defs/>
+   *         <rect/>
+   *         <line/>
+   *         [...]
+   *         <line/>
+   *         <g/>
+   *         [...] // clip-paths
+   *         <g/>
+   *       </g>
+   *     </g>
+   *   </svg>
+   *   <div/> // tooltip
+   * </div>
    * @param pushInfos Holds all pushes for one push def.
    */
   private createTimeline(): void {
