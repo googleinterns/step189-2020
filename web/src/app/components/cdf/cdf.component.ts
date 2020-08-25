@@ -40,7 +40,7 @@ export class CdfComponent implements AfterViewInit {
    * stage. Assigns the probability as the rank of the duration value over the
    * total number of points. The duration and probability are defined in an
    * interface and all points stored as an array of CdfData interfaces.
-   * 
+   *
    * @param pushInfos Array of pushes for a single push def
    * @return Array of Items sorted by increasing duration
    */
@@ -88,18 +88,23 @@ export class CdfComponent implements AfterViewInit {
   }
 
   /**
-   * Creates a CDF chart by plotting the duration of completed pushes against 
+   * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration.
-   * 
+   *
    * Structure of the SVG:
-   * CdfChart:
-   *     - y-axis-left, y-axis-right, y-axis-left-label
-   *     - path:
-   *         - cdf-curve
-   * svg:
-   *     - x-axis, x-axis-label, graph-title
+   * <svg>
+   *   <g id='chart'>
+   *     <g class='y-axis-left'></g>
+   *     <text class='y-axis-left-label'></text>
+   *     <g class='y-axis-right'></g>
+   *     <path class='cdf-curve'></path>
+   *   </g>
+   *   <g class='x-axis'></g>
+   *   <text class='x-axis-label'></text>
+   *   <text class='graph-title'></text>
+   * </svg>
    */
-  private createChart(): void {
+  ngAfterViewInit(): void {
     if (!this.pushInfos) { return; }
     this.data = CdfComponent.populateData(this.pushInfos);
 
@@ -152,7 +157,7 @@ export class CdfComponent implements AfterViewInit {
         .tickFormat(d3.format(',.1f'))
       );
 
-    // Removes axis's vertical line and keeps the tick marks.
+    // Remove axis's vertical line and keeps the tick marks.
     yAxisLeft.select('.domain').remove();
 
     cdfChart.append('text')
@@ -175,7 +180,7 @@ export class CdfComponent implements AfterViewInit {
         .tickFormat(d3.format(',.1f'))
       );
 
-    // Removes axis's vertical line and keeps the tick marks.
+    // Remove axis's vertical line and keeps the tick marks.
     yAxisRight.select('.domain').remove();
 
     const xAxis = this.svg
@@ -199,7 +204,7 @@ export class CdfComponent implements AfterViewInit {
       .attr('text-anchor', 'middle')
       .style('font-size', '16px')
       .text('CDF of completed push durations');
-      
+
     cdfChart
       .datum(this.graphData)
       .append('path')
@@ -212,11 +217,4 @@ export class CdfComponent implements AfterViewInit {
         .curve(d3.curveStepAfter)
       );
   }
-
-  /*
-   * After the component's view has been fully initialized, the chart can be
-   * created. Since the pushInfos are static, we do not need to create the chart
-   * at every change.
-   */
-  ngAfterViewInit(): void { this.createChart(); }
 }
