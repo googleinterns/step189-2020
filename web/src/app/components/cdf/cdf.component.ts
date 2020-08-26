@@ -33,7 +33,8 @@ export class CDFComponent implements AfterViewInit {
    *     <g id='y-axis-left'></g>
    *     <text id='y-axis-left-label'></text>
    *     <g id='y-axis-right'></g>
-   *     <path id='cdf-curve'></path>
+   *     <path id='CDF-area'></path>
+   *     <path id='CDF-stroke'></path>
    *   </g>
    *   <g id='x-axis'></g>
    *   <text id='x-axis-label'></text>
