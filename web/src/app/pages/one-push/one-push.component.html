@@ -7,7 +7,7 @@
 </app-button-row>
 
 <app-bar-chart *ngIf= 'pushInfos | async' 
-                [pushInfos]='pushInfos | async' 
+                [pushInfos]= 'pushInfos | async' 
                 [currentPush]= 'pushInfo | async'>
 </app-bar-chart>
 
