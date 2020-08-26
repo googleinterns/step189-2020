@@ -12,14 +12,16 @@ import { ButtonComponent } from './components/button/button.component';
 import { PageNameComponent } from './components/page-name/page-name.component';
 import { DateNsecPipe } from './pipes/date-nsec.pipe';
 import { BarChartComponent } from './components/bar-chart/bar-chart.component';
+import { CDFComponent } from './components/cdf/cdf.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AllPushesComponent,
     BarChartComponent,
-    ButtonRowComponent,
     ButtonComponent,
+    ButtonRowComponent,
+    CDFComponent,
     DateNsecPipe,
     MyPushesComponent,
     OnePushComponent,

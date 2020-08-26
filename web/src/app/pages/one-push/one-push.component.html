@@ -11,6 +11,12 @@
                 [currentPush]='pushInfo | async'>
 </app-bar-chart>
 
+<app-cdf *ngIf='pushInfos | async'
+         [pushInfos]='pushInfos | async'
+         [currentPush]='pushInfo | async'>
+</app-cdf>
+
+
 <table class='collapse bb bw1 b--black' *ngIf='pushInfo | async as pushInfo'>
     <thead>
         <tr class='bb bw1 b--black'>
