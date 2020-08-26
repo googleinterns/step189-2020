@@ -17,15 +17,14 @@ interface Item {
 /**
  * D3 types used by the bar chart.
  *
- * The d3.Selection has the defult type Selection<GElement, Datum, PElement,
+ * The d3.Selection has the default type Selection<GElement, Datum, PElement,
  * PDatum>, and we want to use it with Datum, Datum, PElement, PDatum being
  * `undefined` or `null`. The SVGSVGElement provides the access and all methods
  * to manipulate `<svg>` element, while SVGGElement corresponds to the `g` element
  * that the top bar chart and the bottom bar chart belong to.
- * SVGSVGElement --> SVGGElement --> SVGElement --> Element --> Node --> EventTarget
- * We want to separate the top bar chart and the bottom bar chart by `g` elements,
- * so that they can be updated with different methods using dropdown menu and brush
- * selector.
+ *
+ * We separate the top bar chart and the bottom bar chart by `g` elements, so that 
+ * they can be updated with different methods using dropdown menu and brush selector.
  */
 type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
 type d3G = d3.Selection<SVGGElement, undefined, null, undefined>;
@@ -285,7 +284,7 @@ export class BarChartComponent implements AfterViewInit {
       (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
       dataSelected.slice(dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS, dataSelected.length) : dataSelected);
 
-    // Initial the brush bar chart.
+    // Initialize the brush bar chart.
     if (!this.brush) { return; }
     const brushBars = this.brush.selectAll('rect')
       .data(dataSelected);
