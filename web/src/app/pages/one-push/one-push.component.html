@@ -6,9 +6,9 @@
     <app-button link='/{{ pushHandle | async }}'>{{ pushHandle | async }}</app-button>
 </app-button-row>
 
-<app-bar-chart *ngIf= 'pushInfos | async' 
-                [pushInfos]= 'pushInfos | async' 
-                [currentPush]= 'pushInfo | async'>
+<app-bar-chart *ngIf='pushInfos | async' 
+                [pushInfos]='pushInfos | async' 
+                [currentPush]='pushInfo | async'>
 </app-bar-chart>
 
 <table class='collapse bb bw1 b--black' *ngIf='pushInfo | async as pushInfo'>
