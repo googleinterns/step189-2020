@@ -11,12 +11,14 @@ import { ButtonRowComponent } from './components/button-row/button-row.component
 import { ButtonComponent } from './components/button/button.component';
 import { PageNameComponent } from './components/page-name/page-name.component';
 import { DateNsecPipe } from './pipes/date-nsec.pipe';
+import { BarChartComponent } from './components/bar-chart/bar-chart.component';
 import { CDFComponent } from './components/cdf/cdf.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AllPushesComponent,
+    BarChartComponent,
     ButtonComponent,
     ButtonRowComponent,
     CDFComponent,
@@ -28,7 +30,7 @@ import { CDFComponent } from './components/cdf/cdf.component';
   imports: [
     AppRoutingModule,
     BrowserModule,
-    HttpClientModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
