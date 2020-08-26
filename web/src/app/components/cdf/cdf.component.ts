@@ -1,24 +1,10 @@
 import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
-import { CDFHelper } from './cdf.helper';
+import { addCurrentPushLine, generateQuantiles, generateYPosition, populateData } from './cdf.utils';
+import { COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR } from './cdf.utils';
 
 import { step189_2020 } from '../../../proto/step189_2020';
 
-interface Item {
-  duration: number; // Minutes between completed stage and first non-empty stage
-  probability: number; // Rank of the duration divided by number of points
-}
-
-/**
- * Defines the type of the d3 SVG. The d3.Selection has a generic type
- * Selection<GElement, Datum, PElement, PDatum>. We want our svg element to have
- * the interface SVGSVGElement. Datum, PElement, and PDatum are unused and thus,
- * assigned to undefined or null.
- * The d3G type is similar to the svg element but SVGGElement refers to a g
- * element within a svg.
- */
-type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
-type d3G = d3.Selection<SVGGElement, undefined, null, undefined>;
 @Component({
   selector: 'app-cdf',
   templateUrl: './cdf.component.html',
@@ -32,7 +18,6 @@ export class CDFComponent implements AfterViewInit {
   @Input() currentPush!: step189_2020.IPushInfo | null;
 
   private data: Item[] = [];
-  private graphData: Item[] = [];
   private svg: d3SVG | undefined;
 
   /**
@@ -61,7 +46,7 @@ export class CDFComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     if (!this.pushInfos) { return; }
     if (!this.currentPush) { return; }
-    this.data = CDFHelper.populateData(this.pushInfos);
+    this.data = populateData(this.pushInfos);
 
     const element = this.CDFContainer.nativeElement;
     const elementWidth = element.clientWidth;
@@ -89,8 +74,8 @@ export class CDFComponent implements AfterViewInit {
       .domain([0, 1])
       .rangeRound([height, 0]);
 
-    this.graphData = Array.from(this.data);
-    this.graphData.push({
+    const extendedData = Array.from(this.data);
+    extendedData.push({
       duration: xScale.ticks()[xScale.ticks().length - 1],
       probability: 1
     });
@@ -162,9 +147,10 @@ export class CDFComponent implements AfterViewInit {
       .text('CDF of completed push durations');
 
     CDFChart
-      .datum(this.graphData)
+      .datum(extendedData)
       .append('path')
-      .attr('fill', CDFHelper.COMPLETED_BLUE)
+      .attr('id', 'CDF-area')
+      .attr('fill', COMPLETED_BLUE)
       .attr('d', d3.area<Item>()
         .x(d => xScale(d.duration))
         .y1(d => yScale(d.probability))
@@ -172,12 +158,25 @@ export class CDFComponent implements AfterViewInit {
         .curve(d3.curveStepAfter)
       );
 
+    CDFChart
+      .datum(extendedData)
+      .append('path')
+      .attr('fill', 'none')
+      .attr('d', d3.line<Item>()
+        .x(d => xScale(d.duration))
+        .y(d => yScale(d.probability))
+        .curve(d3.curveStepAfter)
+      )
+      .attr('id', 'CDF-stroke')
+      .attr('stroke', STROKE_COLOR)
+      .attr('stroke-width', 2);
+
     const percentileLines = this.svg
       .append('g')
       .attr('id', 'percentile-lines')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const percentiles = CDFHelper.generateQuantiles(this.data, [0.1, 0.5, 0.9], xScale);
+    const percentiles = generateQuantiles(this.data, [0.1, 0.5, 0.9], xScale);
 
     percentileLines
       .selectAll('.percentile-lines')
@@ -209,7 +208,7 @@ export class CDFComponent implements AfterViewInit {
       .attr('id', 'current-push-line')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    CDFHelper.addCurrentPushLine(this.currentPush, currentPushLine, xScale, height);
+    addCurrentPushLine(this.currentPush, currentPushLine, xScale, height);
 
     const dotplotContainer = this.svg
       .append('g')
@@ -218,14 +217,14 @@ export class CDFComponent implements AfterViewInit {
 
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
-    let yPosition = CDFHelper.generateYPosition(radius * 2 + 0.1, xScale, xVals);
+    let yPosition = generateYPosition(radius * 2 + 0.1, xScale, xVals);
 
     const maxYPosition = d3.max(yPosition);
     if (!maxYPosition) { return; }
 
     if (maxYPosition > height) {
       radius = 1.4;
-      yPosition = CDFHelper.generateYPosition(radius * 2 + 0.1, xScale, xVals);
+      yPosition = generateYPosition(radius * 2 + 0.1, xScale, xVals);
     }
 
     for (let i = 0; i < this.data.length; i++) {
