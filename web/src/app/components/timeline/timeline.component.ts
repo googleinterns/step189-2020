@@ -299,7 +299,7 @@ export class TimelineComponent implements AfterViewInit {
     // will contain a row with the x-axis on the bottom and rectangles
     // for each interval, the width of which is determined by its
     // respective start and end time.
-    this.svg = d3.select(element).append('svg')
+    this.svg = (d3.select(element).append('svg') as d3.Selection<SVGSVGElement, Item, null, undefined>)
       .attr('width', this.width + margin.left + margin.right)
       .attr('height', this.height + margin.top + margin.bottom)
       .attr('viewBox', `0 0 ${this.width} ${this.height}`)
@@ -377,14 +377,14 @@ export class TimelineComponent implements AfterViewInit {
     element.appendChild(tooltipDiv);
 
     groupIntervalItems
-      .on('mouseover', (d: Item, i: number, nodes: HTMLElement[]): void => {
+      .on('mouseover', (d: Item, i: number, nodes: SVGGElement[]): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 0.50);
 
         tooltip
           .html(this.getTooltipContent(d))
           .style('opacity', 1);
       })
-      .on('mouseleave', (d: Item, i: number, nodes: HTMLElement[]): void => {
+      .on('mouseleave', (d: Item, i: number, nodes: SVGGElement[]): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 1);
         tooltip.style('opacity', 0); // Hide tooltip
       });
