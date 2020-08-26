@@ -55,7 +55,6 @@ export class TimelineComponent implements AfterViewInit {
   private data: Item[] = [];
   private svg: any;
   private x: d3.ScaleTime<number, number> = d3.scaleTime();
-  private xAxis: Function = () => { };
   private height = 0;
   private width = 0;
   private numRows = 0;
@@ -181,7 +180,7 @@ export class TimelineComponent implements AfterViewInit {
    *
    * @param el Encasing element that holds the tooltip
    */
-  private styleTooltip = (el: any) => {
+  private styleTooltip = (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
     el.style('position', 'absolute')
       .style('pointer-events', 'none')
       .style('top', 0)
@@ -263,7 +262,7 @@ export class TimelineComponent implements AfterViewInit {
       .domain([new Date(minTimePoint), new Date(maxTimePoint)])
       .range([0, this.width]);
 
-    this.xAxis = d3
+    const xAxis = d3
       .axisBottom(this.x)
       .tickSize(-this.height - 6)
       .tickPadding(10);
@@ -281,13 +280,13 @@ export class TimelineComponent implements AfterViewInit {
         const updatedScale = transform.rescaleX(this.x);
 
         // Redraw the x-axis on every zoom action.
-        this.xAxis = d3
+        const newXAxis = d3
           .axisBottom(updatedScale)
           .tickSize(-this.height - 6)
           .tickPadding(10);
 
         this.svg.select('.x.axis')
-          .call(this.xAxis)
+          .call(newXAxis)
           .selectAll('line')
           .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
 
@@ -313,7 +312,7 @@ export class TimelineComponent implements AfterViewInit {
     this.svg.append('g')
       .attr('class', 'x axis')
       .attr('transform', `translate(0 ${this.height})`)
-      .call(this.xAxis)
+      .call(xAxis)
       .selectAll('line')
       .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
 
