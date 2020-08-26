@@ -23,7 +23,7 @@ interface Item {
  * to manipulate `<svg>` element, while SVGGElement corresponds to the `g` element
  * that the top bar chart and the bottom bar chart belong to.
  *
- * We separate the top bar chart and the bottom bar chart by `g` elements, so that 
+ * We separate the top bar chart and the bottom bar chart by `g` elements, so that
  * they can be updated with different methods using dropdown menu and brush selector.
  */
 type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
@@ -86,12 +86,15 @@ export class BarChartComponent implements AfterViewInit {
   private svg: d3SVG | undefined;
   private focus: d3G | undefined; // Top bar chart for display.
   private brush: d3G | undefined; // Bottom bar chart for brushing.
+  // tslint:disable-next-line: no-any
   private brushSelector: any;
   private heightFocus = 0;
   private heightBrush = 0;
   private width = 0;
+  // tslint:disable-next-line: no-any
   private xScaleFocus: any;
   private yScaleFocus!: d3ScaleLinear;
+  // tslint:disable-next-line: no-any
   private xScaleBrush: any;
   private yScaleBrush!: d3ScaleLinear;
   private xAxisFocus: d3G | undefined;
