@@ -40,6 +40,8 @@ export class CDFComponent implements AfterViewInit {
    *   <text id='x-axis-label'></text>
    *   <text id='graph-title'></text>
    *   <g id='percentile-lines'></g>
+   *     <line class='percentile-line'></line>
+   *     <text class='percentile-text'></text>
    *   <g id='current-push-line'></g>
    *   <g id='dotplot-container'></g>
    * </svg>
@@ -184,7 +186,7 @@ export class CDFComponent implements AfterViewInit {
       .data(percentiles)
       .enter()
       .append('line')
-      .attr('class', 'y-percentile-line')
+      .attr('class', 'percentile-line')
       .attr('stroke', 'lightgrey')
       .attr('stroke-dasharray', '5,2')
       .attr('x1', (d: Item) => xScale(d.duration))
@@ -199,8 +201,8 @@ export class CDFComponent implements AfterViewInit {
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('x', (d: Item) => xScale(d.duration))
-      .attr('y', 0)
-      .attr('id', 'quantile-text')
+      .attr('y', -10)
+      .attr('class', 'percentile-text')
       .attr('font-size', '10px')
       .text((d: Item) => `${d.probability * 100}%`);
 
