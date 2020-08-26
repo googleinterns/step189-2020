@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } from 'humanize-duration-ts';
+import { formatDate } from '@angular/common';
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
@@ -8,11 +9,11 @@ import { step189_2020 } from '../../../proto/step189_2020';
  * Item holds all required data for one interval on the timeline.
  */
 interface Item {
-  pushID: string;     // Push ID number
+  pushID: string;     // Push ID
   state: number;      // Final state of push
   startTime: number;  // Start of push, in milliseconds
   endTime: number;    // End of push, in milliseconds
-  row: number;        // Row number corresponds to y-position on timeine
+  row: number;        // Row number corresponds to y-position on timeline
 }
 
 @Component({
@@ -22,9 +23,6 @@ interface Item {
 })
 
 export class TimelineComponent implements AfterViewInit {
-  /**
-   * Constants.
-   */
   private static readonly LANG_SERVICE: HumanizeDurationLanguage = new HumanizeDurationLanguage();
   private static readonly HUMANIZER: HumanizeDuration = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
   private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
@@ -52,21 +50,13 @@ export class TimelineComponent implements AfterViewInit {
     19: '#eee'
   };
 
-  /**
-   * Private data variables.
-   *
-   * Note that we use the non-null assertion operator ('!') to indicate to
-   * the compiler that variables will always be declared and thus to not
-   * issue errors about possibilities of them being `null` or `undefined`
-   * since pushInfos is a passed-in value.
-   */
   @ViewChild('timeline') private timelineContainer!: ElementRef;
   @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
   private data: Item[] = [];
   private svg: any;
   private x: d3.ScaleTime<number, number> = d3.scaleTime();
   private xAxis: Function = () => { };
-  private height: number = 0;
+  private height = 0;
   private width = 0;
   private numRows = 0;
 
@@ -77,8 +67,9 @@ export class TimelineComponent implements AfterViewInit {
    *
    * @param pushInfos Array of pushes for one push def
    */
-  private populateData(pushInfos: step189_2020.IPushInfo[] | null): void {
-    if (!pushInfos) { return; }
+  private static populateData(pushInfos: step189_2020.IPushInfo[] | null): [Item[], number] {
+    if (!pushInfos) { return [[], 0]; }
+    const data: Item[] = []
 
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
@@ -99,7 +90,7 @@ export class TimelineComponent implements AfterViewInit {
       const endTime = +statesEndTime / TimelineComponent.NSEC_PER_MSEC;
 
       // Store data points as instances of TimelineBar interface.
-      this.data.push({
+      data.push({
         pushID,
         state,
         startTime,
@@ -110,7 +101,8 @@ export class TimelineComponent implements AfterViewInit {
 
     // Assign a row value to each push representing their horizontal placement
     // on the timeline. Each row index corresponds to one group.
-    this.divideIntoRows();
+    const rowIndex = this.divideIntoRows(data);
+    return [data, rowIndex]
   }
 
   /**
@@ -123,15 +115,13 @@ export class TimelineComponent implements AfterViewInit {
    * no more intervals left. The runtime is O(n * log(n)), which results in
    * the case that all intervals are overlapping.
    */
-  private divideIntoRows(): void {
-    let data: Item[] = [...this.data]; // Creates copy of this.data
-
+  private static divideIntoRows(data: Item[]): number {
     data.sort((a, b) => {
       return a.startTime - b.startTime;
     });
 
     let rowIndex = 0;
-    let overlappingIntervals = [this.data[0]]; // Initialized to arbitrary value to avoid premature return
+    let overlappingIntervals = [data[0]]; // Initialized to arbitrary value to avoid premature return
     while (overlappingIntervals.length !== 0) {
       let lastEndTime = 0;
       overlappingIntervals = [];
@@ -141,7 +131,7 @@ export class TimelineComponent implements AfterViewInit {
         // of the current interval is earlier than the last added end time.
         // This is a consequence of all events being sorted by start time.
         if (interval.startTime >= lastEndTime) {
-          const intervalInData = this.data.find(({ pushID }) => pushID === interval.pushID);
+          const intervalInData = data.find(({ pushID }) => pushID === interval.pushID);
           if (intervalInData) {
             intervalInData.row = rowIndex;
           }
@@ -154,35 +144,7 @@ export class TimelineComponent implements AfterViewInit {
       lastEndTime = 0;
       data = overlappingIntervals;
     }
-    this.numRows = rowIndex;
-  }
-
-  /**
-   * Converts the date (in milliseconds) to a datetime string. The returned
-   * date will have a format of YYYY-MM-DD hh-mm, with single digits padded
-   * with a leading zero.
-   *
-   * @param d Holds one interval's data on the timeline.
-   */
-  private formatDate = (d: any) => {
-    const date = new Date(d);
-    const dateTimeFormat = new Intl.DateTimeFormat('en', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const formatToParts = 'formatToParts';
-    const [{ value: month }, ,
-           { value: day }, ,
-           { value: year }, ,
-           { value: hour }, ,
-           { value: minute }]
-      = dateTimeFormat[formatToParts](date);
-    
-    return `${year}-${month}-${day} ${hour}:${minute}`;
+    return rowIndex;
   }
 
   /**
@@ -206,9 +168,9 @@ export class TimelineComponent implements AfterViewInit {
       <br/>
       <b>Final State: ${d.state}</b>
       <br/>
-      <b>Start Time: ${this.formatDate(d.startTime)}</b>
+      <b>Start Time: ${formatDate(d.startTime, 'yyyy-MM-dd HH:mm:ss', 'en-US')}</b>
       <br/>
-      <b> End Time: ${this.formatDate(d.endTime)}</b>
+      <b> End Time: ${formatDate(d.endTime, 'yyyy-MM-dd HH:mm:ss', 'en-US')}</b>
       <br/>
       <b>Duration: ${output}</b>
       `;
@@ -219,7 +181,7 @@ export class TimelineComponent implements AfterViewInit {
    *
    * @param el Encasing element that holds the tooltip
    */
-  private createTooltip = (el: any) => {
+  private styleTooltip = (el: any) => {
     el.style('position', 'absolute')
       .style('pointer-events', 'none')
       .style('top', 0)
@@ -244,19 +206,21 @@ export class TimelineComponent implements AfterViewInit {
    * <div>
    *   <svg>
    *     <g>
-   *       <g>
-   *         <defs/>
-   *         <rect/>
-   *         <line/>
+   *       <g class='x axis'>
+   *          <g class=’tick’ .../> 
+   *            [...]
+   *          <g class=’tick’ .../>
+   *       <defs/> // clipPath defining how much of timeline is visible
+   *       <rect class=’chart-bounds’/> // Defines where zoom is possible
+   *       <line class=’group-section’/> // Horizontal rows
    *         [...]
-   *         <line/>
-   *         <g/>
-   *         [...] // clip-paths
-   *         <g/>
-   *       </g>
+   *       <line class=’group-section’/>
+   *       <g clip-path=’url(#chart-content)/>
+   *         [...] // clipPaths defining how much of lines can be seen
+   *       <g clip-path=’url(#chart-content)/>
    *     </g>
    *   </svg>
-   *   <div/> // tooltip
+   *   <div/> // tooltip content. Opacity is 0 when not hovering over interval
    * </div>
    *
    * @param pushInfos Holds all pushes for one push def.
@@ -264,7 +228,9 @@ export class TimelineComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     // Filter the data by first adding protocol buffer data into Item and
     // then seperating them into rows by giving them an individual row index.
-    this.populateData(this.pushInfos);
+    const res = TimelineComponent.populateData(this.pushInfos);
+    this.data = res[0];
+    this.numRows = res[1];
 
     const element = this.timelineContainer.nativeElement;
 
@@ -355,7 +321,7 @@ export class TimelineComponent implements AfterViewInit {
       .append('clipPath')
       .attr('id', 'chart-content')
       .append('rect')
-      .attr('x', 1) // Prevent overlapping on x-axis
+      .attr('x', 0)
       .attr('y', 0)
       .attr('height', this.height)
       .attr('width', this.width);
@@ -408,7 +374,7 @@ export class TimelineComponent implements AfterViewInit {
     // set of data, such that it only appears when the cursor is directly on top
     // of an interval.
     const tooltipDiv = document.createElement('div');
-    const tooltip = d3.select(tooltipDiv).call(this.createTooltip);
+    const tooltip = d3.select(tooltipDiv).call(this.styleTooltip);
     element.appendChild(tooltipDiv);
 
     groupIntervalItems
