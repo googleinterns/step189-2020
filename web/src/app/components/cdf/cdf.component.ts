@@ -142,7 +142,7 @@ export class CDFComponent implements AfterViewInit {
     this.svg.append('text')
       .attr('id', 'x-axis-label')
       .attr('transform',
-            `translate(${width / 2}, ${elementHeight - margin.left / 3})`)
+            `translate(${width / 2}, ${elementHeight - margin.left / 4})`)
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Duration (minutes)');

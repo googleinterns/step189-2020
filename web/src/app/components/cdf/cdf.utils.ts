@@ -221,11 +221,11 @@ export function addCurrentPushLine(
     .append('defs')
     .append('marker')
     .attr('id', 'arrow')
-    .attr('refX', 3)
+    .attr('refX', 0)
     .attr('refY', markerSize / 2)
     .attr('markerWidth', markerSize)
     .attr('markerHeight', markerSize)
-    .attr('orient', 'auto')
+    .attr('orient', 'auto-start-reverse')
     .datum(markerPath)
     .append('path')
     .attr('d', d3.line<number[]>()
@@ -238,20 +238,42 @@ export function addCurrentPushLine(
     .append('line')
     .attr('id', 'current-push-line')
     .attr('stroke', 'white')
-    .attr('stroke-dasharray', '10 5')
     .attr('stroke-width', 3)
+    .attr('stroke-opacity', 0.6)
     .attr('x1', xScale(duration))
-    .attr('y1', endOfLine)
+    .attr('y1', height)
     .attr('x2', xScale(duration))
-    .attr('y2', height)
+    .attr('y2', endOfLine)
+
+
+  currentPushLine
+    .append('line')
+    .attr('id', 'current-push-text-line')
+    .attr('stroke', 'black')
+    .attr('stroke-width', .5)
+    .attr('x1', xScale(duration))
+    .attr('y1', height + 7)
+    .attr('x2', xScale(duration))
+    .attr('y2', height + 20)
+    .attr('marker-start', 'url(#arrow)');
+
+  currentPushLine
+    .append('line')
+    .attr('id', 'current-push-text-line-arrow')
+    .attr('stroke', 'black')
+    .attr('stroke-width', 2)
+    .attr('x1', xScale(duration))
+    .attr('y1', height + 7)
+    .attr('x2', xScale(duration))
+    .attr('y2', height + 7.1)
     .attr('marker-start', 'url(#arrow)');
 
   currentPushLine
     .append('text')
     .attr('text-anchor', 'middle')
     .attr('x', xScale(duration))
-    .attr('y', endOfLine - 13)
+    .attr('y', height + 30)
     .attr('id', 'current-line-text')
-    .attr('font-size', '12px')
-    .text('Current Push');
+    .attr('font-size', '11px')
+    .text('Current Push')
 }
