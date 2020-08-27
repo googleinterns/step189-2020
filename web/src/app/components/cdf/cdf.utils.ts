@@ -71,7 +71,6 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
       probability
     } as Item);
   }
-
   return data;
 }
 
@@ -85,7 +84,9 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
  * @param duration A duration value between the min and max of all durations
  * @return A probability value between 0 and 1 (exclusive)
  */
-export function getProbabilityForDuration(data: Item[], duration: number): number {
+export function getProbabilityForDuration(
+                  data: Item[],
+                  duration: number): number {
   const allDurations = data.map(d => d.duration);
   const index = d3.bisectLeft(allDurations, duration);
   return data[index - 1].probability;
@@ -124,7 +125,10 @@ function getDurationforProbability(data: Item[], probability: number): number {
  * @return Array of Items with the duration as the interpolated duration and the
  * probability as the given probability from probabilityLines
  */
-export function generateQuantiles(data: Item[], percentileLines: number[], xScale: d3.ScaleLinear<number, number>): Item[] {
+export function generateQuantiles(
+                  data: Item[],
+                  percentileLines: number[],
+                  xScale: d3.ScaleLinear<number, number>): Item[] {
   if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
     return [percentileLines[1]].map(d => ({
       duration: getDurationforProbability(data, d),
@@ -135,9 +139,15 @@ export function generateQuantiles(data: Item[], percentileLines: number[], xScal
     probability: d} as Item));
 
   const pixelDifference = 15;
-  const differences = [xScale(quantiles[1].duration - quantiles[0].duration), xScale(quantiles[2].duration - quantiles[1].duration)];
+  const differences = [xScale(quantiles[1].duration - quantiles[0].duration),
+                      xScale(quantiles[2].duration - quantiles[1].duration)];
   if (differences[0] < pixelDifference || differences[1] < pixelDifference) {
-    quantiles = generateQuantiles(data, [percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01], xScale);
+    quantiles = generateQuantiles(
+                  data,
+                  [percentileLines[0] - .01,
+                  percentileLines[1],
+                  percentileLines[2] + .01],
+                  xScale);
   }
   return quantiles;
 }
@@ -156,7 +166,10 @@ export function generateQuantiles(data: Item[], percentileLines: number[], xScal
  * @return Array of numbers representing the y position of the dot at duration
  * value maintaining the same indices as the xVals
  */
-export function generateYPosition(radius: number, xScale: d3.ScaleLinear<number, number>, xVals: number[]): number[] {
+export function generateYPosition(
+                  radius: number,
+                  xScale: d3.ScaleLinear<number, number>,
+                  xVals: number[]): number[] {
   const radius2 = radius ** 2;
   const coordinates = [];
   for (const val of xVals) {
@@ -177,9 +190,11 @@ export function generateYPosition(radius: number, xScale: d3.ScaleLinear<number,
 }
 
 /**
- * Appends a vertical line on the chart at the duration of the current push.
- * If the current push does not end with a completed stage, then no line is
- * appended to the chart.
+ * Appends a vertical line on the chart at the duration of the current push. An
+ * arrow with text signifying that this represnts the current push is placed
+ * near the x-axis.
+ * If the current push does not end with a completed stage, then no line or
+ * arrow is appended to the chart.
  *
  * @param currentPush push information for the push that the page is on
  * @param currentPushLine d3 SVG G element

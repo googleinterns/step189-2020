@@ -1,8 +1,17 @@
-import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { AfterViewInit,
+         Component,
+         ElementRef,
+         Input,
+         ViewChild } from '@angular/core';
 import * as d3 from 'd3';
-import { addCurrentPushLine, generateQuantiles, generateYPosition, populateData } from './cdf.utils';
-import { COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR } from './cdf.utils';
-
+import { addCurrentPushLine,
+         generateQuantiles,
+         generateYPosition,
+         populateData } from './cdf.utils';
+import { COMPLETED_BLUE,
+         d3SVG,
+         Item,
+         STROKE_COLOR } from './cdf.utils';
 import { step189_2020 } from '../../../proto/step189_2020';
 
 @Component({
@@ -138,7 +147,8 @@ export class CDFComponent implements AfterViewInit {
     const xAxis = this.svg
       .append('g')
       .attr('id', 'x-axis')
-      .attr('transform', `translate(${margin.left}, ${elementHeight - margin.bottom})`)
+      .attr('transform',
+            `translate(${margin.left}, ${elementHeight - margin.bottom})`)
       .call(d3.axisBottom(xScale));
 
     this.svg.append('text')
@@ -246,6 +256,11 @@ export class CDFComponent implements AfterViewInit {
     .attr('id', 'current-push-line')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    addCurrentPushLine(this.currentPush, currentPushLine, this.data, xScale, height, yScale);
+    addCurrentPushLine(this.currentPush,
+                       currentPushLine,
+                       this.data,
+                       xScale,
+                       height,
+                       yScale);
   }
 }
