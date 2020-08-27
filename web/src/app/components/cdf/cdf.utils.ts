@@ -159,6 +159,12 @@ export function generateYPosition(radius: number, xScale: d3.ScaleLinear<number,
   return coordinates.map(d => d.y);
 }
 
+export function getProbabilityForX(data: Item[], xValue: number): number {
+    const xVals = data.map(d => d.duration);
+    const index = d3.bisectLeft(xVals, xValue);
+    return data[index - 1].probability;
+}
+
 /**
  * Appends a vertical line on the chart at the duration of the current push.
  * If the current push does not end with a completed stage, then no line is
@@ -173,8 +179,10 @@ export function generateYPosition(radius: number, xScale: d3.ScaleLinear<number,
 export function addCurrentPushLine(
                   currentPush: step189_2020.IPushInfo,
                   currentPushLine: d3G,
+                  data: Item[],
                   xScale: d3.ScaleLinear<number, number>,
-                  height: number): void {
+                  height: number,
+                  yScale: d3.ScaleLinear<number, number>): void {
   const states = currentPush.stateInfo;
   if (!states) { return; }
   const pushEndTime = states[states.length - 1].startTimeNsec;
@@ -196,6 +204,22 @@ export function addCurrentPushLine(
 
   const duration = (+pushEndTime - +firstStateStart) / NANO_TO_MINUTES;
 
+  const markerSize = 2.5
+  const markerPath = [[0, 0], [0, markerSize], [markerSize, markerSize/2]]
+  currentPushLine
+    .append('defs')
+    .append('marker')
+    .attr('id', 'arrow')
+    .attr('refX', 3)
+    .attr('refY', markerSize / 2)
+    .attr('markerWidth', markerSize)
+    .attr('markerHeight', markerSize)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', d3.line()([[0, 0], [0, markerSize], [markerSize, markerSize/2]]));
+
+  const endOfLine = yScale(getProbabilityForX(data, duration))
+
   currentPushLine
     .append('line')
     .attr('class', 'current-push-line')
@@ -203,16 +227,39 @@ export function addCurrentPushLine(
     .attr('stroke-dasharray', '10 5 5 5')
     .attr('stroke-width', 3)
     .attr('x1', xScale(duration))
-    .attr('y1', height)
+    .attr('y1', endOfLine)
     .attr('x2', xScale(duration))
-    .attr('y2', 0);
+    .attr('y2', height)
+    .attr('marker-start', 'url(#arrow)');
 
   currentPushLine
     .append('text')
     .attr('text-anchor', 'middle')
     .attr('x', xScale(duration))
-    .attr('y', 0)
+    .attr('y', endOfLine - 13)
     .attr('id', 'current-line-text')
     .attr('font-size', '12px')
     .text('Current Push');
+    
+/*
+  currentPushLine
+   .append('line')
+   .attr('class', 'current-push-line')
+   .attr('stroke', 'grey')
+   .attr('stroke-dasharray', '10 5 5 5')
+   .attr('stroke-width', 4)
+   .attr('x1', xScale(duration))
+   .attr('y1', 0)
+   .attr('x2', xScale(duration))
+   .attr('y2', height)
+
+ currentPushLine
+   .append('text')
+   .attr('text-anchor', 'middle')
+   .attr('x', xScale(duration))
+   .attr('y', 0)
+   .attr('id', 'current-line-text')
+   .attr('font-size', '12px')
+   .text('Current Push');
+   */
 }

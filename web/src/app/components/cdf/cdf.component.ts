@@ -206,13 +206,6 @@ export class CDFComponent implements AfterViewInit {
       .attr('font-size', '10px')
       .text((d: Item) => `${d.probability * 100}%`);
 
-    const currentPushLine = this.svg
-      .append('g')
-      .attr('id', 'current-push-line')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-    addCurrentPushLine(this.currentPush, currentPushLine, xScale, height);
-
     const dotplotContainer = this.svg
       .append('g')
       .attr('id', 'dotplot-container')
@@ -239,5 +232,12 @@ export class CDFComponent implements AfterViewInit {
           .attr('cy', cy)
           .attr('fill', 'black');
     }
+
+    const currentPushLine = this.svg
+    .append('g')
+    .attr('id', 'current-push-line')
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+    addCurrentPushLine(this.currentPush, currentPushLine, this.data, xScale, height, yScale);
   }
 }
