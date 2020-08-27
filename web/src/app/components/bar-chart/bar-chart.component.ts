@@ -164,30 +164,26 @@ export class BarChartComponent implements AfterViewInit {
    *
    * Structure of the SVG:
    * <svg>
-   *  <g>
-   *    // Top bar chart (focus).
-   *    <g>
-   *      // Boxplot (boxplot).
+   *  <g id='focus-bar-chart'>
+   *    <g id='boxplot'>
+   *      <circle class='boxplot-points'></circle>
+   *      <rect class='boxplot-box'></rect>
+   *      <line class='boxplot-median'></line>
+   *      <line class='boxplot-ticks'></line>
+   *      <text class='boxplot-labels'></text>
    *    </g>
-   *    <g>
-   *      // Top x-axis (xAxisFocus).
-   *    </g>
-   *    <g>
-   *      // Top y-axis (yAxis).
-   *    </g>
-   *    <text>
-   *      // Top y-axis title.
-   *    </text>
+   *    <g class='axis axis--xFocus'></g>
+   *    <g class='axis axis--y'></g>
+   *    <text id='bar-chart-title'></text>
+   *    <text id='y-axis-title'></text>
+   *    <rect class='newBars'></rect>
+   *    <rect class='transBars'></rect>
    *  </g>
-   *  <g>
-   *    // Bottom bar chart (brush).
-   *    <g>
-   *      // Bottom x-axis (xAxisBrush).
-   *    </g>
-   *    <g>
-   *      // Brush selector (brushSelector, inplemented in
-   *      // updateChart function).
-   *    </g>
+   *  <g id='brush-bar-chart'>
+   *    <g class='axis axis--xBrush'></g>
+   *    <rect class='brush-bars'></g>
+   *    // Implemented in updateChart funtion.
+   *    <g class='brush'></g>
    *  </g>
    * <svg>
    */
@@ -210,37 +206,47 @@ export class BarChartComponent implements AfterViewInit {
 
     this.focus = this.svg
       .append('g')
+      .attr('id', 'focus-bar-chart')
       .attr('transform', 'translate(0, 0)');
 
     // The brush here is an interactive element that allows dragging to display the
     // focus bar chart.
     this.brush = this.svg
       .append('g')
+      .attr('id', 'brush-bar-chart')
       .attr('transform', `translate(0, ${marginBrush.top})`);
 
-    this.boxplot = this.focus.append('g');
+    this.boxplot = this.focus
+      .append('g')
+      .attr('id', 'boxplot');
 
     this.xScaleFocus = d3
       .scaleBand()
       .range([marginFocus.left, elementWidth - marginFocus.right])
       .padding(0.1);
     this.yScaleFocus = d3
-      .scaleLinear().range([elementHeight - marginFocus.bottom, marginFocus.top]);
+      .scaleLinear()
+      .range([elementHeight - marginFocus.bottom, marginFocus.top]);
     this.xAxisFocus = this.focus
       .append('g')
-      .attr('class', 'axis axis--x')
+      .attr('class', 'axis axis--xFocus')
       .attr('transform', `translate(0, ${elementHeight - marginFocus.bottom})`);
     this.yAxis = this.focus
       .append('g')
+      .attr('class', 'axis axis--y')
       .attr('transform', `translate(${marginFocus.left}, 0)`)
       .style('color', BarChartComponent.COLOR_LIGHT_GRAY);
 
-    this.focus.append('text')
+    this.focus
+      .append('text')
+      .attr('id', 'bar-chart-title')
       .attr('text-anchor', 'middle')
       .attr('transform', `translate(${elementWidth / 2}, ${marginFocus.top / 2})`)
       .style('font-size', '16px sans-serif')
       .text('Bar chart of push durations');
-    this.focus.append('text')
+    this.focus
+      .append('text')
+      .attr('id', 'y-axis-title')
       .attr('text-anchor', 'middle')
       .attr('transform', 'translate(' + (marginFocus.left / 2) + ',' +
         ((elementHeight - marginFocus.bottom + marginFocus.top) / 2) + ')rotate(-90)')
@@ -253,9 +259,11 @@ export class BarChartComponent implements AfterViewInit {
       .range([marginBrush.left, elementWidth - marginBrush.right])
       .padding(0.1);
     this.yScaleBrush = d3
-      .scaleLinear().range([this.heightBrush, 0]);
+      .scaleLinear()
+      .range([this.heightBrush, 0]);
     this.xAxisBrush = this.brush
       .append('g')
+      .attr('class', 'axis axis--xBrush')
       .attr('transform', `translate(0, ${this.heightBrush})`);
   }
 
@@ -294,8 +302,10 @@ export class BarChartComponent implements AfterViewInit {
 
     // Initialize the brush bar chart.
     if (!this.brush) { return; }
-    const brushBars = this.brush.selectAll('rect')
-      .data(dataSelected)
+    const brushBars = this.brush.selectAll('rect').data(dataSelected);
+
+    brushBars
+      .attr('class', 'brush-bars')
       .enter()
       .append('rect')
       .attr('x', (d: Item) => this.xScaleBrush(d.startTime))
@@ -312,9 +322,7 @@ export class BarChartComponent implements AfterViewInit {
         });
 
     // Apply transition to all elements.
-    brushBars.selectAll('#rect')
-      .transition()
-      .duration(500);
+    brushBars.selectAll('rect').transition().duration(500);
 
     // This local function changes the focus of the top bar chart based
     // on the input.
@@ -325,9 +333,7 @@ export class BarChartComponent implements AfterViewInit {
       if (!this.focus) { return; }
       this.focus.selectAll('rect').remove();
 
-      const newBars = this.focus.selectAll('rect')
-        .data(inputData);
-      // TODO: Call function that creates a boxplot.
+      const newBars = this.focus.selectAll('rect').data(inputData);
       const maxFocusDuration = d3.max(inputData, (d: Item) => d.durationHours);
       if (!maxFocusDuration) { return; }
 
@@ -352,7 +358,7 @@ export class BarChartComponent implements AfterViewInit {
       else {
         this.xAxisFocus
           .call(d3.axisBottom(this.xScaleFocus)
-            .tickSizeOuter(0));
+                  .tickSizeOuter(0));
       }
       this.xAxisFocus
         .selectAll('text')
@@ -366,7 +372,7 @@ export class BarChartComponent implements AfterViewInit {
       this.yAxis.select('.domain').remove();
 
       newBars
-        .attr('class', '.newBars')
+        .attr('class', 'new-bars')
         .enter()
         .append('rect')
           .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
@@ -387,7 +393,7 @@ export class BarChartComponent implements AfterViewInit {
 
       // Add transparent bars for hover convience.
       newBars
-        .attr('class', '.transBars')
+        .attr('class', 'trans-bars')
         .enter()
         .append('rect') // Add a transparent rect for each element.
           .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
@@ -399,9 +405,7 @@ export class BarChartComponent implements AfterViewInit {
         // TODO: Call mouseover and mouseleave functions here.
 
       // Apply transition to all elements.
-      newBars.selectAll('rect')
-        .transition()
-        .duration(500);
+      newBars.selectAll('rect').transition().duration(500);
 
       this.createBoxplot(inputData);
     };
@@ -460,7 +464,8 @@ export class BarChartComponent implements AfterViewInit {
       .extent([[70, 0], [this.width - 90, this.heightBrush]]) // Limit the brush.
       .on('brush', brushDown); // Update the focus bar chart based on the brush selection.
 
-    this.brush.append('g')
+    this.brush
+      .append('g')
       .attr('class', 'brush')
       .call(brushSelector)
       .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
@@ -468,8 +473,8 @@ export class BarChartComponent implements AfterViewInit {
 
   /**
    * This function creates a boxplot next to the focus bar chart with all selected data.
-   * It indicates the maximum, the minimium, the median, the first quantile and the third
-   * quantile of the selected data duartions.
+   * It indicates maximum, minimium, median, first quantile and third quantile of the
+   * selected data durations.
    *
    * @param inputData: Data selected for the focus bar chart
    */
@@ -491,16 +496,18 @@ export class BarChartComponent implements AfterViewInit {
     if (!median) { return; }
     const q3 = d3.quantile(durationSorted, 0.75);
     if (!q3) { return; }
+    const dataLabels = [durationMax, durationMin, q1, median, q3];
 
     const boxWidth = 30;
     // If more than 100 Items are selected, set the circle radius to be 1.4; otherwise, set
     // the radius to 2.5.
     const pointRadius = (inputData.length > BarChartComponent.DEFAULT_MAX_LABELS) ? 1.4 : 2.5;
-    const jitterWidth = 20;
+    const jitterWidth = boxWidth - 10;
     const center = this.width - 60;
 
     // Add individual points with jitter.
     this.boxplot
+      .attr('class', 'boxplot-points')
       .selectAll('points')
       .data(inputData)
       .enter()
@@ -513,6 +520,7 @@ export class BarChartComponent implements AfterViewInit {
 
     // Add the rectangle for the boxplot.
     this.boxplot
+      .attr('class', 'boxplot-box')
       .append('rect')
         .attr('x', center - boxWidth / 2)
         .attr('y', this.yScaleFocus(q3))
@@ -523,6 +531,7 @@ export class BarChartComponent implements AfterViewInit {
 
     // Add the median horizontal line to the boxplot.
     this.boxplot
+      .attr('class', 'boxplot-median')
       .append('line')
         .attr('x1', center - boxWidth / 2)
         .attr('x2', center + boxWidth / 2)
@@ -533,8 +542,9 @@ export class BarChartComponent implements AfterViewInit {
 
     // Add ticks for max, min, median, q1 and q3.
     this.boxplot
+      .attr('class', 'boxplot-ticks')
       .selectAll('ticks')
-      .data([durationMax, durationMin, median, q1, q3])
+      .data(dataLabels)
       .enter()
       .append('line')
         .attr('x1', center + boxWidth / 2 + 4)
@@ -546,8 +556,9 @@ export class BarChartComponent implements AfterViewInit {
 
     // Add labels for max, min, median, q1 and q3.
     this.boxplot
+      .attr('class', 'boxplot-labels')
       .selectAll('labels')
-      .data([durationMax, durationMin, median, q1, q3])
+      .data(dataLabels)
       .enter()
       .append('text')
         .attr('dx', center + boxWidth / 2 + 12)
