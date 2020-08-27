@@ -68,7 +68,7 @@ export class TimelineComponent implements AfterViewInit {
    */
   private static populateData(pushInfos: step189_2020.IPushInfo[] | null): [Item[], number] {
     if (!pushInfos) { return [[], 0]; }
-    const data: Item[] = []
+    const data: Item[] = [];
 
     pushInfos.forEach(pushInfo => {
       if (!pushInfo) { return; }
@@ -101,7 +101,7 @@ export class TimelineComponent implements AfterViewInit {
     // Assign a row value to each push representing their horizontal placement
     // on the timeline. Each row index corresponds to one group.
     const rowIndex = this.divideIntoRows(data);
-    return [data, rowIndex]
+    return [data, rowIndex];
   }
 
   /**
@@ -206,7 +206,7 @@ export class TimelineComponent implements AfterViewInit {
    *   <svg>
    *     <g>
    *       <g class='x axis'>
-   *          <g class=’tick’ .../> 
+   *          <g class=’tick’ .../>
    *            [...]
    *          <g class=’tick’ .../>
    *       <defs/> // clipPath defining how much of timeline is visible
