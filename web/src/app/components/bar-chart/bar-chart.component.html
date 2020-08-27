@@ -1,10 +1,10 @@
 <!-- Initialize a select button. -->
 <div #selectButton class='selectButton'>
   <select id='selections' (change)='updateChart();'>
-    <option value='0'>Show all pushes</option>
-    <option value='1'>Show complete pushes</option>
+    <option value='all'>Show all pushes</option>
+    <option value='completed'>Show completed pushes</option>
   </select>
- </div>
+</div>
 
 <!-- Div where the graph will take place. -->
 <div #barchart class='barchart'></div>

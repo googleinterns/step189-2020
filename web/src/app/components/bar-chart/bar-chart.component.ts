@@ -45,7 +45,7 @@ export class BarChartComponent implements AfterViewInit {
   private static readonly NANO_TO_SECS: number = 10 ** 9;
   private static readonly NANO_TO_MILLI: number = 10 ** 6;
   private static readonly SECS_TO_HRS: number = 60 * 60;
-  private static readonly ALL_PUSHES_OPTION: string = '0';
+  private static readonly ALL_PUSHES_OPTION: string = 'all';
   private static readonly COLOR_LIGHT_GRAY: string = '#787878';
   private static readonly COLOR_DARK_GRAY: string = '#373C38';
   private static readonly COLOR_WHITE: string = '#eee';
@@ -232,7 +232,7 @@ export class BarChartComponent implements AfterViewInit {
       .attr('text-anchor', 'middle')
       .attr('transform', `translate(${elementWidth / 2}, ${marginFocus.top / 2})`)
       .style('font-size', '16px sans-serif')
-      .text('Bar chart of all pushes');
+      .text('Bar chart of push durations');
     this.focus.append('text')
       .attr('text-anchor', 'middle')
       .attr('transform', 'translate(' + (marginFocus.left / 2) + ',' +
@@ -256,8 +256,8 @@ export class BarChartComponent implements AfterViewInit {
    * This function updates the focus bar chart and the brush bar chart based on
    * the data of the dropdown selection. The function display the most recent 30
    * pushes by default. It also implements an interactive brush to display a selected
-   * area of the bar chart. If the selected value is '0', the function updates both
-   * charts with all pushes; if the selected value is '1', it udpates the charts with
+   * area of the bar chart. If the selected value is 'all', the function updates both
+   * charts with all pushes; if the selected value is 'completed', it udpates the charts with
    * just the completed pushes.
    */
   public updateChart(): void {
