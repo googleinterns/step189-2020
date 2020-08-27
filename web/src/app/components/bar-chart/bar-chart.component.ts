@@ -88,6 +88,7 @@ export class BarChartComponent implements AfterViewInit {
   private focus: d3G | undefined; // Top bar chart for display.
   // tslint:disable-next-line: no-any
   private brush: any; // Bottom bar chart for brushing.
+  private boxplot: d3G | undefined;
   private heightFocus = 0;
   private heightBrush = 0;
   private width = 0;
@@ -115,7 +116,7 @@ export class BarChartComponent implements AfterViewInit {
    * future boxplot. DataAll and dataComplete arrays are sorted in ascending order
    * by startTime.
    *
-   * @param pushInfos Array for one push def
+   * @param pushInfos: Array for one push def
    */
   private update(pushInfos: step189_2020.IPushInfo[]): void {
     if (!pushInfos) { return; }
@@ -166,6 +167,9 @@ export class BarChartComponent implements AfterViewInit {
    *  <g>
    *    // Top bar chart (focus).
    *    <g>
+   *      // Boxplot (boxplot).
+   *    </g>
+   *    <g>
    *      // Top x-axis (xAxisFocus).
    *    </g>
    *    <g>
@@ -213,6 +217,8 @@ export class BarChartComponent implements AfterViewInit {
     this.brush = this.svg
       .append('g')
       .attr('transform', `translate(0, ${marginBrush.top})`);
+
+    this.boxplot = this.focus.append('g');
 
     this.xScaleFocus = d3
       .scaleBand()
@@ -266,7 +272,7 @@ export class BarChartComponent implements AfterViewInit {
     d3.selectAll('rect').remove();
 
     const valueSelected = (document.getElementById('selections') as HTMLSelectElement).value;
-    let dataSelected = (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ? this.dataAll : this.dataComplete;
+    const dataSelected = (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ? this.dataAll : this.dataComplete;
     if (!dataSelected) { return; }
 
     const maxDuration = d3.max(dataSelected, (d: Item) => d.durationHours);
@@ -340,7 +346,7 @@ export class BarChartComponent implements AfterViewInit {
         const modNum = Math.round((inputData.length / BarChartComponent.DEFAULT_MAX_LABELS));
         this.xAxisFocus
           .call(d3.axisBottom(this.xScaleFocus)
-            .tickValues(this.xScaleFocus.domain().filter((d: Item, i: number) => { return !(i % modNum); }))
+            .tickValues(this.xScaleFocus.domain().filter((d: Item, i: number) => !(i % modNum)))
             .tickSizeOuter(0));
       }
       else {
@@ -396,6 +402,8 @@ export class BarChartComponent implements AfterViewInit {
       newBars.selectAll('rect')
         .transition()
         .duration(500);
+
+      this.createBoxplot(inputData);
     };
 
     // Update the focus chart given the selected data. If the selected data
@@ -456,5 +464,101 @@ export class BarChartComponent implements AfterViewInit {
       .attr('class', 'brush')
       .call(brushSelector)
       .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
+  }
+
+  /**
+   * This function creates a boxplot next to the focus bar chart with all selected data.
+   * It indicates the maximum, the minimium, the median, the first quantile and the third
+   * quantile of the selected data duartions.
+   *
+   * @param inputData: Data selected for the focus bar chart
+   */
+  private createBoxplot(inputData: Item[]): void {
+    // Remove all elements of from the previous boxplot,
+    if (!this.boxplot) { return; }
+    this.boxplot.selectAll('circle').remove();
+    this.boxplot.selectAll('line').remove();
+    this.boxplot.selectAll('text').remove();
+
+    const durationSelected = inputData.map((obj: Item) => obj.durationHours);
+    const durationSorted = durationSelected.sort(d3.ascending);
+    const durationMax = durationSorted[durationSorted.length - 1];
+    const durationMin = durationSorted[0];
+
+    const q1 = d3.quantile(durationSorted, 0.25);
+    if (!q1) { return; }
+    const median = d3.quantile(durationSorted, 0.5);
+    if (!median) { return; }
+    const q3 = d3.quantile(durationSorted, 0.75);
+    if (!q3) { return; }
+    const interQuantileRange = q3 - q1;
+    const min = Math.max(q1 - 1.5 * interQuantileRange, durationMin);
+    const max = Math.min(q3 + 1.5 * interQuantileRange, durationMax);
+
+    const boxWidth = 30;
+    // If more than 100 Items are selected, set the circle radius to be 1.4; otherwise, set
+    // the radius to 2.5.
+    const pointRadius = (inputData.length > BarChartComponent.DEFAULT_MAX_LABELS) ? 1.4 : 2.5;
+    const jitterWidth = 20;
+    const center = this.width - 60;
+
+    // Add individual points with jitter.
+    this.boxplot
+      .selectAll('points')
+      .data(inputData)
+      .enter()
+      .append('circle')
+        .attr('cx', (d: Item) => (center - jitterWidth / 2 + Math.random() * jitterWidth))
+        .attr('cy', (d: Item) => this.yScaleFocus(d.durationHours))
+        .attr('r', pointRadius)
+        .style('fill', (d: Item) => BarChartComponent.STATE_TO_COLOR[d.state])
+        .style('fill-opacity', 0.45); // Show overlay among dataPoints.
+
+    // Add the rectangle for the boxplot.
+    this.boxplot
+      .append('rect')
+        .attr('x', center - boxWidth / 2)
+        .attr('y', this.yScaleFocus(q3))
+        .attr('height', (this.yScaleFocus(q1) - this.yScaleFocus(q3)))
+        .attr('width', boxWidth)
+        .attr('stroke', BarChartComponent.COLOR_DARK_GRAY)
+        .style('fill-opacity', 0);
+
+    // Add the median horizontal line to the boxplot.
+    this.boxplot
+      .append('line')
+        .attr('x1', center - boxWidth / 2)
+        .attr('x2', center + boxWidth / 2)
+        .attr('y1', this.yScaleFocus(median))
+        .attr('y2', this.yScaleFocus(median))
+        .attr('stroke', BarChartComponent.COLOR_DARK_GRAY)
+        .style('fill-opacity', 1);
+
+    // Add ticks for max, min, median, q1 and q3.
+    this.boxplot
+      .selectAll('ticks')
+      .data([max, min, median, q1, q3])
+      .enter()
+      .append('line')
+        .attr('x1', center + boxWidth / 2 + 4)
+        .attr('x2', center + boxWidth / 2 + 10)
+        .attr('y1', (d: number) => this.yScaleFocus(d))
+        .attr('y2', (d: number) => this.yScaleFocus(d))
+        .attr('stroke', BarChartComponent.COLOR_LIGHT_GRAY)
+        .style('fill-opacity', 1);
+
+    // Add labels for max, min, median, q1 and q3.
+    this.boxplot
+      .selectAll('labels')
+      .data([max, min, median, q1, q3])
+      .enter()
+      .append('text')
+        .attr('dx', center + boxWidth / 2 + 12)
+        .attr('dy', (d: number) => this.yScaleFocus(d) + 3)
+        .attr('line-height', '1.5')
+        .text((d: number) => d.toFixed(1))
+        .style('text-anchor', 'start')
+        .style('font', '11px sans-serif')
+        .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
   }
 }
