@@ -256,9 +256,9 @@ export class BarChartComponent implements AfterViewInit {
    * This function updates the focus bar chart and the brush bar chart based on
    * the data of the dropdown selection. The function display the most recent 30
    * pushes by default. It also implements an interactive brush to display a selected
-   * area of the bar chart. If the selected value is 'all', the function updates both
-   * charts with all pushes; if the selected value is 'completed', it udpates the charts with
-   * just the completed pushes.
+   * area of the bar chart. If the user selects 'Show all pushes', the function updates
+   * both charts with all pushes; otherwise, it updates the charts with just the
+   * completed ones.
    */
   public updateChart(): void {
     // Clear all bars from the previous selection.
