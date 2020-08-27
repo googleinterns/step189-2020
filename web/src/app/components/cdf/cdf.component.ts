@@ -33,8 +33,8 @@ export class CDFComponent implements AfterViewInit {
    *     <g id='y-axis-left'></g>
    *     <text id='y-axis-left-label'></text>
    *     <g id='y-axis-right'></g>
-   *     <path id='CDF-area'></path>
-   *     <path id='CDF-stroke'></path>
+   *     <path id='cdf-area'></path>
+   *     <path id='cdf-stroke'></path>
    *   </g>
    *   <g id='x-axis'></g>
    *   <text id='x-axis-label'></text>
@@ -48,6 +48,8 @@ export class CDFComponent implements AfterViewInit {
    *       <marker id='arrow'></marker>
    *     </defs>
    *     <line id='current-push-line'></line>
+   *     <line id='current-push-text-line'></line>
+   *     <line id='current-push-text-line-arrow'></line>
    *     <text id='current-push-text'></text>
    *   </g>
    * </svg>
@@ -158,7 +160,7 @@ export class CDFComponent implements AfterViewInit {
     cdfChart
       .datum(extendedData)
       .append('path')
-      .attr('id', 'CDF-area')
+      .attr('id', 'cdf-area')
       .attr('fill', COMPLETED_BLUE)
       .attr('d', d3.area<Item>()
         .x(d => xScale(d.duration))
@@ -176,7 +178,7 @@ export class CDFComponent implements AfterViewInit {
         .y(d => yScale(d.probability))
         .curve(d3.curveStepAfter)
       )
-      .attr('id', 'CDF-stroke')
+      .attr('id', 'cdf-stroke')
       .attr('stroke', STROKE_COLOR)
       .attr('stroke-width', 2);
 

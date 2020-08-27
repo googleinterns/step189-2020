@@ -243,8 +243,7 @@ export function addCurrentPushLine(
     .attr('x1', xScale(duration))
     .attr('y1', height)
     .attr('x2', xScale(duration))
-    .attr('y2', endOfLine)
-
+    .attr('y2', endOfLine);
 
   currentPushLine
     .append('line')
@@ -273,7 +272,7 @@ export function addCurrentPushLine(
     .attr('text-anchor', 'middle')
     .attr('x', xScale(duration))
     .attr('y', height + 30)
-    .attr('id', 'current-line-text')
+    .attr('id', 'current-push-text')
     .attr('font-size', '11px')
-    .text('Current Push')
+    .text('Current Push');
 }
