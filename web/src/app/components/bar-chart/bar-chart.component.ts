@@ -491,9 +491,6 @@ export class BarChartComponent implements AfterViewInit {
     if (!median) { return; }
     const q3 = d3.quantile(durationSorted, 0.75);
     if (!q3) { return; }
-    const interQuantileRange = q3 - q1;
-    const min = Math.max(q1 - 1.5 * interQuantileRange, durationMin);
-    const max = Math.min(q3 + 1.5 * interQuantileRange, durationMax);
 
     const boxWidth = 30;
     // If more than 100 Items are selected, set the circle radius to be 1.4; otherwise, set
@@ -537,7 +534,7 @@ export class BarChartComponent implements AfterViewInit {
     // Add ticks for max, min, median, q1 and q3.
     this.boxplot
       .selectAll('ticks')
-      .data([max, min, median, q1, q3])
+      .data([durationMax, durationMin, median, q1, q3])
       .enter()
       .append('line')
         .attr('x1', center + boxWidth / 2 + 4)
@@ -550,7 +547,7 @@ export class BarChartComponent implements AfterViewInit {
     // Add labels for max, min, median, q1 and q3.
     this.boxplot
       .selectAll('labels')
-      .data([max, min, median, q1, q3])
+      .data([durationMax, durationMin, median, q1, q3])
       .enter()
       .append('text')
         .attr('dx', center + boxWidth / 2 + 12)
