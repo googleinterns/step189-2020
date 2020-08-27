@@ -76,6 +76,22 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
 }
 
 /**
+ * Finds the probability of a duration taking less time than the given duration
+ * parameter. Because the curve is a step function and the data is sorted by
+ * increasing duration, the resulting probability is the probability of the
+ * Item with a duration directly less than the given duration parameter.
+ *
+ * @param data Array of Items sorted by increasing duration
+ * @param duration A duration value between the min and max of all durations
+ * @return A probability value between 0 and 1 (exclusive)
+ */
+export function getProbabilityForDuration(data: Item[], duration: number): number {
+  const allDurations = data.map(d => d.duration);
+  const index = d3.bisectLeft(allDurations, duration);
+  return data[index - 1].probability;
+}
+
+/**
  * Finds the interpolated duration value for a given probability. It uses the
  * ratio of the differences in duration over the differences in probability of
  * the Items with probability directly less and than greater than probability
@@ -85,10 +101,10 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
  * @param probability A probability value between 0 and 1 (exclusive)
  * @return The interpolated duration value for the probability parameter
  */
-function getXforPercentage(data: Item[], probability: number): number {
-  const yVals = data.map(d => d.probability);
-  const left = data[d3.bisectLeft(yVals, probability) - 1];
-  const right = data[d3.bisectRight(yVals, probability)];
+function getDurationforProbability(data: Item[], probability: number): number {
+  const allProbabilities = data.map(d => d.probability);
+  const left = data[d3.bisectLeft(allProbabilities, probability) - 1];
+  const right = data[d3.bisectRight(allProbabilities, probability)];
   return ((probability - left.probability) * (right.duration - left.duration) /
     (right.probability - left.probability)) + left.duration;
 }
@@ -111,15 +127,16 @@ function getXforPercentage(data: Item[], probability: number): number {
 export function generateQuantiles(data: Item[], percentileLines: number[], xScale: d3.ScaleLinear<number, number>): Item[] {
   if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
     return [percentileLines[1]].map(d => ({
-      duration: getXforPercentage(data, d),
+      duration: getDurationforProbability(data, d),
       probability: d} as Item));
   }
   let quantiles = percentileLines.map(d => ({
-    duration: getXforPercentage(data, d),
+    duration: getDurationforProbability(data, d),
     probability: d} as Item));
 
+  const pixelDifference = 15;
   const differences = [xScale(quantiles[1].duration - quantiles[0].duration), xScale(quantiles[2].duration - quantiles[1].duration)];
-  if (differences[0] < 15 || differences[1] < 15) {
+  if (differences[0] < pixelDifference || differences[1] < pixelDifference) {
     quantiles = generateQuantiles(data, [percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01], xScale);
   }
   return quantiles;
@@ -157,12 +174,6 @@ export function generateYPosition(radius: number, xScale: d3.ScaleLinear<number,
     coordinates.push({x, y});
   }
   return coordinates.map(d => d.y);
-}
-
-export function getProbabilityForX(data: Item[], xValue: number): number {
-    const xVals = data.map(d => d.duration);
-    const index = d3.bisectLeft(xVals, xValue);
-    return data[index - 1].probability;
 }
 
 /**
@@ -204,8 +215,8 @@ export function addCurrentPushLine(
 
   const duration = (+pushEndTime - +firstStateStart) / NANO_TO_MINUTES;
 
-  const markerSize = 2.5
-  const markerPath = [[0, 0], [0, markerSize], [markerSize, markerSize/2]]
+  const markerSize = 2.5;
+  const markerPath = [[0, 0], [0, markerSize], [markerSize, markerSize / 2]];
   currentPushLine
     .append('defs')
     .append('marker')
@@ -215,16 +226,19 @@ export function addCurrentPushLine(
     .attr('markerWidth', markerSize)
     .attr('markerHeight', markerSize)
     .attr('orient', 'auto')
+    .datum(markerPath)
     .append('path')
-    .attr('d', d3.line()([[0, 0], [0, markerSize], [markerSize, markerSize/2]]));
+    .attr('d', d3.line<number[]>()
+      .x(d => d[0])
+      .y(d => d[1]));
 
-  const endOfLine = yScale(getProbabilityForX(data, duration))
+  const endOfLine = yScale(getProbabilityForDuration(data, duration));
 
   currentPushLine
     .append('line')
-    .attr('class', 'current-push-line')
+    .attr('id', 'current-push-line')
     .attr('stroke', 'white')
-    .attr('stroke-dasharray', '10 5 5 5')
+    .attr('stroke-dasharray', '10 5')
     .attr('stroke-width', 3)
     .attr('x1', xScale(duration))
     .attr('y1', endOfLine)
@@ -240,26 +254,4 @@ export function addCurrentPushLine(
     .attr('id', 'current-line-text')
     .attr('font-size', '12px')
     .text('Current Push');
-    
-/*
-  currentPushLine
-   .append('line')
-   .attr('class', 'current-push-line')
-   .attr('stroke', 'grey')
-   .attr('stroke-dasharray', '10 5 5 5')
-   .attr('stroke-width', 4)
-   .attr('x1', xScale(duration))
-   .attr('y1', 0)
-   .attr('x2', xScale(duration))
-   .attr('y2', height)
-
- currentPushLine
-   .append('text')
-   .attr('text-anchor', 'middle')
-   .attr('x', xScale(duration))
-   .attr('y', 0)
-   .attr('id', 'current-line-text')
-   .attr('font-size', '12px')
-   .text('Current Push');
-   */
 }

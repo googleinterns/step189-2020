@@ -42,8 +42,14 @@ export class CDFComponent implements AfterViewInit {
    *   <g id='percentile-lines'></g>
    *     <line class='percentile-line'></line>
    *     <text class='percentile-text'></text>
-   *   <g id='current-push-line'></g>
    *   <g id='dotplot-container'></g>
+   *   <g id='current-push-line'> (Only if the visited push is completed)
+   *     <defs>
+   *       <marker id='arrow'></marker>
+   *     </defs>
+   *     <line id='current-push-line'></line>
+   *     <text id='current-push-text'></text>
+   *   </g>
    * </svg>
    */
   ngAfterViewInit(): void {
@@ -89,12 +95,12 @@ export class CDFComponent implements AfterViewInit {
       .attr('width', elementWidth)
       .attr('height', elementHeight);
 
-    const CDFChart = this.svg
+    const cdfChart = this.svg
       .append('g')
       .attr('id', 'cdf-chart')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const yAxisLeft = CDFChart
+    const yAxisLeft = cdfChart
       .append('g')
       .attr('id', 'y-axis-left')
       .call(d3
@@ -105,7 +111,7 @@ export class CDFComponent implements AfterViewInit {
 
     yAxisLeft.select('.domain').remove();
 
-    CDFChart.append('text')
+    cdfChart.append('text')
       .attr('id', 'y-axis-left-label')
       .attr('transform', 'rotate(-90)')
       .attr('y', -margin.left)
@@ -115,7 +121,7 @@ export class CDFComponent implements AfterViewInit {
       .style('font-size', '12px')
       .text('Probability');
 
-    const yAxisRight = CDFChart
+    const yAxisRight = cdfChart
       .append('g')
       .attr('id', 'y-axis-right')
       .attr('transform', `translate(${width}, 0)`)
@@ -149,7 +155,7 @@ export class CDFComponent implements AfterViewInit {
       .style('font-size', '16px')
       .text('CDF of completed push durations');
 
-    CDFChart
+    cdfChart
       .datum(extendedData)
       .append('path')
       .attr('id', 'CDF-area')
@@ -161,7 +167,7 @@ export class CDFComponent implements AfterViewInit {
         .curve(d3.curveStepAfter)
       );
 
-    CDFChart
+    cdfChart
       .datum(extendedData)
       .append('path')
       .attr('fill', 'none')
