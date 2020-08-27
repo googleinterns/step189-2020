@@ -253,11 +253,12 @@ export class BarChartComponent implements AfterViewInit {
   }
 
   /**
-   * This function updates the focus barchart based on the data of the dropdown
-   * selection. If the dropdown selection return '0' for
-   * dataAll and '1' for dataComplete.
-   *
-   * @param dataSelection: Value selected for the bar chart
+   * This function updates the focus bar chart and the brush bar chart based on
+   * the data of the dropdown selection. The function display the most recent 30
+   * pushes by default. It also implements an interactive brush to display a selected
+   * area of the bar chart. If the selected value is '0', the function updates both
+   * charts with all pushes; if the selected value is '1', it udpates the charts with
+   * just the completed pushes.
    */
   public updateChart(): void {
     // Clear all bars from the previous selection.
@@ -392,7 +393,9 @@ export class BarChartComponent implements AfterViewInit {
     const localBrush = this.xScaleBrush;
 
     // This callback function updates the focus bar chart selection to the brusing
-    // area. It is declared as a local function to prevent the use of `this`.
+    // area. It is declared as a local function to prevent the use of `this`. The
+    // listener of D3 brush function defaults `this` context as the current DOM element.
+    // We have to declare it locally, in order to use xScaleBrush and dataSelected.
     const brushDown = () => {
       // Return if no input is given or the selection is emtpy.
       if (!d3.event.sourceEvent || !d3.event.selection) { return; }
