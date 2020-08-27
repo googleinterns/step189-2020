@@ -1,7 +1,10 @@
-<div id='instruction'>
-  <h4>Bar Chart</h4>
+<!-- Initialize a select button. -->
+<div #selectButton class='selectButton'>
+  <select id='selections' (change)='updateChart();'>
+    <option value='all'>Show all pushes</option>
+    <option value='completed'>Show completed pushes</option>
+  </select>
 </div>
 
 <!-- Div where the graph will take place. -->
 <div #barchart class='barchart'></div>
-<div id='tooltip'></div>

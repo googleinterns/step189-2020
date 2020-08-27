@@ -41,11 +41,11 @@ export class BarChartComponent implements AfterViewInit {
   /**
    * Constants.
    */
-  private static readonly ALL_PUSHES_OPTION: number = 0;
   private static readonly DEFAULT_NUM_BARS: number = 30;
   private static readonly NANO_TO_SECS: number = 10 ** 9;
   private static readonly NANO_TO_MILLI: number = 10 ** 6;
   private static readonly SECS_TO_HRS: number = 60 * 60;
+  private static readonly ALL_PUSHES_OPTION: string = 'all';
   private static readonly COLOR_LIGHT_GRAY: string = '#787878';
   private static readonly COLOR_DARK_GRAY: string = '#373C38';
   private static readonly COLOR_WHITE: string = '#eee';
@@ -85,9 +85,8 @@ export class BarChartComponent implements AfterViewInit {
   private completeDuration: number[] = [];
   private svg: d3SVG | undefined;
   private focus: d3G | undefined; // Top bar chart for display.
-  private brush: d3G | undefined; // Bottom bar chart for brushing.
   // tslint:disable-next-line: no-any
-  private brushSelector: any;
+  private brush: any; // Bottom bar chart for brushing.
   private heightFocus = 0;
   private heightBrush = 0;
   private width = 0;
@@ -105,8 +104,7 @@ export class BarChartComponent implements AfterViewInit {
     if (!this.pushInfos) { return; }
     this.update(this.pushInfos);
     this.initialChart();
-    this.updateChart(BarChartComponent.ALL_PUSHES_OPTION); // Initialize the focus chart with dataAll.
-    // TODO: Call function that creates the brushSelector.
+    this.updateChart(); // Initialize the focus chart with dataAll.
   }
 
   /**
@@ -182,7 +180,8 @@ export class BarChartComponent implements AfterViewInit {
    *      // Bottom x-axis (xAxisBrush).
    *    </g>
    *    <g>
-   *      // Brush selector (brushSelector).
+   *      // Brush selector (brushSelector, inplemented in
+   *      // updateChart function).
    *    </g>
    *  </g>
    * <svg>
@@ -192,7 +191,7 @@ export class BarChartComponent implements AfterViewInit {
     const elementWidth = element.clientWidth;
     const elementHeight = element.clientHeight;
     const marginFocus = { top: 60, right: 90, bottom: 150, left: 70 };
-    const marginBrush = { top: 370, right: 90, bottom: 20, left: 70};
+    const marginBrush = { top: 370, right: 90, bottom: 20, left: 70 };
 
     this.heightFocus = elementHeight;
     this.heightBrush = 30;
@@ -231,6 +230,11 @@ export class BarChartComponent implements AfterViewInit {
 
     this.focus.append('text')
       .attr('text-anchor', 'middle')
+      .attr('transform', `translate(${elementWidth / 2}, ${marginFocus.top / 2})`)
+      .style('font-size', '16px sans-serif')
+      .text('Bar chart of push durations');
+    this.focus.append('text')
+      .attr('text-anchor', 'middle')
       .attr('transform', 'translate(' + (marginFocus.left / 2) + ',' +
         ((elementHeight - marginFocus.bottom + marginFocus.top) / 2) + ')rotate(-90)')
       .attr('fill', BarChartComponent.COLOR_LIGHT_GRAY)
@@ -246,23 +250,22 @@ export class BarChartComponent implements AfterViewInit {
     this.xAxisBrush = this.brush
       .append('g')
       .attr('transform', `translate(0, ${this.heightBrush})`);
-
-    this.brushSelector = d3
-      .brushX()
-      .extent([[marginBrush.left, 0], [elementWidth - marginBrush.right, this.heightBrush]])
-      .on('brush', this.brushMove)
-      .on('end', this.brushUp);
   }
 
   /**
-   * This function updates the focus barchart based on the data of the
-   * dropdown selection. TODO: The dropdown selection would return 0 for
-   * dataAll and 1 for dataComplete.
-   *
-   * @param dataSelection: Value selected for the bar chart
+   * This function updates the focus bar chart and the brush bar chart based on
+   * the data of the dropdown selection. The function display the most recent 30
+   * pushes by default. It also implements an interactive brush to display a selected
+   * area of the bar chart. If the user selects 'Show all pushes', the function updates
+   * both charts with all pushes; otherwise, it updates the charts with just the
+   * completed ones.
    */
-  public updateChart(dataSelection: number): void {
-    const dataSelected = (dataSelection === BarChartComponent.ALL_PUSHES_OPTION) ? this.dataAll : this.dataComplete;
+  public updateChart(): void {
+    // Clear all bars from the previous selection.
+    d3.selectAll('rect').remove();
+
+    const valueSelected = (document.getElementById('selections') as HTMLSelectElement).value;
+    const dataSelected = (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ? this.dataAll : this.dataComplete;
     if (!dataSelected) { return; }
 
     const maxDuration = d3.max(dataSelected, (d: Item) => d.durationHours);
@@ -282,17 +285,10 @@ export class BarChartComponent implements AfterViewInit {
     // brush selector.
     this.xAxisBrush.select('.domain').remove();
 
-    // Update the focus chart given the selected data.
-    this.changeFocus(
-      (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
-      dataSelected.slice(dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS, dataSelected.length) : dataSelected);
-
     // Initialize the brush bar chart.
     if (!this.brush) { return; }
     const brushBars = this.brush.selectAll('rect')
-      .data(dataSelected);
-
-    brushBars
+      .data(dataSelected)
       .enter()
       .append('rect')
       .attr('x', (d: Item) => this.xScaleBrush(d.startTime))
@@ -313,91 +309,136 @@ export class BarChartComponent implements AfterViewInit {
       .transition()
       .duration(500);
 
-    // Initial position of the brush selector.
-    const firstItemPosition = this.xScaleBrush(dataSelected[dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS].startTime);
-    const lastItemPosition = this.xScaleBrush(dataSelected[dataSelected.length - 1].startTime) + this.xScaleBrush.bandwidth();
-    if (!this.brushSelector) { return; }
+    // This local function changes the focus of the top bar chart based
+    // on the input.
+    const changeFocus = (inputData: Item[]) => {
+      if (!inputData) { return; }
+
+      // Remove all bars from previous brushing.
+      if (!this.focus) { return; }
+      this.focus.selectAll('rect').remove();
+
+      const newBars = this.focus.selectAll('rect')
+        .data(inputData);
+      // TODO: Call function that creates a boxplot.
+      const maxFocusDuration = d3.max(inputData, (d: Item) => d.durationHours);
+      if (!maxFocusDuration) { return; }
+
+      // Upate the xScaleFocus, yScaleFocus, xAxisFocus and yAxisFocus
+      // based on the selected data for the focus chart.
+      this.xScaleFocus.domain(inputData.map((d: Item) => d.startTime));
+      this.yScaleFocus.domain([0, maxFocusDuration]);
+      if (!this.yAxis) { return; }
+      this.yAxis.transition().duration(0).call(d3.axisLeft(this.yScaleFocus));
+      if (!this.xAxisFocus) { return; }
+      this.xAxisFocus.transition().duration(0)
+        .call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0))
+        .selectAll('text')
+        .style('text-anchor', 'end')
+        .attr('dx', '-10px')
+        .attr('dy', '-5px')
+        .attr('transform', 'rotate(-90)')
+        .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
+
+      // Remove the horizontal line of y axis to follow the convention.
+      this.yAxis.select('.domain').remove();
+
+      newBars
+        .attr('class', '.newBars')
+        .enter()
+        .append('rect')
+          .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
+          .attr('width', this.xScaleFocus.bandwidth())
+          .attr('y', (d: Item) => this.yScaleFocus(d.durationHours))
+          .attr('height', (d: Item) =>
+            this.yScaleFocus(0) - this.yScaleFocus(d.durationHours))
+          .attr('style', (d: Item) =>
+            `fill: ${BarChartComponent.STATE_TO_COLOR[d.state]}`)
+          .attr('fill-opacity', 1)
+          .attr('stroke', (d: Item) => { // Outline the white bars.
+              if (BarChartComponent.STATE_TO_COLOR[d.state] === BarChartComponent.COLOR_WHITE) {
+                return BarChartComponent.COLOR_DARK_GRAY;
+              }
+              return BarChartComponent.STATE_TO_COLOR[d.state];
+            });
+        // TODO: Call mouseover and mouseleave functions here.
+
+      // Add transparent bars for hover convience.
+      newBars
+        .attr('class', '.transBars')
+        .enter()
+        .append('rect') // Add a transparent rect for each element.
+          .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
+          .attr('width', this.xScaleFocus.bandwidth())
+          .attr('y', (d: Item) => this.yScaleFocus(maxFocusDuration))
+          .attr('height', (d: Item) =>
+            this.yScaleFocus(d.durationHours) - this.yScaleFocus(maxFocusDuration))
+          .attr('fill', BarChartComponent.COLOR_WHITE_TRANS);
+        // TODO: Call mouseover and mouseleave functions here.
+
+      // Apply transition to all elements.
+      newBars.selectAll('rect')
+        .transition()
+        .duration(500);
+    };
+
+    // Update the focus chart given the selected data. If the selected data
+    // contains more than 30 Items, only show the most recent 30 Items by default.
+    changeFocus(
+      (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
+      dataSelected.slice(dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS, dataSelected.length) : dataSelected);
+
+    // Local variable used by the brushDown function to prevent the use
+    // of `this` in the callback function.
+    const localBrush = this.xScaleBrush;
+
+    // This callback function updates the focus bar chart selection to the brusing
+    // area. It is declared as a local function to prevent the use of `this`. The
+    // listener of D3 brush function defaults `this` context as the current DOM element.
+    // We have to declare it locally, in order to use xScaleBrush and dataSelected.
+    const brushDown = () => {
+      // Return if no input is given or the selection is emtpy.
+      if (!d3.event.sourceEvent || !d3.event.selection) { return; }
+
+      const newInput: string[] = [];
+      let brushArea = d3.event.selection;
+      // Set the area of selection to the entire xScaleFocus if selection
+      // is invalid.
+      if (brushArea[0] === brushArea[1]) { brushArea = localBrush.range(); }
+
+      localBrush.domain().forEach((d: string) => {
+        const position = localBrush(d) + localBrush.bandwidth() / 2;
+        if (position >= brushArea[0] && position <= brushArea[1]) {
+          newInput.push(d);
+        }
+      });
+
+      const newData: Item[] = [];
+      for (const data of dataSelected) {
+        if (newInput.includes(data.startTime)) {
+          newData.push(data);
+        }
+      }
+
+      // Update the bar chart with extracted data.
+      changeFocus(newData);
+    };
+
+    // Initial position of the brush selector according to the input of the focus bar.
+    const firstItem =  (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
+      dataSelected[dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS] : dataSelected[0];
+    const firstItemPosition = this.xScaleBrush(firstItem.startTime);
+    const lastItemPosition = this.xScaleBrush(dataSelected[dataSelected.length - 1].startTime) +
+      this.xScaleBrush.bandwidth();
+
+    const brushSelector = d3
+      .brushX()
+      .extent([[70, 0], [this.width - 90, this.heightBrush]]) // Limit the brush.
+      .on('brush', brushDown); // Update the focus bar chart based on the brush selection.
+
     this.brush.append('g')
       .attr('class', 'brush')
-      .call(this.brushSelector)
-      .call(this.brushSelector.move, [firstItemPosition, lastItemPosition]);
-  }
-
-  /**
-   * This function changes the focus of the top bar chart based on the input.
-   *
-   * @param inputData: Data selected as the input.
-   */
-  private changeFocus(inputData: Item[]): void {
-    if (!inputData) { return; }
-
-    if (!this.focus) { return; }
-    const newBars = this.focus.selectAll('rect')
-      .data(inputData);
-    // TODO: Call function that creates a boxplot.
-    const maxDuration = d3.max(inputData, (d: Item) => d.durationHours);
-    if (!maxDuration) { return; }
-
-    // Upate the xScaleFocus, yScaleFocus, xAxisFocus and yAxisFocus
-    // based on the selected data for the focus chart.
-    this.xScaleFocus.domain(inputData.map((d: Item) => d.startTime));
-    this.yScaleFocus.domain([0, maxDuration]);
-    if (!this.yAxis) { return; }
-    this.yAxis.transition().duration(0).call(d3.axisLeft(this.yScaleFocus));
-    if (!this.xAxisFocus) { return; }
-    this.xAxisFocus.transition().duration(0)
-      .call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0))
-      .selectAll('text')
-      .style('text-anchor', 'end')
-      .attr('dx', '-10px')
-      .attr('dy', '-5px')
-      .attr('transform', 'rotate(-90)')
-      .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
-
-    newBars
-      .attr('class', '.newBars')
-      .enter()
-      .append('rect')
-        .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
-        .attr('width', this.xScaleFocus.bandwidth())
-        .attr('y', (d: Item) => this.yScaleFocus(d.durationHours))
-        .attr('height', (d: Item) =>
-          this.yScaleFocus(0) - this.yScaleFocus(d.durationHours))
-        .attr('style', (d: Item) =>
-          `fill: ${BarChartComponent.STATE_TO_COLOR[d.state]}`)
-        .attr('fill-opacity', 1)
-        .attr('stroke', (d: Item) => { // Outline the white bars.
-            if (BarChartComponent.STATE_TO_COLOR[d.state] === BarChartComponent.COLOR_WHITE) {
-              return BarChartComponent.COLOR_DARK_GRAY;
-            }
-            return BarChartComponent.STATE_TO_COLOR[d.state];
-          });
-      // TODO: Call mouseover and mouseleave functions here.
-
-    // Add transparent bars for hover convience.
-    newBars
-      .attr('class', '.transBars')
-      .enter()
-      .append('rect') // Add a transparent rect for each element.
-        .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
-        .attr('width', this.xScaleFocus.bandwidth())
-        .attr('y', (d: Item) => this.yScaleFocus(maxDuration))
-        .attr('height', (d: Item) =>
-          this.yScaleFocus(d.durationHours) - this.yScaleFocus(maxDuration))
-        .attr('fill', BarChartComponent.COLOR_WHITE_TRANS);
-      // TODO: Call mouseover and mouseleave functions here.
-
-    // Apply transition to all elements.
-    newBars.selectAll('rect')
-      .transition()
-      .duration(500);
-  }
-
-  private brushMove(): void {
-    // TODO: Move the brush when the user select it.
-  }
-
-  private brushUp(): void {
-    // TODO: Pickup the brush when the user done selection.
+      .call(brushSelector)
+      .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
   }
 }
