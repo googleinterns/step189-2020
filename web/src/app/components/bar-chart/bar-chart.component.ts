@@ -10,7 +10,7 @@ import { step189_2020 } from '../../../proto/step189_2020';
 interface Item {
   pushID: string;    // Push ID string
   state: number;     // Tag of the push end state
-  startTime: string; // Start time of the push, in `YYYY-MM-DD HH:mm` format
+  startTime: string; // Start time of the push, in `yyyy-MM-dd HH:mm` format
   durationHours: number;  // Duration of the push, in hours
 }
 
@@ -42,6 +42,7 @@ export class BarChartComponent implements AfterViewInit {
    * Constants.
    */
   private static readonly DEFAULT_NUM_BARS: number = 30;
+  private static readonly DEFAULT_MAX_LABELS: number = 100;
   private static readonly NANO_TO_SECS: number = 10 ** 9;
   private static readonly NANO_TO_MILLI: number = 10 ** 6;
   private static readonly SECS_TO_HRS: number = 60 * 60;
@@ -50,7 +51,7 @@ export class BarChartComponent implements AfterViewInit {
   private static readonly COLOR_DARK_GRAY: string = '#373C38';
   private static readonly COLOR_WHITE: string = '#eee';
   private static readonly COLOR_WHITE_TRANS: string = '#ffffff00';
-  private static readonly DATE_FORMAT: string = 'yyyy-mm-dd hh:mm';
+  private static readonly DATE_FORMAT: string = 'yyyy-MM-dd HH:mm';
   private static readonly DATE_LOCALE: string = 'en-US';
   private static readonly STATE_TO_COLOR: { [index: number]: string } = {
     1: '#eee',
@@ -215,7 +216,7 @@ export class BarChartComponent implements AfterViewInit {
 
     this.xScaleFocus = d3
       .scaleBand()
-      .rangeRound([marginFocus.left, elementWidth - marginFocus.right])
+      .range([marginFocus.left, elementWidth - marginFocus.right])
       .padding(0.1);
     this.yScaleFocus = d3
       .scaleLinear().range([elementHeight - marginFocus.bottom, marginFocus.top]);
@@ -243,7 +244,7 @@ export class BarChartComponent implements AfterViewInit {
 
     this.xScaleBrush = d3
       .scaleBand()
-      .rangeRound([marginBrush.left, elementWidth - marginBrush.right])
+      .range([marginBrush.left, elementWidth - marginBrush.right])
       .padding(0.1);
     this.yScaleBrush = d3
       .scaleLinear().range([this.heightBrush, 0]);
@@ -265,7 +266,7 @@ export class BarChartComponent implements AfterViewInit {
     d3.selectAll('rect').remove();
 
     const valueSelected = (document.getElementById('selections') as HTMLSelectElement).value;
-    const dataSelected = (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ? this.dataAll : this.dataComplete;
+    let dataSelected = (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ? this.dataAll : this.dataComplete;
     if (!dataSelected) { return; }
 
     const maxDuration = d3.max(dataSelected, (d: Item) => d.durationHours);
@@ -328,11 +329,26 @@ export class BarChartComponent implements AfterViewInit {
       // based on the selected data for the focus chart.
       this.xScaleFocus.domain(inputData.map((d: Item) => d.startTime));
       this.yScaleFocus.domain([0, maxFocusDuration]);
+
       if (!this.yAxis) { return; }
-      this.yAxis.transition().duration(0).call(d3.axisLeft(this.yScaleFocus));
+      this.yAxis.call(d3.axisLeft(this.yScaleFocus));
+
+      // If the focus chart has more than 100 bars, set the ticks and labels
+      // on xAxisFocus to be always smaller than 100.
       if (!this.xAxisFocus) { return; }
-      this.xAxisFocus.transition().duration(0)
-        .call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0))
+      if (inputData.length > BarChartComponent.DEFAULT_MAX_LABELS) {
+        const modNum = Math.round((inputData.length / BarChartComponent.DEFAULT_MAX_LABELS));
+        this.xAxisFocus
+          .call(d3.axisBottom(this.xScaleFocus)
+            .tickValues(this.xScaleFocus.domain().filter((d: Item, i: number) => { return !(i % modNum); }))
+            .tickSizeOuter(0));
+      }
+      else {
+        this.xAxisFocus
+          .call(d3.axisBottom(this.xScaleFocus)
+            .tickSizeOuter(0));
+      }
+      this.xAxisFocus
         .selectAll('text')
         .style('text-anchor', 'end')
         .attr('dx', '-10px')
