@@ -13,9 +13,11 @@ import { PageNameComponent } from './components/page-name/page-name.component';
 import { DateNsecPipe } from './pipes/date-nsec.pipe';
 import { BarChartComponent } from './components/bar-chart/bar-chart.component';
 import { CDFComponent } from './components/cdf/cdf.component';
+import { TimelineComponent } from './components/timeline/timeline.component';
 
 @NgModule({
   declarations: [
+    AllPushesComponent,
     AppComponent,
     AllPushesComponent,
     BarChartComponent,
@@ -25,7 +27,8 @@ import { CDFComponent } from './components/cdf/cdf.component';
     DateNsecPipe,
     MyPushesComponent,
     OnePushComponent,
-    PageNameComponent
+    PageNameComponent,
+    TimelineComponent
   ],
   imports: [
     AppRoutingModule,
