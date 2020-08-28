@@ -19,8 +19,9 @@ export type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
 type d3G = d3.Selection<SVGGElement, undefined, null, undefined>;
 
 const NANO_TO_MINUTES = (10 ** 9) * 60;
-export const COMPLETED_BLUE = '#00bfa5';
 const COMPLETED_STATE_TAG = 5;
+
+export const COMPLETED_BLUE = '#00bfa5';
 export const STROKE_COLOR = '#167364';
 
 /**
@@ -95,7 +96,7 @@ export function getProbabilityForDuration(
 /**
  * Finds the interpolated duration value for a given probability. It uses the
  * ratio of the differences in duration over the differences in probability of
- * the Items with probability directly less and than greater than probability
+ * the Items with probability directly less than and greater than probability
  * parameter.
  *
  * @param data Array of Items sorted by increasing duration
@@ -191,7 +192,7 @@ export function generateYPosition(
 
 /**
  * Appends a vertical line on the chart at the duration of the current push. An
- * arrow with text signifying that this represnts the current push is placed
+ * arrow with text signifying that this represents the current push is placed
  * near the x-axis.
  * If the current push does not end with a completed stage, then no line or
  * arrow is appended to the chart.
@@ -264,7 +265,7 @@ export function addCurrentPushLine(
     .append('line')
     .attr('id', 'current-push-text-line')
     .attr('stroke', 'black')
-    .attr('stroke-width', .5)
+    .attr('stroke-width', 1)
     .attr('x1', xScale(duration))
     .attr('y1', height + 7)
     .attr('x2', xScale(duration))
