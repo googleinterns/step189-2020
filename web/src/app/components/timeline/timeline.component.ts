@@ -316,7 +316,7 @@ export class TimelineComponent implements AfterViewInit {
           .tickPadding(10);
 
         (this.svg.select('.x-axis') as
-          d3.Selection<SVGElement, Item[], null, undefined>)
+          d3.Selection<SVGGElement, Item[], null, undefined>)
           .call(newXAxis)
           .selectAll('line')
           .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
