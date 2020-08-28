@@ -35,10 +35,10 @@ type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
 })
 
 export class TimelineComponent implements AfterViewInit {
-  private static readonly LANG_SERVICE: HumanizeDurationLanguage
-    = new HumanizeDurationLanguage();
-  private static readonly HUMANIZER: HumanizeDuration
-    = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
+  private static readonly LANG_SERVICE: HumanizeDurationLanguage =
+    new HumanizeDurationLanguage();
+  private static readonly HUMANIZER: HumanizeDuration =
+    new HumanizeDuration(TimelineComponent.LANG_SERVICE);
   private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
   private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
@@ -137,7 +137,7 @@ export class TimelineComponent implements AfterViewInit {
       return a.startTime - b.startTime;
     });
 
-    // Initialized to arbitrary value toavoid premature return
+    // Initialized to arbitrary value to avoid premature return.
     let overlappingIntervals = [data[0]];
     let rowIndex = 0;
     while (overlappingIntervals.length !== 0) {
@@ -172,7 +172,7 @@ export class TimelineComponent implements AfterViewInit {
    * @param d Holds one interval's data on the timeline.
    */
   private getTooltipContent = (d: Item) => {
-    const duration = (d.endTime - d.startTime);
+    const duration = d.endTime - d.startTime;
 
     // Convert the duration, currently in milliseconds, to a human readable
     // format with the largest unit in days and the smallest in seconds (e.g.
@@ -204,9 +204,8 @@ export class TimelineComponent implements AfterViewInit {
    *
    * @param el Encasing element that holds the tooltip
    */
-  private styleTooltip
-    = (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
-
+  private styleTooltip =
+    (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
     el.style('position', 'absolute')
       .style('pointer-events', 'none')
       .style('top', 0)
@@ -301,8 +300,8 @@ export class TimelineComponent implements AfterViewInit {
     // will rescale, as will the timeline intervals. The maxZoomIn value
     // restricts the zoom in to at most 5 second increments for any size data
     // set.
-    const maxZoomIn
-      = (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
+    const maxZoomIn =
+      (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
     const zoom = d3.zoom<SVGSVGElement, Item[]>()
       .scaleExtent([0.75, maxZoomIn]) // Limit zoom out.
       .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
@@ -317,7 +316,7 @@ export class TimelineComponent implements AfterViewInit {
           .tickPadding(10);
 
         (this.svg.select('.x-axis') as
-          d3.Selection<SVGSVGElement, Item[], null, undefined>)
+          d3.Selection<SVGElement, Item[], null, undefined>)
           .call(newXAxis)
           .selectAll('line')
           .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
@@ -400,7 +399,7 @@ export class TimelineComponent implements AfterViewInit {
     element.appendChild(tooltipDiv);
 
     groupIntervalItems
-      .on('mouseover', (d: Item): void => {
+      .on('mouseover', (d: Item) => {
         d3.select(d3.event.currentTarget)
           .select('rect')
           .attr('fill-opacity', 0.50);
@@ -409,14 +408,14 @@ export class TimelineComponent implements AfterViewInit {
           .html(this.getTooltipContent(d))
           .style('opacity', 1);
       })
-      .on('mouseleave', (): void => {
+      .on('mouseleave', () => {
         d3.select(d3.event.currentTarget)
           .select('rect')
           .attr('fill-opacity', 1);
         tooltip.style('opacity', 0); // Hide tooltip
       });
 
-    this.svg.on('mousemove', (): void => {
+    this.svg.on('mousemove', () => {
       let [x, y] = d3.mouse(d3.event.currentTarget);
       y += 120; // Set how much below cursor the tooltip will appear
       if (x > +d3.event.currentTarget.width / 2) {
