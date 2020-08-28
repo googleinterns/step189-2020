@@ -17,7 +17,6 @@ import { TimelineComponent } from './components/timeline/timeline.component';
 
 @NgModule({
   declarations: [
-    AllPushesComponent,
     AppComponent,
     AllPushesComponent,
     BarChartComponent,
