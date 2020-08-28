@@ -120,6 +120,7 @@ export class CDFComponent implements AfterViewInit {
         .tickFormat(d3.format(',.1f'))
       );
 
+    // Remove axis' vertical line and keep the tick marks
     yAxisLeft.select('.domain').remove();
 
     cdfChart.append('text')
@@ -142,6 +143,7 @@ export class CDFComponent implements AfterViewInit {
         .tickFormat(d3.format(',.1f'))
       );
 
+    // Remove axis' vertical line and keep the tick marks
     yAxisRight.select('.domain').remove();
 
     const xAxis = this.svg
@@ -245,16 +247,16 @@ export class CDFComponent implements AfterViewInit {
       const cx = xScale(this.data[i].duration);
       const cy = height - yPosition[i] - radius;
       dotplotContainer.append('circle')
-          .attr('cx', cx)
-          .attr('r', radius)
-          .attr('cy', cy)
-          .attr('fill', 'black');
+        .attr('cx', cx)
+        .attr('r', radius)
+        .attr('cy', cy)
+        .attr('fill', 'black');
     }
 
     const currentPushLine = this.svg
-    .append('g')
-    .attr('id', 'current-push-line')
-    .attr('transform', `translate(${margin.left}, ${margin.top})`);
+      .append('g')
+      .attr('id', 'current-push-line')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     addCurrentPushLine(this.currentPush,
                        currentPushLine,
