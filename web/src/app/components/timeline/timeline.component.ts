@@ -335,20 +335,6 @@ export class TimelineComponent implements AfterViewInit {
     // Insert timeline interval bars with their y-position determined by their
     // row index.
     const groupHeight = this.height / this.numRows;
-    this.svg.selectAll('.group-section')
-      .data(this.data)
-      .enter()
-      .append('line')
-      .attr('class', 'group-section')
-      .attr('x1', 0)
-      .attr('x2', this.width)
-      .attr('y1', (d: Item) => {
-        return groupHeight * ((this.numRows - d.row) + 1);
-      })
-      .attr('y2', (d: Item) => {
-        return groupHeight * ((this.numRows - d.row) + 1);
-      });
-
     const groupIntervalItems = this.svg.selectAll('.group-interval-item')
       .data(this.data)
       .enter()
