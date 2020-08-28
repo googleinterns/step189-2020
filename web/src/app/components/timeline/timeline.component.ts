@@ -106,7 +106,7 @@ export class TimelineComponent implements AfterViewInit {
       const startTime = +statesStartTime / TimelineComponent.NSEC_PER_MSEC;
       const endTime = +statesEndTime / TimelineComponent.NSEC_PER_MSEC;
 
-      // Store data points as instances of TimelineBar interface.
+      // Store data points as instances of Item interface.
       data.push({
         pushID,
         state,
@@ -403,7 +403,6 @@ export class TimelineComponent implements AfterViewInit {
         d3.select(d3.event.currentTarget)
           .select('rect')
           .attr('fill-opacity', 0.50);
-
         tooltip
           .html(this.getTooltipContent(d))
           .style('opacity', 1);
