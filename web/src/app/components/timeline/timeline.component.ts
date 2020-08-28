@@ -1,8 +1,16 @@
-import { AfterViewInit, Component, ElementRef, Input, ViewChild } 
-  from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  ViewChild
+} from '@angular/core';
 import { formatDate } from '@angular/common';
-import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } 
-  from 'humanize-duration-ts';
+import {
+  HumanizeDurationLanguage,
+  HumanizeDuration,
+  HumanizeDurationOptions
+} from 'humanize-duration-ts';
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
@@ -27,10 +35,10 @@ type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
 })
 
 export class TimelineComponent implements AfterViewInit {
-  private static readonly LANG_SERVICE: HumanizeDurationLanguage 
-  = new HumanizeDurationLanguage();
-  private static readonly HUMANIZER: HumanizeDuration 
-  = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
+  private static readonly LANG_SERVICE: HumanizeDurationLanguage
+    = new HumanizeDurationLanguage();
+  private static readonly HUMANIZER: HumanizeDuration
+    = new HumanizeDuration(TimelineComponent.LANG_SERVICE);
   private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
   private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
@@ -68,13 +76,13 @@ export class TimelineComponent implements AfterViewInit {
   private numRows = 0;
 
   /**
-   * Extracts the pushID, state, and start and end time for each push
-   * in pushInfos and inserts them into Item interfaces, which
-   * are collectively stored in an array.
+   * Extracts the pushID, state, and start and end time for each push in
+   * pushInfos and inserts them into Item interfaces, which are collectively
+   * stored in an array.
    *
    * @param pushInfos Array of pushes for one push def
    */
-  private static populateData(pushInfos: step189_2020.IPushInfo[] | null): 
+  private static populateData(pushInfos: step189_2020.IPushInfo[] | null):
     [Item[], number] {
 
     if (!pushInfos) { return [[], 0]; }
@@ -142,7 +150,7 @@ export class TimelineComponent implements AfterViewInit {
         // This is a consequence of all events being sorted by start time.
         if (interval.startTime >= lastEndTime) {
           const intervalInData = data.find(({ pushID }) => {
-            pushID === interval.pushID
+            pushID === interval.pushID;
           });
           if (intervalInData) {
             intervalInData.row = rowIndex;
@@ -197,8 +205,8 @@ export class TimelineComponent implements AfterViewInit {
    *
    * @param el Encasing element that holds the tooltip
    */
-  private styleTooltip = 
-    (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
+  private styleTooltip
+    = (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
 
     el.style('position', 'absolute')
       .style('pointer-events', 'none')
@@ -261,8 +269,8 @@ export class TimelineComponent implements AfterViewInit {
     if (elementHeight > TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows) {
       // Resize height if the current allocated interval height is too small
       // to see clearly and comfortably.
-      element.style.height = 
-        (TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows) + 'px';
+      element.style.height
+        = (TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows) + 'px';
       elementHeight = element.clientHeight;
     }
 
@@ -294,8 +302,8 @@ export class TimelineComponent implements AfterViewInit {
     // will rescale, as will the timeline intervals. The maxZoomIn value
     // restricts the zoom in to at most 5 second increments for any size data
     // set.
-    const maxZoomIn = 
-      (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
+    const maxZoomIn
+      = (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
     const zoom = d3.zoom<SVGSVGElement, Item[]>()
       .scaleExtent([0.75, maxZoomIn]) // Limit zoom out.
       .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
@@ -318,9 +326,8 @@ export class TimelineComponent implements AfterViewInit {
         (this.svg.selectAll('rect.interval') as
           d3.Selection<SVGRectElement, Item, SVGSVGElement, Item[]>)
           .attr('x', (d: Item) => updatedScale(d.startTime))
-          .attr('width', (d: Item) => {
-            updatedScale(d.endTime) - updatedScale(d.startTime)
-          });
+          .attr('width', (d: Item) =>
+            updatedScale(d.endTime) - updatedScale(d.startTime));
       });
 
     // Set up timeline chart components. The structure of the SVG tree
@@ -371,9 +378,8 @@ export class TimelineComponent implements AfterViewInit {
       .append('g')
       .attr('clip-path', 'url(#chart-content)')
       .attr('transform', (d: Item) => `translate(0, ${groupHeight * d.row})`)
-      .attr('style', (d: Item) => {
-        `fill: ${TimelineComponent.STATE_TO_COLOR[d.state]}`;
-      });
+      .attr('style', (d: Item) =>
+        `fill: ${TimelineComponent.STATE_TO_COLOR[d.state]}`);
 
     const intervalBarHeight = 0.8 * groupHeight; // Space between each interval
     const intervalBarMargin = (groupHeight - intervalBarHeight) / 2;
