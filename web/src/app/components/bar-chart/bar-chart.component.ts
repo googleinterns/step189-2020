@@ -185,7 +185,7 @@ export class BarChartComponent implements AfterViewInit {
    *    // Implemented in updateChart funtion.
    *    <g class='brush'></g>
    *  </g>
-   * <svg>
+   * /<svg>
    */
   private initialChart(): void {
     const element = this.barChartContainer.nativeElement;
@@ -354,8 +354,7 @@ export class BarChartComponent implements AfterViewInit {
           .call(d3.axisBottom(this.xScaleFocus)
             .tickValues(this.xScaleFocus.domain().filter((d: Item, i: number) => !(i % modNum)))
             .tickSizeOuter(0));
-      }
-      else {
+      } else {
         this.xAxisFocus
           .call(d3.axisBottom(this.xScaleFocus)
                   .tickSizeOuter(0));
@@ -479,8 +478,8 @@ export class BarChartComponent implements AfterViewInit {
    * @param inputData: Data selected for the focus bar chart
    */
   private createBoxplot(inputData: Item[]): void {
-    // Remove all elements of from the previous boxplot,
     if (!this.boxplot) { return; }
+    // Remove all elements of from the previous boxplot.
     this.boxplot.selectAll('circle').remove();
     this.boxplot.selectAll('line').remove();
     this.boxplot.selectAll('text').remove();
