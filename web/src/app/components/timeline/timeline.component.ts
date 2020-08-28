@@ -16,6 +16,8 @@ interface Item {
   row: number;        // Row number corresponds to y-position on timeline
 }
 
+type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+
 @Component({
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
@@ -53,7 +55,7 @@ export class TimelineComponent implements AfterViewInit {
   @ViewChild('timeline') private timelineContainer!: ElementRef;
   @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
   private data: Item[] = [];
-  private svg: any;
+  private svg!: d3SVG;
   private x: d3.ScaleTime<number, number> = d3.scaleTime();
   private height = 0;
   private width = 0;
@@ -272,7 +274,7 @@ export class TimelineComponent implements AfterViewInit {
     // as will the timeline intervals. The maxZoomIn value restricts the zoom in to
     // at most 5 second increments for any size data set.
     const maxZoomIn = (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
-    const zoom = d3.zoom()
+    const zoom = d3.zoom<SVGSVGElement, Item[]>()
       .scaleExtent([0.75, maxZoomIn]) // Limit zoom out.
       .translateExtent([[-100000, 0], [100000, 0]]) // Avoid scrolling too far.
       .on('zoom', () => {
@@ -285,12 +287,12 @@ export class TimelineComponent implements AfterViewInit {
           .tickSize(-this.height - 6)
           .tickPadding(10);
 
-        this.svg.select('.x.axis')
+        (this.svg.select('.x.axis') as any)
           .call(newXAxis)
           .selectAll('line')
           .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
 
-        this.svg.selectAll('rect.interval')
+        (this.svg.selectAll('rect.interval') as any)
           .attr('x', (d: Item) => updatedScale(d.startTime))
           .attr('width', (d: Item) => updatedScale(d.endTime) - updatedScale(d.startTime));
       });
@@ -299,13 +301,12 @@ export class TimelineComponent implements AfterViewInit {
     // will contain a row with the x-axis on the bottom and rectangles
     // for each interval, the width of which is determined by its
     // respective start and end time.
-    this.svg = (d3.select(element).append('svg') as d3.Selection<SVGSVGElement, Item, null, undefined>)
+    this.svg = d3.select(element).append('svg') as d3SVG;
+    this.svg
       .attr('width', this.width + margin.left + margin.right)
       .attr('height', this.height + margin.top + margin.bottom)
       .attr('viewBox', `0 0 ${this.width} ${this.height}`)
-      .attr('preserveAspectRatio', 'xMinYMin') // Preserve aspect ratio on window resize
-      .append('g')
-      .attr('transform', `translate(${margin.left} ${margin.top})`);
+      .attr('preserveAspectRatio', 'xMinYMin'); // Preserve aspect ratio on window resize
 
     this.svg.call(zoom);
 
@@ -366,22 +367,22 @@ export class TimelineComponent implements AfterViewInit {
     element.appendChild(tooltipDiv);
 
     groupIntervalItems
-      .on('mouseover', (d: Item, i: number, nodes: SVGGElement[]): void => {
+      .on('mouseover', (d: Item, i: number, nodes): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 0.50);
 
         tooltip
           .html(this.getTooltipContent(d))
           .style('opacity', 1);
       })
-      .on('mouseleave', (d: Item, i: number, nodes: SVGGElement[]): void => {
+      .on('mouseleave', (d: Item, i: number, nodes): void => {
         d3.select(nodes[i]).select('rect').attr('fill-opacity', 1);
         tooltip.style('opacity', 0); // Hide tooltip
       });
 
-    this.svg.on('mousemove', (d: Item, i: number, nodes: HTMLCanvasElement[]): void => {
+    this.svg.on('mousemove', (d: Item[], i: number, nodes): void => {
       let [x, y] = d3.mouse(nodes[i]);
       y += 120; // Set how much below cursor the tooltip will appear
-      if (x > nodes[i].width / 2) {
+      if (x > +nodes[i].width / 2) {
         x -= 100;
       }
 
