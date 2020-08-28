@@ -333,7 +333,10 @@ export class TimelineComponent implements AfterViewInit {
       .attr('width', this.width);
 
     // Insert timeline interval bars with their y-position determined by their
-    // row index.
+    // row index. In this case, `selectAll()` returns an empty selection since
+    // the class does not yet exist in the page. `data(this.data)` and `enter()`
+    // subsequently attaches data to the selection, with the first item in
+    // data corresponding to the first slot in the selection, and so on.
     const groupHeight = this.height / this.numRows;
     const groupIntervalItems = this.svg.selectAll('.group-interval-item')
       .data(this.data)
