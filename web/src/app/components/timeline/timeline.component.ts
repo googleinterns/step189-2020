@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } from 'humanize-duration-ts';
 import { formatDate } from '@angular/common';
+import { HumanizeDurationLanguage, HumanizeDuration, HumanizeDurationOptions } from 'humanize-duration-ts';
 import * as d3 from 'd3';
 
 import { step189_2020 } from '../../../proto/step189_2020';
@@ -169,7 +169,7 @@ export class TimelineComponent implements AfterViewInit {
       <br/>
       <b>Start Time: ${formatDate(d.startTime, 'yyyy-MM-dd HH:mm:ss', 'en-US')}</b>
       <br/>
-      <b> End Time: ${formatDate(d.endTime, 'yyyy-MM-dd HH:mm:ss', 'en-US')}</b>
+      <b>End Time: ${formatDate(d.endTime, 'yyyy-MM-dd HH:mm:ss', 'en-US')}</b>
       <br/>
       <b>Duration: ${output}</b>
       `;
