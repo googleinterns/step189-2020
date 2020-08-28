@@ -149,9 +149,8 @@ export class TimelineComponent implements AfterViewInit {
         // of the current interval is earlier than the last added end time.
         // This is a consequence of all events being sorted by start time.
         if (interval.startTime >= lastEndTime) {
-          const intervalInData = data.find(({ pushID }) => {
-            pushID === interval.pushID;
-          });
+          const intervalInData = data.find(({ pushID }) =>
+            pushID === interval.pushID);
           if (intervalInData) {
             intervalInData.row = rowIndex;
           }
@@ -317,7 +316,7 @@ export class TimelineComponent implements AfterViewInit {
           .tickSize(-this.height - 6)
           .tickPadding(10);
 
-        (this.svg.select('.x-axis') as 
+        (this.svg.select('.x-axis') as
           d3.Selection<SVGSVGElement, Item[], null, undefined>)
           .call(newXAxis)
           .selectAll('line')
