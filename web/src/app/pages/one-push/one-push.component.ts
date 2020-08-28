@@ -22,12 +22,14 @@ import {flatMap, map, shareReplay} from 'rxjs/operators';
 
 import {step189_2020} from '../../../proto/step189_2020';
 
+
 @Component({
   selector: 'app-one-push',
   templateUrl: './one-push.component.html',
   styleUrls: ['./one-push.component.scss']
 })
 export class OnePushComponent {
+  showcdf = false;
   readonly pushHandle: Observable<string>;
   readonly pushDefName: Observable<string>;
   readonly pushInfos: Observable<step189_2020.IPushInfo[]>;
