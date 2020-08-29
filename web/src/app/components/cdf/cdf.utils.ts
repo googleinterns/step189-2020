@@ -86,8 +86,8 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
  * @return A probability value between 0 and 1 (exclusive)
  */
 export function getProbabilityForDuration(
-                  data: Item[],
-                  duration: number): number {
+    data: Item[],
+    duration: number): number {
   const allDurations = data.map(d => d.duration);
   const index = d3.bisectLeft(allDurations, duration);
   return data[index - 1].probability;
@@ -127,9 +127,9 @@ function getDurationforProbability(data: Item[], probability: number): number {
  * probability as the given probability from probabilityLines
  */
 export function generateQuantiles(
-                  data: Item[],
-                  percentileLines: number[],
-                  xScale: d3.ScaleLinear<number, number>): Item[] {
+    data: Item[],
+    percentileLines: number[],
+    xScale: d3.ScaleLinear<number, number>): Item[] {
   if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
     return [percentileLines[1]].map(d => ({
       duration: getDurationforProbability(data, d),
@@ -162,15 +162,15 @@ export function generateQuantiles(
  *
  * @param radius radius of dots
  * @param xScale d3 function that applies a scaling factor on raw x values to
- * correctly place them on the graph
+ *     correctly place them on the graph
  * @param xVals array of durations in sorted order
  * @return Array of numbers representing the y position of the dot at duration
- * value maintaining the same indices as the xVals
+ *     value maintaining the same indices as the xVals
  */
 export function generateYPosition(
-                  radius: number,
-                  xScale: d3.ScaleLinear<number, number>,
-                  xVals: number[]): number[] {
+    radius: number,
+    xScale: d3.ScaleLinear<number, number>,
+    xVals: number[]): number[] {
   const radius2 = radius ** 2;
   const coordinates = [];
   for (const val of xVals) {
@@ -200,16 +200,18 @@ export function generateYPosition(
  * @param currentPush push information for the push that the page is on
  * @param currentPushLine d3 SVG G element
  * @param xScale d3 function that applies a scaling factor on raw x values to
- * correctly place them on the graph
+ *     correctly place them on the graph
  * @param height height of the chart element
+ * @param yScale d3 function that applies a scaling factor on raw y
+ *     probabilities to correctly place them on the graph
  */
 export function addCurrentPushLine(
-                  currentPush: step189_2020.IPushInfo,
-                  currentPushLine: d3G,
-                  data: Item[],
-                  xScale: d3.ScaleLinear<number, number>,
-                  height: number,
-                  yScale: d3.ScaleLinear<number, number>): void {
+    currentPush: step189_2020.IPushInfo,
+    currentPushLine: d3G,
+    data: Item[],
+    height: number,
+    xScale: d3.ScaleLinear<number, number>,
+    yScale: d3.ScaleLinear<number, number>): void {
   const states = currentPush.stateInfo;
   if (!states) { return; }
   const pushEndTime = states[states.length - 1].startTimeNsec;

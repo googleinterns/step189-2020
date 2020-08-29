@@ -261,8 +261,8 @@ export class CDFComponent implements AfterViewInit {
     addCurrentPushLine(this.currentPush,
                        currentPushLine,
                        this.data,
-                       xScale,
                        height,
+                       xScale,
                        yScale);
   }
 }
