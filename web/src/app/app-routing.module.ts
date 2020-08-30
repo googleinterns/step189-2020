@@ -1,9 +1,9 @@
-import { NgModule } from '@angular/core';
-import { Routes, RouterModule, UrlSegment, UrlMatchResult } from '@angular/router';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes, UrlMatchResult, UrlSegment} from '@angular/router';
 
-import { AllPushesComponent } from './pages/all-pushes/all-pushes.component';
-import { MyPushesComponent } from './pages/my-pushes/my-pushes.component';
-import { OnePushComponent } from './pages/one-push/one-push.component';
+import {AllPushesComponent} from './pages/all-pushes/all-pushes.component';
+import {MyPushesComponent} from './pages/my-pushes/my-pushes.component';
+import {OnePushComponent} from './pages/one-push/one-push.component';
 
 /**
  * Matcher for the URLs for individual pushes.
@@ -34,8 +34,6 @@ const routes: Routes = [
   },
 ];
 
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }
+@NgModule({imports: [RouterModule.forRoot(routes)], exports: [RouterModule]})
+export class AppRoutingModule {
+}

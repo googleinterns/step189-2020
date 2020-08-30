@@ -1,16 +1,14 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { PageNameComponent } from './page-name.component';
+import {PageNameComponent} from './page-name.component';
 
 describe('PageNameComponent', () => {
   let component: PageNameComponent;
   let fixture: ComponentFixture<PageNameComponent>;
 
   beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ PageNameComponent ]
-    })
-    .compileComponents();
+    TestBed.configureTestingModule({declarations: [PageNameComponent]})
+        .compileComponents();
   }));
 
   beforeEach(() => {

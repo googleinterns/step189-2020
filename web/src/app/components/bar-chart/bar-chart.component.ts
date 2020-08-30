@@ -1,21 +1,17 @@
-import { AfterViewInit,
-        Component,
-        ElementRef,
-        Input,
-        ViewChild} from '@angular/core';
-import { formatDate } from '@angular/common';
+import {formatDate} from '@angular/common';
+import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
-import { step189_2020 } from '../../../proto/step189_2020';
+import {step189_2020} from '../../../proto/step189_2020';
 
 /**
  * Item includes all data used by the single in the bar chart.
  */
 interface Item {
-  pushID: string;        // Push ID string
-  state: number;         // Tag of the push end state
-  startTime: string;     // Start time of the push, in `yyyy-MM-dd HH:mm` format
-  durationHours: number; // Duration of the push, in hours
+  pushID: string;     // Push ID string
+  state: number;      // Tag of the push end state
+  startTime: string;  // Start time of the push, in `yyyy-MM-dd HH:mm` format
+  durationHours: number;  // Duration of the push, in hours
 }
 
 /**
@@ -58,7 +54,7 @@ export class BarChartComponent implements AfterViewInit {
   private static readonly COLOR_WHITE_TRANS: string = '#ffffff00';
   private static readonly DATE_FORMAT: string = 'yyyy-MM-dd HH:mm';
   private static readonly DATE_LOCALE: string = 'en-US';
-  private static readonly STATE_TO_COLOR: { [index: number]: string } = {
+  private static readonly STATE_TO_COLOR: {[index: number]: string} = {
     1: '#eee',
     3: '#2196f3',
     4: '#d50000',
@@ -82,18 +78,18 @@ export class BarChartComponent implements AfterViewInit {
    * declared as any, as their types change in different functions.
    */
   @ViewChild('barchart') private barChartContainer!: ElementRef;
-  @Input() private pushInfos!: step189_2020.IPushInfo[] | null;
-  @Input() private currentPush!: step189_2020.IPushInfo | null;
+  @Input() private pushInfos!: step189_2020.IPushInfo[]|null;
+  @Input() private currentPush!: step189_2020.IPushInfo|null;
 
   private dataAll: Item[] = [];
   private dataComplete: Item[] = [];
   private totalDuration: number[] = [];
   private completeDuration: number[] = [];
-  private svg: d3SVG | undefined;
-  private focus: d3G | undefined; // Top bar chart for display.
+  private svg: d3SVG|undefined;
+  private focus: d3G|undefined;  // Top bar chart for display.
   // tslint:disable-next-line: no-any
-  private brush: any; // Bottom bar chart for brushing.
-  private boxplot: d3G | undefined;
+  private brush: any;  // Bottom bar chart for brushing.
+  private boxplot: d3G|undefined;
   private heightFocus = 0;
   private heightBrush = 0;
   private width = 0;
@@ -103,15 +99,17 @@ export class BarChartComponent implements AfterViewInit {
   // tslint:disable-next-line: no-any
   private xScaleBrush: any;
   private yScaleBrush!: d3ScaleLinear;
-  private xAxisFocus: d3G | undefined;
-  private xAxisBrush: d3G | undefined;
-  private yAxis: d3G | undefined;
+  private xAxisFocus: d3G|undefined;
+  private xAxisBrush: d3G|undefined;
+  private yAxis: d3G|undefined;
 
   ngAfterViewInit(): void {
-    if (!this.pushInfos) { return; }
+    if (!this.pushInfos) {
+      return;
+    }
     this.update(this.pushInfos);
     this.initialChart();
-    this.updateChart(); // Initialize the focus chart with dataAll.
+    this.updateChart();  // Initialize the focus chart with dataAll.
   }
 
   /**
@@ -124,37 +122,48 @@ export class BarChartComponent implements AfterViewInit {
    * @param pushInfos: Array for one push def
    */
   private update(pushInfos: step189_2020.IPushInfo[]): void {
-    if (!pushInfos) { return; }
+    if (!pushInfos) {
+      return;
+    }
     pushInfos.reverse().forEach(pushInfo => {
-      if (!pushInfo) { return; }
+      if (!pushInfo) {
+        return;
+      }
       const states = pushInfo.stateInfo;
-      if (!states) { return; }
+      if (!states) {
+        return;
+      }
       const pushID = pushInfo.pushHandle;
-      if (!pushID) { return; }
+      if (!pushID) {
+        return;
+      }
       const endState = states[states.length - 1].state;
-      if (!endState) { return; }
+      if (!endState) {
+        return;
+      }
       const pushStartTime = states[0].startTimeNsec;
-      if (!pushStartTime) { return; }
+      if (!pushStartTime) {
+        return;
+      }
       const pushEndTime = states[states.length - 1].startTimeNsec;
-      if (!pushEndTime) { return; }
+      if (!pushEndTime) {
+        return;
+      }
 
       // Filter pushes with only one state (0 duration) and endState which
       // should not be considered.
-      if (states.length <= 1) { return; }
-      if (endState !== 14 && endState !== 17 && endState !== 18
-        && endState !== 19) {
+      if (states.length <= 1) {
+        return;
+      }
+      if (endState !== 14 && endState !== 17 && endState !== 18 &&
+          endState !== 19) {
         const startTime = formatDate(
-          (+pushStartTime / BarChartComponent.NANO_TO_MILLI),
-          BarChartComponent.DATE_FORMAT, BarChartComponent.DATE_LOCALE
-        );
+            (+pushStartTime / BarChartComponent.NANO_TO_MILLI),
+            BarChartComponent.DATE_FORMAT, BarChartComponent.DATE_LOCALE);
         const durationHours = (+pushEndTime - +pushStartTime) /
-          BarChartComponent.NANO_TO_SECS / BarChartComponent.SECS_TO_HRS;
-        const thePush: Item = {
-          pushID,
-          state: endState,
-          startTime,
-          durationHours
-        };
+            BarChartComponent.NANO_TO_SECS / BarChartComponent.SECS_TO_HRS;
+        const thePush:
+            Item = {pushID, state: endState, startTime, durationHours};
         this.totalDuration.push(durationHours);
         this.dataAll.push(thePush);
 
@@ -199,82 +208,74 @@ export class BarChartComponent implements AfterViewInit {
     const element = this.barChartContainer.nativeElement;
     const elementWidth = element.clientWidth;
     const elementHeight = element.clientHeight;
-    const marginFocus = { top: 60, right: 90, bottom: 150, left: 70 };
-    const marginBrush = { top: 370, right: 90, bottom: 20, left: 70 };
+    const marginFocus = {top: 60, right: 90, bottom: 150, left: 70};
+    const marginBrush = {top: 370, right: 90, bottom: 20, left: 70};
 
     this.heightFocus = elementHeight;
     this.heightBrush = 30;
     this.width = elementWidth;
 
-    this.svg = (d3
-      .select(element)
-      .append('svg') as d3SVG)
-      .attr('width', elementWidth)
-      .attr('height', elementHeight);
+    this.svg = (d3.select(element).append('svg') as d3SVG)
+                   .attr('width', elementWidth)
+                   .attr('height', elementHeight);
 
-    this.focus = this.svg
-      .append('g')
-      .attr('id', 'focus-bar-chart')
-      .attr('transform', 'translate(0, 0)');
+    this.focus = this.svg.append('g')
+                     .attr('id', 'focus-bar-chart')
+                     .attr('transform', 'translate(0, 0)');
 
     // The brush here is an interactive element that allows dragging to display
     // the focus bar chart.
-    this.brush = this.svg
-      .append('g')
-      .attr('id', 'brush-bar-chart')
-      .attr('transform', `translate(0, ${marginBrush.top})`);
+    this.brush = this.svg.append('g')
+                     .attr('id', 'brush-bar-chart')
+                     .attr('transform', `translate(0, ${marginBrush.top})`);
 
-    this.boxplot = this.focus
-      .append('g')
-      .attr('id', 'boxplot');
+    this.boxplot = this.focus.append('g').attr('id', 'boxplot');
 
-    this.xScaleFocus = d3
-      .scaleBand()
-      .range([marginFocus.left, elementWidth - marginFocus.right])
-      .padding(0.1);
-    this.yScaleFocus = d3
-      .scaleLinear()
-      .range([elementHeight - marginFocus.bottom, marginFocus.top]);
-    this.xAxisFocus = this.focus
-      .append('g')
-      .attr('class', 'axis-xFocus')
-      .attr('transform', `translate(0, ${elementHeight - marginFocus.bottom})`);
-    this.yAxis = this.focus
-      .append('g')
-      .attr('class', 'axis-y')
-      .attr('transform', `translate(${marginFocus.left}, 0)`)
-      .style('color', BarChartComponent.COLOR_LIGHT_GRAY);
+    this.xScaleFocus =
+        d3.scaleBand()
+            .range([marginFocus.left, elementWidth - marginFocus.right])
+            .padding(0.1);
+    this.yScaleFocus = d3.scaleLinear().range(
+        [elementHeight - marginFocus.bottom, marginFocus.top]);
+    this.xAxisFocus =
+        this.focus.append('g')
+            .attr('class', 'axis-xFocus')
+            .attr(
+                'transform',
+                `translate(0, ${elementHeight - marginFocus.bottom})`);
+    this.yAxis = this.focus.append('g')
+                     .attr('class', 'axis-y')
+                     .attr('transform', `translate(${marginFocus.left}, 0)`)
+                     .style('color', BarChartComponent.COLOR_LIGHT_GRAY);
 
-    this.focus
-      .append('text')
-      .attr('id', 'bar-chart-title')
-      .attr('text-anchor', 'middle')
-      .attr('transform', `translate(${elementWidth / 2},
+    this.focus.append('text')
+        .attr('id', 'bar-chart-title')
+        .attr('text-anchor', 'middle')
+        .attr('transform', `translate(${elementWidth / 2},
         ${marginFocus.top / 2})`)
-      .style('font-size', '16px sans-serif')
-      .text('Bar chart of push durations');
-    this.focus
-      .append('text')
-      .attr('id', 'y-axis-title')
-      .attr('text-anchor', 'middle')
-      .attr('transform', 'translate(' + (marginFocus.left / 2) + ',' +
-        ((elementHeight - marginFocus.bottom + marginFocus.top) / 2)
-        + ')rotate(-90)')
-      .attr('fill', BarChartComponent.COLOR_LIGHT_GRAY)
-      .text('Push durations (hours)')
-      .style('font', '12px sans-serif');
+        .style('font-size', '16px sans-serif')
+        .text('Bar chart of push durations');
+    this.focus.append('text')
+        .attr('id', 'y-axis-title')
+        .attr('text-anchor', 'middle')
+        .attr(
+            'transform',
+            'translate(' + (marginFocus.left / 2) + ',' +
+                ((elementHeight - marginFocus.bottom + marginFocus.top) / 2) +
+                ')rotate(-90)')
+        .attr('fill', BarChartComponent.COLOR_LIGHT_GRAY)
+        .text('Push durations (hours)')
+        .style('font', '12px sans-serif');
 
-    this.xScaleBrush = d3
-      .scaleBand()
-      .range([marginBrush.left, elementWidth - marginBrush.right])
-      .padding(0.1);
-    this.yScaleBrush = d3
-      .scaleLinear()
-      .range([this.heightBrush, 0]);
-    this.xAxisBrush = this.brush
-      .append('g')
-      .attr('class', 'axis-xBrush')
-      .attr('transform', `translate(0, ${this.heightBrush})`);
+    this.xScaleBrush =
+        d3.scaleBand()
+            .range([marginBrush.left, elementWidth - marginBrush.right])
+            .padding(0.1);
+    this.yScaleBrush = d3.scaleLinear().range([this.heightBrush, 0]);
+    this.xAxisBrush =
+        this.brush.append('g')
+            .attr('class', 'axis-xBrush')
+            .attr('transform', `translate(0, ${this.heightBrush})`);
   }
 
   /**
@@ -290,47 +291,59 @@ export class BarChartComponent implements AfterViewInit {
     d3.selectAll('rect').remove();
 
     const valueSelected =
-      (document.getElementById('selections') as HTMLSelectElement).value;
-    const dataSelected = (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ?
-     this.dataAll : this.dataComplete;
-    if (!dataSelected) { return; }
+        (document.getElementById('selections') as HTMLSelectElement).value;
+    const dataSelected =
+        (valueSelected === BarChartComponent.ALL_PUSHES_OPTION) ?
+        this.dataAll :
+        this.dataComplete;
+    if (!dataSelected) {
+      return;
+    }
 
     const maxDuration = d3.max(dataSelected, (d: Item) => d.durationHours);
-    if (!maxDuration) { return; }
+    if (!maxDuration) {
+      return;
+    }
 
     // Update xScaleBrush, yScaleBrush and xAxisBrush based on the
     // selected data for the brush chart.
     this.xScaleBrush.domain(dataSelected.map((d: Item) => d.startTime));
     this.yScaleBrush.domain([0, maxDuration]);
-    if (!this.xAxisBrush) { return; }
-    this.xAxisBrush.transition().duration(0)
-      .call(d3.axisBottom(this.xScaleBrush).tickSize(0)) // Remove the ticks.
-      .selectAll('text')
-      .attr('opacity', 0); // Hide the x axis labels of the brush chart.
+    if (!this.xAxisBrush) {
+      return;
+    }
+    this.xAxisBrush.transition()
+        .duration(0)
+        .call(d3.axisBottom(this.xScaleBrush).tickSize(0))  // Remove the ticks.
+        .selectAll('text')
+        .attr('opacity', 0);  // Hide the x axis labels of the brush chart.
 
     // Remove the horizontal line of brush x axis to prevent overlaying the
     // brush selector.
     this.xAxisBrush.select('.domain').remove();
 
     // Initialize the brush bar chart.
-    if (!this.brush) { return; }
+    if (!this.brush) {
+      return;
+    }
     const brushBars = this.brush.selectAll('rect').data(dataSelected);
 
-    brushBars
-      .attr('class', 'brush-bars')
-      .enter()
-      .append('rect')
-      .attr('x', (d: Item) => this.xScaleBrush(d.startTime))
-      .attr('width', this.xScaleBrush.bandwidth())
-      .attr('y', (d: Item) => this.yScaleBrush(d.durationHours))
-      .attr('height', (d: Item) =>
-        this.heightBrush - this.yScaleBrush(d.durationHours))
-      .attr('style', (d: Item) =>
-        `fill: ${BarChartComponent.STATE_TO_COLOR[d.state]}`)
-      .attr('fill-opacity', 1)
-      .attr('stroke', (d: Item) => { // Outline the white bars.
+    brushBars.attr('class', 'brush-bars')
+        .enter()
+        .append('rect')
+        .attr('x', (d: Item) => this.xScaleBrush(d.startTime))
+        .attr('width', this.xScaleBrush.bandwidth())
+        .attr('y', (d: Item) => this.yScaleBrush(d.durationHours))
+        .attr(
+            'height',
+            (d: Item) => this.heightBrush - this.yScaleBrush(d.durationHours))
+        .attr(
+            'style',
+            (d: Item) => `fill: ${BarChartComponent.STATE_TO_COLOR[d.state]}`)
+        .attr('fill-opacity', 1)
+        .attr('stroke', (d: Item) => {  // Outline the white bars.
           if (BarChartComponent.STATE_TO_COLOR[d.state] ===
-            BarChartComponent.COLOR_WHITE) {
+              BarChartComponent.COLOR_WHITE) {
             return BarChartComponent.COLOR_DARK_GRAY;
           }
           return BarChartComponent.STATE_TO_COLOR[d.state];
@@ -342,87 +355,93 @@ export class BarChartComponent implements AfterViewInit {
     // This local function changes the focus of the top bar chart based
     // on the input.
     const changeFocus = (inputData: Item[]) => {
-      if (!inputData) { return; }
+      if (!inputData) {
+        return;
+      }
 
       // Remove all bars from previous brushing.
-      if (!this.focus) { return; }
+      if (!this.focus) {
+        return;
+      }
       this.focus.selectAll('rect').remove();
 
       const focusBars = this.focus.selectAll('rect').data(inputData);
       const maxFocusDuration = d3.max(inputData, (d: Item) => d.durationHours);
-      if (!maxFocusDuration) { return; }
+      if (!maxFocusDuration) {
+        return;
+      }
 
       // Upate the xScaleFocus, yScaleFocus, xAxisFocus and yAxisFocus
       // based on the selected data for the focus chart.
       this.xScaleFocus.domain(inputData.map((d: Item) => d.startTime));
       this.yScaleFocus.domain([0, maxFocusDuration]);
 
-      if (!this.yAxis) { return; }
+      if (!this.yAxis) {
+        return;
+      }
       this.yAxis.call(d3.axisLeft(this.yScaleFocus));
 
       // If the focus chart has more than `DEFAULT_MAX_BARS`, set the ticks and
       // labels on xAxisFocus to be always smaller than `DEFAULT_MAX_BARS`.
-      if (!this.xAxisFocus) { return; }
-      if (inputData.length > BarChartComponent.DEFAULT_MAX_BARS) {
-        const modNum = Math.round(
-          (inputData.length / BarChartComponent.DEFAULT_MAX_BARS));
-        this.xAxisFocus
-          .call(d3.axisBottom(this.xScaleFocus)
-            .tickValues(
-              this.xScaleFocus.domain().filter((d: Item, i: number) =>
-              !(i % modNum)))
-            .tickSizeOuter(0));
-      } else {
-        this.xAxisFocus
-          .call(d3.axisBottom(this.xScaleFocus)
-                  .tickSizeOuter(0)
-                );
+      if (!this.xAxisFocus) {
+        return;
       }
-      this.xAxisFocus
-        .selectAll('text')
-        .style('text-anchor', 'end')
-        .attr('dx', '-10px')
-        .attr('dy', '-5px')
-        .attr('transform', 'rotate(-90)')
-        .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
+      if (inputData.length > BarChartComponent.DEFAULT_MAX_BARS) {
+        const modNum =
+            Math.round((inputData.length / BarChartComponent.DEFAULT_MAX_BARS));
+        this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus)
+                                 .tickValues(this.xScaleFocus.domain().filter(
+                                     (d: Item, i: number) => !(i % modNum)))
+                                 .tickSizeOuter(0));
+      } else {
+        this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0));
+      }
+      this.xAxisFocus.selectAll('text')
+          .style('text-anchor', 'end')
+          .attr('dx', '-10px')
+          .attr('dy', '-5px')
+          .attr('transform', 'rotate(-90)')
+          .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
 
       // Remove the horizontal line of y axis to follow the convention.
       this.yAxis.select('.domain').remove();
 
-      focusBars
-        .attr('class', 'new-bars')
-        .enter()
-        .append('rect')
+      focusBars.attr('class', 'new-bars')
+          .enter()
+          .append('rect')
           .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
           .attr('width', this.xScaleFocus.bandwidth())
           .attr('y', (d: Item) => this.yScaleFocus(d.durationHours))
-          .attr('height', (d: Item) =>
-            this.yScaleFocus(0) - this.yScaleFocus(d.durationHours))
-          .attr('style', (d: Item) =>
-            `fill: ${BarChartComponent.STATE_TO_COLOR[d.state]}`)
+          .attr(
+              'height',
+              (d: Item) =>
+                  this.yScaleFocus(0) - this.yScaleFocus(d.durationHours))
+          .attr(
+              'style',
+              (d: Item) => `fill: ${BarChartComponent.STATE_TO_COLOR[d.state]}`)
           .attr('fill-opacity', 1)
-          .attr('stroke', (d: Item) => { // Outline the white bars.
-              if (BarChartComponent.STATE_TO_COLOR[d.state]
-                === BarChartComponent.COLOR_WHITE) {
-                return BarChartComponent.COLOR_DARK_GRAY;
-              }
-              return BarChartComponent.STATE_TO_COLOR[d.state];
-            });
-        // TODO: Call mouseover and mouseleave functions here.
+          .attr('stroke', (d: Item) => {  // Outline the white bars.
+            if (BarChartComponent.STATE_TO_COLOR[d.state] ===
+                BarChartComponent.COLOR_WHITE) {
+              return BarChartComponent.COLOR_DARK_GRAY;
+            }
+            return BarChartComponent.STATE_TO_COLOR[d.state];
+          });
+      // TODO: Call mouseover and mouseleave functions here.
 
       // Add transparent bars for hover convience.
-      focusBars
-        .attr('class', 'trans-bars')
-        .enter()
-        .append('rect') // Add a transparent rect for each element.
+      focusBars.attr('class', 'trans-bars')
+          .enter()
+          .append('rect')  // Add a transparent rect for each element.
           .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
           .attr('width', this.xScaleFocus.bandwidth())
           .attr('y', (d: Item) => this.yScaleFocus(maxFocusDuration))
-          .attr('height', (d: Item) =>
-            this.yScaleFocus(d.durationHours) -
-            this.yScaleFocus(maxFocusDuration))
+          .attr(
+              'height',
+              (d: Item) => this.yScaleFocus(d.durationHours) -
+                  this.yScaleFocus(maxFocusDuration))
           .attr('fill', BarChartComponent.COLOR_WHITE_TRANS);
-        // TODO: Call mouseover and mouseleave functions here.
+      // TODO: Call mouseover and mouseleave functions here.
 
       // Apply transition to all elements.
       focusBars.selectAll('rect').transition().duration(500);
@@ -434,10 +453,11 @@ export class BarChartComponent implements AfterViewInit {
     // contains more than 30 Items, only show the most recent 30 Items by
     // default.
     changeFocus(
-      (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
-        dataSelected.slice(dataSelected.length -
-        BarChartComponent.DEFAULT_NUM_BARS, dataSelected.length) :
-        dataSelected);
+        (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
+            dataSelected.slice(
+                dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS,
+                dataSelected.length) :
+            dataSelected);
 
     // Local variable used by the brushDown function to prevent the use
     // of `this` in the callback function.
@@ -450,13 +470,17 @@ export class BarChartComponent implements AfterViewInit {
     // xScaleBrush and dataSelected.
     const brushDown = () => {
       // Return if no input is given or the selection is emtpy.
-      if (!d3.event.sourceEvent || !d3.event.selection) { return; }
+      if (!d3.event.sourceEvent || !d3.event.selection) {
+        return;
+      }
 
       const newInput: string[] = [];
       let brushArea = d3.event.selection;
       // Set the area of selection to the entire xScaleFocus if selection
       // is invalid.
-      if (brushArea[0] === brushArea[1]) { brushArea = localBrush.range(); }
+      if (brushArea[0] === brushArea[1]) {
+        brushArea = localBrush.range();
+      }
 
       localBrush.domain().forEach((d: string) => {
         const position = localBrush(d) + localBrush.bandwidth() / 2;
@@ -479,24 +503,24 @@ export class BarChartComponent implements AfterViewInit {
     // Initial position of the brush selector according to the input of the
     // focus bar.
     const firstItem =
-      (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
-      dataSelected[dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS] :
-      dataSelected[0];
+        (dataSelected.length > BarChartComponent.DEFAULT_NUM_BARS) ?
+        dataSelected[dataSelected.length - BarChartComponent.DEFAULT_NUM_BARS] :
+        dataSelected[0];
     const firstItemPosition = this.xScaleBrush(firstItem.startTime);
-    const lastItemPosition = this.xScaleBrush(
-      dataSelected[dataSelected.length - 1].startTime) +
-      this.xScaleBrush.bandwidth();
+    const lastItemPosition =
+        this.xScaleBrush(dataSelected[dataSelected.length - 1].startTime) +
+        this.xScaleBrush.bandwidth();
 
-    const brushSelector = d3
-      .brushX()
-      .extent([[70, 0], [this.width - 90, this.heightBrush]])
-      .on('brush', brushDown); // Update the focus bar chart based on selection.
+    const brushSelector =
+        d3.brushX()
+            .extent([[70, 0], [this.width - 90, this.heightBrush]])
+            .on('brush',
+                brushDown);  // Update the focus bar chart based on selection.
 
-    this.brush
-      .append('g')
-      .attr('class', 'brush')
-      .call(brushSelector)
-      .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
+    this.brush.append('g')
+        .attr('class', 'brush')
+        .call(brushSelector)
+        .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
   }
 
   /**
@@ -507,7 +531,9 @@ export class BarChartComponent implements AfterViewInit {
    * @param inputData: Data selected for the focus bar chart
    */
   private createBoxplot(inputData: Item[]): void {
-    if (!this.boxplot) { return; }
+    if (!this.boxplot) {
+      return;
+    }
     // Remove all elements of from the previous boxplot.
     this.boxplot.selectAll('circle').remove();
     this.boxplot.selectAll('line').remove();
@@ -519,40 +545,46 @@ export class BarChartComponent implements AfterViewInit {
     const durationMin = durationSorted[0];
 
     const q1 = d3.quantile(durationSorted, 0.25);
-    if (!q1) { return; }
+    if (!q1) {
+      return;
+    }
     const median = d3.quantile(durationSorted, 0.5);
-    if (!median) { return; }
+    if (!median) {
+      return;
+    }
     const q3 = d3.quantile(durationSorted, 0.75);
-    if (!q3) { return; }
+    if (!q3) {
+      return;
+    }
     const dataLabels = [durationMax, durationMin, q1, median, q3];
 
     const boxWidth = 30;
     // If more than `DEFAULT_MAX_BARS` are selected, set the circle radius to be
     // 1.4; otherwise, set the radius to 2.5.
-    const pointRadius = (inputData.length > BarChartComponent.DEFAULT_MAX_BARS)
-      ? 1.4 : 2.5;
+    const pointRadius =
+        (inputData.length > BarChartComponent.DEFAULT_MAX_BARS) ? 1.4 : 2.5;
     const jitterWidth = boxWidth - 10;
     const center = this.width - 60;
 
     // Add individual points with jitter.
-    this.boxplot
-      .attr('class', 'boxplot-points')
-      .selectAll('points')
-      .data(inputData)
-      .enter()
-      .append('circle')
-        .attr('cx', (d: Item) => (
-          center - jitterWidth / 2 + Math.random() * jitterWidth))
+    this.boxplot.attr('class', 'boxplot-points')
+        .selectAll('points')
+        .data(inputData)
+        .enter()
+        .append('circle')
+        .attr(
+            'cx',
+            (d: Item) =>
+                (center - jitterWidth / 2 + Math.random() * jitterWidth))
         // TODO: Tie the position of the points for any change of the brush.
         .attr('cy', (d: Item) => this.yScaleFocus(d.durationHours))
         .attr('r', pointRadius)
         .style('fill', (d: Item) => BarChartComponent.STATE_TO_COLOR[d.state])
-        .style('fill-opacity', 0.45); // Show overlay among dataPoints.
+        .style('fill-opacity', 0.45);  // Show overlay among dataPoints.
 
     // Add the rectangle for the boxplot.
-    this.boxplot
-      .attr('class', 'boxplot-box')
-      .append('rect')
+    this.boxplot.attr('class', 'boxplot-box')
+        .append('rect')
         .attr('x', center - boxWidth / 2)
         .attr('y', this.yScaleFocus(q3))
         .attr('height', (this.yScaleFocus(q1) - this.yScaleFocus(q3)))
@@ -561,9 +593,8 @@ export class BarChartComponent implements AfterViewInit {
         .style('fill-opacity', 0);
 
     // Add the median horizontal line to the boxplot.
-    this.boxplot
-      .attr('class', 'boxplot-median')
-      .append('line')
+    this.boxplot.attr('class', 'boxplot-median')
+        .append('line')
         .attr('x1', center - boxWidth / 2)
         .attr('x2', center + boxWidth / 2)
         .attr('y1', this.yScaleFocus(median))
@@ -572,12 +603,11 @@ export class BarChartComponent implements AfterViewInit {
         .style('fill-opacity', 1);
 
     // Add ticks for max, min, median, q1 and q3.
-    this.boxplot
-      .attr('class', 'boxplot-ticks')
-      .selectAll('ticks')
-      .data(dataLabels)
-      .enter()
-      .append('line')
+    this.boxplot.attr('class', 'boxplot-ticks')
+        .selectAll('ticks')
+        .data(dataLabels)
+        .enter()
+        .append('line')
         .attr('x1', center + boxWidth / 2 + 4)
         .attr('x2', center + boxWidth / 2 + 10)
         .attr('y1', (d: number) => this.yScaleFocus(d))
@@ -586,12 +616,11 @@ export class BarChartComponent implements AfterViewInit {
         .style('fill-opacity', 1);
 
     // Add labels for max, min, median, q1 and q3.
-    this.boxplot
-      .attr('class', 'boxplot-labels')
-      .selectAll('labels')
-      .data(dataLabels)
-      .enter()
-      .append('text')
+    this.boxplot.attr('class', 'boxplot-labels')
+        .selectAll('labels')
+        .data(dataLabels)
+        .enter()
+        .append('text')
         .attr('dx', center + boxWidth / 2 + 12)
         .attr('dy', (d: number) => this.yScaleFocus(d) + 3)
         .attr('line-height', '1.5')
