@@ -5,9 +5,10 @@ import {DurationItem, findDurationUnit, findStartandEnd, UNIT_CONVERSION} from '
 
 
 export interface Item {
-  duration: number;     // Time (in best unit) between completed stage and first
+  duration: number;     // Time (in best unit) between last stage and first
                         // non-empty stage
   probability: number;  // Rank of the duration divided by number of points
+  endState: number;     // Tag of the last state
 }
 
 /**
@@ -37,9 +38,8 @@ export const STROKE_COLOR = '#167364';
  * @return Array of Items sorted by increasing duration
  */
 export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
-  const bestUnit = findDurationUnit(pushInfos);
   const divisor = UNIT_CONVERSION[findDurationUnit(pushInfos)];
-  const durations: number[] = [];
+  const pushes: Item[] = [];
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
       return;
@@ -57,23 +57,28 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
       return;
     }
 
-    if (finalState === 5) {
-      const startEnd: DurationItem|undefined = findStartandEnd(pushInfo);
-      if (startEnd) {
-        const duration = (+startEnd.end - +startEnd.start) / divisor;
-        durations.push(duration);
-      }
+    const startEnd: DurationItem|undefined = findStartandEnd(pushInfo);
+    if (startEnd) {
+      pushes.push({
+        duration: (+startEnd.end - +startEnd.start) / divisor,
+        probability: 0,
+        endState: finalState
+      } as Item);
     }
   });
-
-  const sortedArray: number[] = durations.sort((n1, n2) => n1 - n2);
+  const completed = pushes.filter(d => d.endState === 5);
+  const sortedArray: Item[] =
+      completed.sort((n1, n2) => n1.duration - n2.duration);
 
   const data: Item[] = [];
   const durationLength = sortedArray.length;
   for (let i = 0; i < durationLength; i++) {
-    const duration = sortedArray[i];
-    const probability = (i + 1) / durationLength;
-    data.push({duration, probability} as Item);
+    const push = sortedArray[i];
+    data.push({
+      duration: push.duration,
+      probability: (i + 1) / durationLength,
+      endState: push.endState
+    } as Item);
   }
   return data;
 }

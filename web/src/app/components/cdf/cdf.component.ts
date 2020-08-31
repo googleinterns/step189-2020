@@ -94,8 +94,11 @@ export class CDFComponent implements AfterViewInit {
     const yScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
 
     const extendedData = Array.from(this.data);
-    extendedData.push(
-        {duration: xScale.ticks()[xScale.ticks().length - 1], probability: 1});
+    extendedData.push({
+      duration: xScale.ticks()[xScale.ticks().length - 1],
+      probability: 1,
+      endState: 5
+    });
 
     this.svg = (d3.select(element).append('svg') as d3SVG)
                    .attr('width', elementWidth)

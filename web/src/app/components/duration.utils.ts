@@ -68,6 +68,7 @@ export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
   }
   return bestUnit;
 }
+
 /**
  * Finds the start time of the first non-empty state and the ned time of the
  * pushInfo.
