@@ -1,16 +1,14 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { ButtonRowComponent } from './button-row.component';
+import {ButtonRowComponent} from './button-row.component';
 
 describe('ButtonRowComponent', () => {
   let component: ButtonRowComponent;
   let fixture: ComponentFixture<ButtonRowComponent>;
 
   beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ ButtonRowComponent ]
-    })
-    .compileComponents();
+    TestBed.configureTestingModule({declarations: [ButtonRowComponent]})
+        .compileComponents();
   }));
 
   beforeEach(() => {

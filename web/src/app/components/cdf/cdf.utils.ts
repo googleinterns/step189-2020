@@ -1,10 +1,11 @@
 import * as d3 from 'd3';
 
-import { step189_2020 } from '../../../proto/step189_2020';
+import {step189_2020} from '../../../proto/step189_2020';
 
 export interface Item {
-  duration: number; // Minutes between completed stage and first non-empty stage
-  probability: number; // Rank of the duration divided by number of points
+  duration:
+      number;  // Minutes between completed stage and first non-empty stage
+  probability: number;  // Rank of the duration divided by number of points
 }
 
 /**
@@ -36,17 +37,25 @@ export const STROKE_COLOR = '#167364';
 export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
   const durations: number[] = [];
   pushInfos.forEach(pushInfo => {
-    if (!pushInfo) { return; }
+    if (!pushInfo) {
+      return;
+    }
     const states = pushInfo.stateInfo;
-    if (!states) { return; }
+    if (!states) {
+      return;
+    }
     const pushEndTime = states[states.length - 1].startTimeNsec;
-    if (!pushEndTime) { return; }
+    if (!pushEndTime) {
+      return;
+    }
     const finalState = states[states.length - 1].state;
-    if (!finalState) { return; }
+    if (!finalState) {
+      return;
+    }
 
     if (finalState === COMPLETED_STATE_TAG) {
       // Find the start time of the first non-empty stage.
-      let firstStateStart: number | Long = -1;
+      let firstStateStart: number|Long = -1;
       for (const state of states) {
         if (state.stage && state.startTimeNsec) {
           firstStateStart = state.startTimeNsec;
@@ -67,10 +76,7 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
   for (let i = 0; i < durationLength; i++) {
     const duration = sortedArray[i];
     const probability = (i + 1) / durationLength;
-    data.push({
-      duration,
-      probability
-    } as Item);
+    data.push({duration, probability} as Item);
   }
   return data;
 }
@@ -86,8 +92,7 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
  * @return A probability value between 0 and 1 (exclusive)
  */
 export function getProbabilityForDuration(
-    data: Item[],
-    duration: number): number {
+    data: Item[], duration: number): number {
   const allDurations = data.map(d => d.duration);
   const index = d3.bisectLeft(allDurations, duration);
   return data[index - 1].probability;
@@ -108,7 +113,8 @@ function getDurationforProbability(data: Item[], probability: number): number {
   const left = data[d3.bisectLeft(allProbabilities, probability) - 1];
   const right = data[d3.bisectRight(allProbabilities, probability)];
   return ((probability - left.probability) * (right.duration - left.duration) /
-    (right.probability - left.probability)) + left.duration;
+          (right.probability - left.probability)) +
+      left.duration;
 }
 
 /**
@@ -127,28 +133,31 @@ function getDurationforProbability(data: Item[], probability: number): number {
  * probability as the given probability from probabilityLines
  */
 export function generateQuantiles(
-    data: Item[],
-    percentileLines: number[],
+    data: Item[], percentileLines: number[],
     xScale: d3.ScaleLinear<number, number>): Item[] {
   if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
-    return [percentileLines[1]].map(d => ({
-      duration: getDurationforProbability(data, d),
-      probability: d} as Item));
+    return [percentileLines[1]].map(
+        d =>
+            ({duration: getDurationforProbability(data, d), probability: d} as
+             Item));
   }
-  let quantiles = percentileLines.map(d => ({
-    duration: getDurationforProbability(data, d),
-    probability: d} as Item));
+  let quantiles = percentileLines.map(
+      d =>
+          ({duration: getDurationforProbability(data, d), probability: d} as
+           Item));
 
   const pixelDifference = 15;
-  const differences = [xScale(quantiles[1].duration - quantiles[0].duration),
-                      xScale(quantiles[2].duration - quantiles[1].duration)];
+  const differences = [
+    xScale(quantiles[1].duration - quantiles[0].duration),
+    xScale(quantiles[2].duration - quantiles[1].duration)
+  ];
   if (differences[0] < pixelDifference || differences[1] < pixelDifference) {
     quantiles = generateQuantiles(
-                  data,
-                  [percentileLines[0] - .01,
-                  percentileLines[1],
-                  percentileLines[2] + .01],
-                  xScale);
+        data,
+        [
+          percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01
+        ],
+        xScale);
   }
   return quantiles;
 }
@@ -168,8 +177,7 @@ export function generateQuantiles(
  *     value maintaining the same indices as the xVals
  */
 export function generateYPosition(
-    radius: number,
-    xScale: d3.ScaleLinear<number, number>,
+    radius: number, xScale: d3.ScaleLinear<number, number>,
     xVals: number[]): number[] {
   const radius2 = radius ** 2;
   const coordinates = [];
@@ -177,7 +185,9 @@ export function generateYPosition(
     const x = xScale(val);
     let y = 0;
     for (const {x: xi, y: yi} of coordinates) {
-      if (!xi) { continue; }
+      if (!xi) {
+        continue;
+      }
       const x2 = (xi - x) ** 2;
       const y2 = (yi - y) ** 2;
       if (radius2 > x2 + y2) {
@@ -206,91 +216,91 @@ export function generateYPosition(
  *     probabilities to correctly place them on the graph
  */
 export function addCurrentPushLine(
-    currentPush: step189_2020.IPushInfo,
-    currentPushLine: d3G,
-    data: Item[],
-    height: number,
-    xScale: d3.ScaleLinear<number, number>,
+    currentPush: step189_2020.IPushInfo, currentPushLine: d3G, data: Item[],
+    height: number, xScale: d3.ScaleLinear<number, number>,
     yScale: d3.ScaleLinear<number, number>): void {
   const states = currentPush.stateInfo;
-  if (!states) { return; }
+  if (!states) {
+    return;
+  }
   const pushEndTime = states[states.length - 1].startTimeNsec;
-  if (!pushEndTime) { return; }
+  if (!pushEndTime) {
+    return;
+  }
   const finalState = states[states.length - 1].state;
-  if (!finalState) { return; }
+  if (!finalState) {
+    return;
+  }
 
-  if (finalState !== COMPLETED_STATE_TAG) { return; }
+  if (finalState !== COMPLETED_STATE_TAG) {
+    return;
+  }
 
   // Find the start time of the first non-empty stage.
-  let firstStateStart: number | Long = -1;
+  let firstStateStart: number|Long = -1;
   for (const state of states) {
     if (state.stage && state.startTimeNsec) {
       firstStateStart = state.startTimeNsec;
       break;
     }
   }
-  if (firstStateStart === -1) { return; }
+  if (firstStateStart === -1) {
+    return;
+  }
 
   const duration = (+pushEndTime - +firstStateStart) / NANO_TO_MINUTES;
 
   const markerSize = 2.5;
   const markerPath = [[0, 0], [0, markerSize], [markerSize, markerSize / 2]];
-  currentPushLine
-    .append('defs')
-    .append('marker')
-    .attr('id', 'arrow')
-    .attr('refX', 0)
-    .attr('refY', markerSize / 2)
-    .attr('markerWidth', markerSize)
-    .attr('markerHeight', markerSize)
-    .attr('orient', 'auto-start-reverse')
-    .datum(markerPath)
-    .append('path')
-    .attr('d', d3.line<number[]>()
-      .x(d => d[0])
-      .y(d => d[1]));
+  currentPushLine.append('defs')
+      .append('marker')
+      .attr('id', 'arrow')
+      .attr('refX', 0)
+      .attr('refY', markerSize / 2)
+      .attr('markerWidth', markerSize)
+      .attr('markerHeight', markerSize)
+      .attr('orient', 'auto-start-reverse')
+      .datum(markerPath)
+      .append('path')
+      .attr('d', d3.line<number[]>().x(d => d[0]).y(d => d[1]));
 
   const endOfLine = yScale(getProbabilityForDuration(data, duration));
 
-  currentPushLine
-    .append('line')
-    .attr('id', 'current-push-line')
-    .attr('stroke', 'white')
-    .attr('stroke-width', 3)
-    .attr('stroke-opacity', 0.6)
-    .attr('x1', xScale(duration))
-    .attr('y1', height)
-    .attr('x2', xScale(duration))
-    .attr('y2', endOfLine);
+  currentPushLine.append('line')
+      .attr('id', 'current-push-line')
+      .attr('stroke', 'white')
+      .attr('stroke-width', 3)
+      .attr('stroke-opacity', 0.6)
+      .attr('x1', xScale(duration))
+      .attr('y1', height)
+      .attr('x2', xScale(duration))
+      .attr('y2', endOfLine);
 
-  currentPushLine
-    .append('line')
-    .attr('id', 'current-push-text-line')
-    .attr('stroke', 'black')
-    .attr('stroke-width', 1)
-    .attr('x1', xScale(duration))
-    .attr('y1', height + 7)
-    .attr('x2', xScale(duration))
-    .attr('y2', height + 20)
-    .attr('marker-start', 'url(#arrow)');
+  currentPushLine.append('line')
+      .attr('id', 'current-push-text-line')
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1)
+      .attr('x1', xScale(duration))
+      .attr('y1', height + 7)
+      .attr('x2', xScale(duration))
+      .attr('y2', height + 20)
+      .attr('marker-start', 'url(#arrow)');
 
-  currentPushLine
-    .append('line')
-    .attr('id', 'current-push-text-line-arrow')
-    .attr('stroke', 'black')
-    .attr('stroke-width', 2)
-    .attr('x1', xScale(duration))
-    .attr('y1', height + 7)
-    .attr('x2', xScale(duration))
-    .attr('y2', height + 7.1)
-    .attr('marker-start', 'url(#arrow)');
+  currentPushLine.append('line')
+      .attr('id', 'current-push-text-line-arrow')
+      .attr('stroke', 'black')
+      .attr('stroke-width', 2)
+      .attr('x1', xScale(duration))
+      .attr('y1', height + 7)
+      .attr('x2', xScale(duration))
+      .attr('y2', height + 7.1)
+      .attr('marker-start', 'url(#arrow)');
 
-  currentPushLine
-    .append('text')
-    .attr('text-anchor', 'middle')
-    .attr('x', xScale(duration))
-    .attr('y', height + 30)
-    .attr('id', 'current-push-text')
-    .attr('font-size', '11px')
-    .text('Current Push');
+  currentPushLine.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', xScale(duration))
+      .attr('y', height + 30)
+      .attr('id', 'current-push-text')
+      .attr('font-size', '11px')
+      .text('Current Push');
 }

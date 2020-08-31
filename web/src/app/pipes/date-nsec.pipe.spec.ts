@@ -1,4 +1,4 @@
-import { DateNsecPipe } from './date-nsec.pipe';
+import {DateNsecPipe} from './date-nsec.pipe';
 
 describe('DateNsecPipe', () => {
   it('create an instance', () => {
