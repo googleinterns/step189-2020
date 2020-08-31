@@ -4,7 +4,9 @@
 }
 
 .selectButton {
-    float: right;
+    position: absolute;
+    top: 60px;
+    left: 860px;
 }
 
 .tooltip:after {
