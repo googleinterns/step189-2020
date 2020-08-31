@@ -22,7 +22,6 @@ export class CDFComponent implements AfterViewInit {
   private svg: d3SVG|undefined;
   private durationUnit = '';
 
-
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration. Adds lines

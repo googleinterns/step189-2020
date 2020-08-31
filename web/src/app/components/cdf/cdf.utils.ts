@@ -3,10 +3,8 @@ import * as d3 from 'd3';
 import {step189_2020} from '../../../proto/step189_2020';
 import {DurationItem, findDurationUnit, findStartandEnd, UNIT_CONVERSION} from '../duration.utils';
 
-
 export interface Item {
-  duration: number;     // Time (in best unit) between last stage and first
-                        // non-empty stage
+  duration: number;     // Time between last stage and first non-empty stage
   probability: number;  // Rank of the duration divided by number of points
   endState: number;     // Tag of the last state
 }
@@ -29,10 +27,11 @@ export const COMPLETED_BLUE = '#00bfa5';
 export const STROKE_COLOR = '#167364';
 
 /**
- * Calculates the duration between the completed stage and the first non-empty
- * stage. Assigns the probability as the rank of the duration value over the
- * total number of points. The duration and probability are defined in an
- * interface and all points stored as an array of CdfData interfaces.
+ * Calculates the duration (in the best unit) between the completed stage and
+ * the first non-empty stage. Assigns the probability as the rank of the
+ * duration value over the total number of points. The duration and probability
+ * are defined in an interface and all points stored as an array of Item
+ * interfaces.
  *
  * @param pushInfos Array of pushes for a single push def
  * @return Array of Items sorted by increasing duration
