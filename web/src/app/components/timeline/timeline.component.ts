@@ -482,11 +482,9 @@ export class TimelineComponent implements AfterViewInit {
     });
 
     this.svg.on('mousemove', () => {
-      let [x, y] = d3.mouse(d3.event.currentTarget);
-      line.attr('transform', `translate(${x} 0)`); // Move line
-
+      const [x, y] = d3.mouse(d3.event.currentTarget);
       const xScale = this.isZoomed ? this.newX : this.x; // New axis if scaled
-      
+
       // Move the lineLabel while always keeping it in the frame of timeline.
       let diff = 0;
       if (x > this.width-50) {
