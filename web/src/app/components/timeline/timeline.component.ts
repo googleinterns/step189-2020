@@ -271,8 +271,8 @@ export class TimelineComponent implements AfterViewInit {
       // Resize height if the current allocated interval height is too small
       // to see clearly and comfortably.
       element.style.height =
-        (TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows + margin.bottom) 
-        + 'px';
+        (TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows + margin.bottom)
+            + 'px';
       elementHeight = element.clientHeight;
     }
 
@@ -334,7 +334,7 @@ export class TimelineComponent implements AfterViewInit {
              d3.Selection<SVGRectElement, Item, SVGSVGElement, Item[]>)
                 .attr('x', (d: Item) => updatedScale(d.startTime))
                 .attr(
-                    'width', 
+                    'width',
                     (d: Item) =>
                           updatedScale(d.endTime) - updatedScale(d.startTime));
           });
@@ -445,7 +445,7 @@ export class TimelineComponent implements AfterViewInit {
                     .select('rect')
                     .attr('filter', 'none')
                     .attr(
-                        'stroke', 
+                        'stroke',
                         () => {
                             const color =
                                 TimelineComponent.STATE_TO_COLOR[d.state];
@@ -471,7 +471,7 @@ export class TimelineComponent implements AfterViewInit {
         .attr('text-anchor', 'middle')
         .style('opacity', 0);
 
-    this.svg.on('mouseover',() => {
+    this.svg.on('mouseover', () => {
         line.style('opacity', 1);
         lineLabel.style('opacity', 1);
     });
@@ -487,13 +487,13 @@ export class TimelineComponent implements AfterViewInit {
 
       // Move the lineLabel while always keeping it in the frame of timeline.
       let diff = 0;
-      if (x > this.width-50) {
-        diff = this.width-x-50;
+      if (x > this.width - 50) {
+        diff = this.width - x - 50;
       } else if (x < 50) {
-        diff = 50-x;
+        diff = 50 - x;
       }
       const xScale = this.isZoomed ? this.newX : this.x; // New axis if scaled
-      lineLabel.attr('transform', `translate(${x+diff} 0)`)
+      lineLabel.attr('transform', `translate(${x + diff} 0)`)
           .text(formatDate(xScale.invert(x), 'yyyy-MM-dd HH:mm:ss', 'en-US'))
           .style('font-size', '10px')
           .attr('class', 'b system-sans-serif');
