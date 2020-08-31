@@ -25,40 +25,46 @@ export const UNIT_CONVERSION: {[unit: string]: number} = {
  * @return one of [seconds, minutes, hours, days]
  */
 export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
-  const unitCounter:
-      {[unit: string]:
-           number} = {seconds: 0, minutes: 0, hours: 0, days: 0, years: 0};
+  const unitCounter: {[unit: string]: number} = {
+    seconds: 0,
+    minutes: 0,
+    hours: 0,
+    days: 0
+  };
 
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
       return;
     }
+
     const states = pushInfo.stateInfo;
     if (!states) {
       return;
     }
+
     const pushEndTime = states[states.length - 1].startTimeNsec;
     if (!pushEndTime) {
       return;
     }
+
     const finalState = states[states.length - 1].state;
     if (!finalState) {
       return;
     }
-    if (finalState === 5) {
-      // Find the start time of the first non-empty stage.
-      const startEnd: DurationItem|undefined = findDuration(pushInfo);
-      if (startEnd) {
-        const nsecDuration = (+pushEndTime - +startEnd.startNsec);
-        for (const unit of ['days', 'hours', 'minutes', 'seconds']) {
-          if ((nsecDuration / UNIT_CONVERSION[unit]) > 1) {
-            unitCounter[unit] += 1;
-            break;
-          }
+
+    // Find the start time of the first non-empty stage.
+    const startEnd: DurationItem|undefined = findDuration(pushInfo);
+    if (startEnd) {
+      const nsecDuration = (+pushEndTime - +startEnd.startNsec);
+      for (const unit of ['days', 'hours', 'minutes', 'seconds']) {
+        if ((nsecDuration / UNIT_CONVERSION[unit]) > 1) {
+          unitCounter[unit] += 1;
+          break;
         }
       }
     }
   });
+
   let bestUnit = '';
   let max = 0;
   for (const [key, value] of Object.entries(unitCounter)) {
@@ -85,6 +91,7 @@ export function findDuration(pushInfo: step189_2020.IPushInfo): DurationItem|
   if (!states) {
     return;
   }
+
   let firstStateStart: number|Long = -1;
   for (const state of states) {
     if (state.stage && state.startTimeNsec) {
@@ -92,12 +99,15 @@ export function findDuration(pushInfo: step189_2020.IPushInfo): DurationItem|
       break;
     }
   }
+
   if (firstStateStart === -1) {
     return;
   }
+
   const endTime = states[states.length - 1].startTimeNsec;
   if (!endTime) {
     return;
   }
+
   return {startNsec: firstStateStart, endNsec: endTime} as DurationItem;
 }
