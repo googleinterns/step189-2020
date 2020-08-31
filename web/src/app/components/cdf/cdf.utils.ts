@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
-import {DurationItem, findDurationUnit, findStartandEnd, UNIT_CONVERSION} from '../duration.utils';
+import {DurationItem, findDurationUnit, findDuration, UNIT_CONVERSION} from '../duration.utils';
 
 export interface Item {
   duration: number;     // Time between last stage and first non-empty stage
@@ -56,10 +56,10 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
       return;
     }
 
-    const startEnd: DurationItem|undefined = findStartandEnd(pushInfo);
+    const startEnd: DurationItem|undefined = findDuration(pushInfo);
     if (startEnd) {
       pushes.push({
-        duration: (+startEnd.end - +startEnd.start) / divisor,
+        duration: (+startEnd.endNsec - +startEnd.startNsec) / divisor,
         probability: 0,
         endState: finalState
       } as Item);

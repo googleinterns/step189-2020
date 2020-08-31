@@ -1,8 +1,8 @@
 import {step189_2020} from '../../proto/step189_2020';
 
 export interface DurationItem {
-  start: number|Long;  // nsec time of the first non-empty state
-  end: number|Long;    // nsec time of the last state
+  startNsec: number|Long;  // nsec time of the first non-empty state
+  endNsec: number|Long;    // nsec time of the last state
 }
 
 const NANO_TO_DAYS = (10 ** 9) * 60 * 60 * 24;
@@ -20,6 +20,7 @@ export const UNIT_CONVERSION: {[unit: string]: number} = {
 /**
  * Finds the unit of time that best describes the majority of the durations of
  * the pushInfos.
+ *
  * @param pushInfos Array of pushes for a single push def
  * @return one of [seconds, minutes, hours, days]
  */
@@ -46,9 +47,9 @@ export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
     }
     if (finalState === 5) {
       // Find the start time of the first non-empty stage.
-      const startEnd: DurationItem|undefined = findStartandEnd(pushInfo);
+      const startEnd: DurationItem|undefined = findDuration(pushInfo);
       if (startEnd) {
-        const nsecDuration = (+pushEndTime - +startEnd.start);
+        const nsecDuration = (+pushEndTime - +startEnd.startNsec);
         for (const unit of ['days', 'hours', 'minutes', 'seconds']) {
           if ((nsecDuration / UNIT_CONVERSION[unit]) > 1) {
             unitCounter[unit] += 1;
@@ -70,13 +71,15 @@ export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
 }
 
 /**
- * Finds the start time of the first non-empty state and the ned time of the
+ * Finds the start time of the first non-empty state and the end time of the
  * pushInfo.
- * @param pushInfo Array of pushes for a single push def
+ *
+ * @param pushInfo A single push
  * @return a DurationItem that has a start of the time of the first non-empty
- *     stage and an end of the time of the last state
+ *     stage and an end of the time of the last state. If there is no state with
+ *     a stage, then return undefined.
  */
-export function findStartandEnd(pushInfo: step189_2020.IPushInfo): DurationItem|
+export function findDuration(pushInfo: step189_2020.IPushInfo): DurationItem|
     undefined {
   const states = pushInfo.stateInfo;
   if (!states) {
@@ -96,5 +99,5 @@ export function findStartandEnd(pushInfo: step189_2020.IPushInfo): DurationItem|
   if (!endTime) {
     return;
   }
-  return {start: firstStateStart, end: endTime} as DurationItem;
+  return {startNsec: firstStateStart, endNsec: endTime} as DurationItem;
 }
