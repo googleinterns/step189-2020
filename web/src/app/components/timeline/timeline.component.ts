@@ -486,17 +486,27 @@ export class TimelineComponent implements AfterViewInit {
       line.attr('transform', `translate(${x} 0)`); // Move line
 
       const xScale = this.isZoomed ? this.newX : this.x; // New axis if scaled
-      lineLabel.attr('transform', `translate(${x} 0)`)
+      
+      // Move the lineLabel while always keeping it in the frame of timeline.
+      let diff = 0;
+      if (x > this.width-50) {
+        diff = this.width-x-50;
+      } else if (x < 50) {
+        diff = 50-x;
+      }
+      lineLabel.attr('transform', `translate(${x+diff} 0)`)
           .text(formatDate(xScale.invert(x), 'yyyy-MM-dd HH:mm:ss', 'en-US'))
           .style('font-size', '10px')
           .attr('class', 'b system-sans-serif');
 
       // Move the tooltip above cursor if we near the x-axis and to the left
       // of the cursor if we near the right edge of the timeline.
-      y = (y < +this.height / 2) ? y + 125 : y + 20;
-      x = (x > +this.height / 2) ? x - 100 : x;
+      const lineY = (y < this.height / 2) ? y + 125 : y + 15;
+      const lineX = (x > this.height / 2) ? x - 100 : x;
 
-      tooltip.style('left', x + 'px').style('top', y + 'px');
+      tooltip
+          .style('left', lineX + 'px')
+          .style('top', lineY + 'px');
     });
   }
 }
