@@ -95,6 +95,9 @@ export function getProbabilityForDuration(
     data: Item[], duration: number): number {
   const allDurations = data.map(d => d.duration);
   const index = d3.bisectLeft(allDurations, duration);
+  if (index == 0) {
+    return 0;
+  }
   return data[index - 1].probability;
 }
 

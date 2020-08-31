@@ -35,6 +35,7 @@ export class CDFComponent implements AfterViewInit {
    *     <g id='y-axis-right'></g>
    *     <path id='cdf-area'></path>
    *     <path id='cdf-stroke'></path>
+   *     <g id='dotplot-container'></g>
    *   </g>
    *   <g id='x-axis'></g>
    *   <text id='x-axis-label'></text>
@@ -42,7 +43,6 @@ export class CDFComponent implements AfterViewInit {
    *   <g id='percentile-lines'></g>
    *     <line class='percentile-line'></line>
    *     <text class='percentile-text'></text>
-   *   <g id='dotplot-container'></g>
    *   <g id='current-push-line'> (Only if the visited push is completed)
    *     <defs>
    *       <marker id='arrow'></marker>
@@ -210,11 +210,6 @@ export class CDFComponent implements AfterViewInit {
         .attr('font-size', '10px')
         .text((d: Item) => `${d.probability * 100}%`);
 
-    const dotplotContainer =
-        this.svg.append('g')
-            .attr('id', 'dotplot-container')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
     let yPosition = generateYPosition(radius * 2 + 0.1, xScale, xVals);
@@ -232,7 +227,8 @@ export class CDFComponent implements AfterViewInit {
     for (let i = 0; i < this.data.length; i++) {
       const cx = xScale(this.data[i].duration);
       const cy = height - yPosition[i] - radius;
-      dotplotContainer.append('circle')
+      cdfChart.append('circle')
+          .attr('class', 'dots')
           .attr('cx', cx)
           .attr('r', radius)
           .attr('cy', cy)
@@ -248,7 +244,7 @@ export class CDFComponent implements AfterViewInit {
         this.currentPush, currentPushLine, this.data, height, xScale, yScale);
 
     // Mouse click
-    let startValue = minDuration + 1;
+    let startValue = minDuration ;
 
     const clipRect = cdfChart
       .append('clipPath')
@@ -348,6 +344,11 @@ export class CDFComponent implements AfterViewInit {
           .attr('y', yScale(yValue) + 10)
           .text(`${(getProbabilityForDuration(this.data, startValue) * 100).toFixed(1)}%`)
           .attr('opacity', 1);
+        d3.select(d3.event.currentTarget)
+          .selectAll('.dots')
+          .data(this.data)
+          .enter()
+          .attr('fill', (d: Item) => (d.duration <= startValue ? 'grey' : 'black'));
       }
     });
 
@@ -362,6 +363,25 @@ export class CDFComponent implements AfterViewInit {
       .attr('class', 'x-label-bg')
       .attr('x', 0)
       .attr('y', height)
+      .attr('height', labelsize[1])
+      .attr('width', labelsize[0])
+      .attr('fill', highlightColor)
+      .attr('opacity', 0);
+
+    cdfChart.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('class', 'x-label')
+      .attr('x', 0)
+      .attr('y', height + 5 + labelFontSize)
+      .attr('opacity', 0)
+      .style('font-size', `${labelFontSize}px`)
+      .style('font-weight', 'bold')
+      .attr('fill', 'black');
+
+    cdfChart.append('rect')
+      .attr('class', 'y-label-bg')
+      .attr('x', -labelsize[0])
+      .attr('y', 0)
       .attr('height', labelsize[1])
       .attr('width', labelsize[0])
       .attr('fill', highlightColor)
