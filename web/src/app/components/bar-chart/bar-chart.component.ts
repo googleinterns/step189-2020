@@ -543,7 +543,7 @@ export class BarChartComponent implements AfterViewInit {
       .append('circle')
         .attr('cx', (d: Item) => (
           center - jitterWidth / 2 + Math.random() * jitterWidth))
-        // TODO: Tight the position of the points for any change of the brush.
+        // TODO: Tie the position of the points for any change of the brush.
         .attr('cy', (d: Item) => this.yScaleFocus(d.durationHours))
         .attr('r', pointRadius)
         .style('fill', (d: Item) => BarChartComponent.STATE_TO_COLOR[d.state])
