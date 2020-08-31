@@ -1,10 +1,12 @@
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
+import {DurationItem, findDurationUnit, findStartandEnd, UNIT_CONVERSION} from '../duration.utils';
+
 
 export interface Item {
-  duration:
-      number;  // Minutes between completed stage and first non-empty stage
+  duration: number;     // Time (in best unit) between completed stage and first
+                        // non-empty stage
   probability: number;  // Rank of the duration divided by number of points
 }
 
@@ -35,6 +37,8 @@ export const STROKE_COLOR = '#167364';
  * @return Array of Items sorted by increasing duration
  */
 export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
+  const bestUnit = findDurationUnit(pushInfos);
+  const divisor = UNIT_CONVERSION[findDurationUnit(pushInfos)];
   const durations: number[] = [];
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
@@ -53,17 +57,10 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
       return;
     }
 
-    if (finalState === COMPLETED_STATE_TAG) {
-      // Find the start time of the first non-empty stage.
-      let firstStateStart: number|Long = -1;
-      for (const state of states) {
-        if (state.stage && state.startTimeNsec) {
-          firstStateStart = state.startTimeNsec;
-          break;
-        }
-      }
-      if (firstStateStart !== -1) {
-        const duration = (+pushEndTime - +firstStateStart) / NANO_TO_MINUTES;
+    if (finalState === 5) {
+      const startEnd: DurationItem|undefined = findStartandEnd(pushInfo);
+      if (startEnd) {
+        const duration = (+startEnd.end - +startEnd.start) / divisor;
         durations.push(duration);
       }
     }

@@ -2,6 +2,7 @@ import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/c
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
+import {findDurationUnit} from '../duration.utils';
 
 import {addCurrentPushLine, generateQuantiles, generateYPosition, populateData} from './cdf.utils';
 import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
@@ -19,6 +20,8 @@ export class CDFComponent implements AfterViewInit {
 
   private data: Item[] = [];
   private svg: d3SVG|undefined;
+  private durationUnit = '';
+
 
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
@@ -61,6 +64,7 @@ export class CDFComponent implements AfterViewInit {
     if (!this.currentPush) {
       return;
     }
+    this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
 
     const element = this.CDFContainer.nativeElement;
@@ -144,7 +148,7 @@ export class CDFComponent implements AfterViewInit {
             `translate(${width / 2}, ${elementHeight - margin.left / 4})`)
         .style('text-anchor', 'middle')
         .style('font-size', '12px')
-        .text('Duration (minutes)');
+        .text(`Duration (${this.durationUnit})`);
 
     this.svg.append('text')
         .attr('id', 'graph-title')
