@@ -436,7 +436,8 @@ export class BarChartComponent implements AfterViewInit {
             Math.round((inputData.length / BarChartComponent.DEFAULT_MAX_BARS));
         this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus)
                                  .tickValues(this.xScaleFocus.domain().filter(
-                                     (d: Item, i: number) => !(i % modNum)))
+                                     (x: string, i: number, arr: string[]) =>
+                                     !(i % modNum)))
                                  .tickSizeOuter(0));
       } else {
         this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0));
