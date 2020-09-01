@@ -18,7 +18,7 @@ import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/c
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
-import {findDurationUnit} from '../duration.utils';
+import {findDurationUnit} from '../duration-utils';
 
 import {addCurrentPushLine, generateQuantiles, generateYPosition, getProbabilityForDuration, populateData} from './cdf.utils';
 import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
