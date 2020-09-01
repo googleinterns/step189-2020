@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-export const DARK_GRAY: string = '#a9a9a9';
-export const MED_GRAY: string = '#d3d3d3';
-export const LIGHT_GRAY: string = '#eee';
+export const DARK_GRAY = '#a9a9a9';
+export const MED_GRAY = '#d3d3d3';
+export const LIGHT_GRAY = '#eee';
 
-const BLUE: string = '#2196f3';
-const GREEN: string = '#34a853';
-const ORANGE: string = '#f9ab00';
-const RED: string = '#d50000';
+const BLUE = '#2196f3';
+const GREEN = '#34a853';
+const ORANGE = '#f9ab00';
+const RED = '#d50000';
 
 // Mapping from states to corresponding colors.
 export const STATE_TO_COLOR: {[index: number]: string} = {
