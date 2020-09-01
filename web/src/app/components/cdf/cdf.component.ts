@@ -57,9 +57,10 @@ export class CDFComponent implements AfterViewInit {
    *   <g id='x-axis'></g>
    *   <text id='x-axis-label'></text>
    *   <text id='graph-title'></text>
-   *   <g id='percentile-lines'></g>
+   *   <g id='percentile-lines'>
    *     <line class='percentile-line'></line>
    *     <text class='percentile-text'></text>
+   *   </g>
    *   <g id='dotplot-container'></g>
    *   <g id='current-push-line'> (Only if the visited push is completed)
    *     <defs>
