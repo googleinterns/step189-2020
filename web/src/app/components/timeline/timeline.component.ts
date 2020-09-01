@@ -54,7 +54,8 @@ export class TimelineComponent implements AfterViewInit {
       new HumanizeDurationLanguage();
   private static readonly HUMANIZER: HumanizeDuration =
       new HumanizeDuration(TimelineComponent.LANG_SERVICE);
-  private static readonly FIVE_MINUTES: number = 300000;
+  private static readonly FIVE_MINUTES: number = 5 * 60 * 60 * (10 ** 3);
+  private static readonly HALF_LABEL_WIDTH: number = 50;
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
   private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
@@ -207,7 +208,7 @@ export class TimelineComponent implements AfterViewInit {
   /**
    * Create tooltip to display each interval's content.
    *
-   * @param el Encasing element that holds the tooltip
+   * @param el Encasing element that holds the tooltip.
    */
   private styleTooltip =
       (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
@@ -223,15 +224,21 @@ export class TimelineComponent implements AfterViewInit {
             .style('font', '11px sans-serif');
       }
 
+  /**
+   * Move the line and its corresponding line marker below the x-axis so that
+   * it stays wherever the mouse is, even during drag.
+   * 
+   * @param x The x-coordinate of the mouse relative to the encasing SVG.
+   */
   private moveLine =
       (x: number) => {
         this.line.attr('transform', `translate(${x} 0)`);
 
         let diff = 0;
-        if (x > this.width - 50) {
-          diff = this.width - x - 50;
-        } else if (x < 50) {
-          diff = 50 - x;
+        if (x > this.width - TimelineComponent.HALF_LABEL_WIDTH) {
+          diff = this.width - x - TimelineComponent.HALF_LABEL_WIDTH;
+        } else if (x < TimelineComponent.HALF_LABEL_WIDTH) {
+          diff = TimelineComponent.HALF_LABEL_WIDTH - x;
         }
 
         const xScale =
