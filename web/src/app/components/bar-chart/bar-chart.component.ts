@@ -103,8 +103,7 @@ export class BarChartComponent implements AfterViewInit {
   private dataComplete: Item[] = [];
   private totalDuration: number[] = [];
   private svg: d3SVG|undefined;
-  // tslint:disable-next-line: no-any
-  private focus: any;  // Top bar chart for display.
+  private focus: d3G|undefined;  // Top bar chart for display.
   // tslint:disable-next-line: no-any
   private brush: any;  // Bottom bar chart for brushing.
   private points: d3Circle|undefined;
@@ -473,12 +472,16 @@ export class BarChartComponent implements AfterViewInit {
           .attr('transform', 'rotate(-90)')
           .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
 
-      const focusBars = this.focus.selectAll('rect').data(inputData);
+      const focusBars =
+          (this.focus.selectAll('rect') as
+           d3.Selection<SVGRectElement, Item, SVGGElement, undefined>)
+              .data(inputData)
+              .enter();
+
       const solidBars =
           focusBars.attr('class', 'new-bars')
-              .enter()
               .append('rect')
-              .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
+              .attr('x', (d: Item) => this.xScaleFocus(d.startTime) as number)
               .attr('width', this.xScaleFocus.bandwidth())
               .attr('y', (d: Item) => this.yScaleFocus(d.durationHours))
               .attr(
@@ -504,9 +507,8 @@ export class BarChartComponent implements AfterViewInit {
 
       // Add transparent bars for hover convience.
       focusBars.attr('class', 'trans-bars')
-          .enter()
           .append('rect')  // Add a transparent rect for each element.
-          .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
+          .attr('x', (d: Item) => this.xScaleFocus(d.startTime) as number)
           .attr('width', this.xScaleFocus.bandwidth())
           .attr('y', (d: Item) => this.yScaleFocus(maxFocusDuration))
           .attr(
