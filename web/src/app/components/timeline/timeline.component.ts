@@ -54,10 +54,10 @@ export class TimelineComponent implements AfterViewInit {
       new HumanizeDurationLanguage();
   private static readonly HUMANIZER: HumanizeDuration =
       new HumanizeDuration(TimelineComponent.LANG_SERVICE);
-  private static readonly FIVE_MINUTES: number = 5 * 60 * 60 * (10 ** 3);
+  private static readonly MIN_VISIBLE_DURATION: number = 5 * 60 * 60 * 1000;
   private static readonly HALF_LABEL_WIDTH: number = 50;
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
-  private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
+  private static readonly MSEC_PER_MIN: number = 60 * 1000;
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
 
   // Note that we use the non-null assertion operator ('!') in order to reassure
@@ -465,7 +465,7 @@ export class TimelineComponent implements AfterViewInit {
                   const color = STATE_TO_COLOR[d.state];
                   const duration = d.endTime - d.startTime;
                   return (color === LIGHT_GRAY &&
-                          duration < TimelineComponent.FIVE_MINUTES) ?
+                          duration < TimelineComponent.MIN_VISIBLE_DURATION) ?
                       DARK_GRAY :
                       color;
                 })
@@ -488,7 +488,7 @@ export class TimelineComponent implements AfterViewInit {
 
               tooltip.html(this.getTooltipContent(d)).style('opacity', 1);
             })
-        .on('mouseleave', (d: Item) => {
+        .on('mouseleave', () => {
           d3.select(d3.event.currentTarget)
               .attr('filter', 'none')
               .attr('opacity', 1);
