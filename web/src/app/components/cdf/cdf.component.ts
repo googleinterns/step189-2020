@@ -1,7 +1,24 @@
+/**
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
+import {findDurationUnit} from '../duration.utils';
 
 import {addCurrentPushLine, generateQuantiles, generateYPosition, populateData} from './cdf.utils';
 import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
@@ -19,6 +36,7 @@ export class CDFComponent implements AfterViewInit {
 
   private data: Item[] = [];
   private svg: d3SVG|undefined;
+  private durationUnit = '';
 
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
@@ -61,6 +79,7 @@ export class CDFComponent implements AfterViewInit {
     if (!this.currentPush) {
       return;
     }
+    this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
 
     const element = this.CDFContainer.nativeElement;
@@ -90,8 +109,11 @@ export class CDFComponent implements AfterViewInit {
     const yScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
 
     const extendedData = Array.from(this.data);
-    extendedData.push(
-        {duration: xScale.ticks()[xScale.ticks().length - 1], probability: 1});
+    extendedData.push({
+      duration: xScale.ticks()[xScale.ticks().length - 1],
+      probability: 1,
+      endState: 5
+    });
 
     this.svg = (d3.select(element).append('svg') as d3SVG)
                    .attr('width', elementWidth)
@@ -144,7 +166,7 @@ export class CDFComponent implements AfterViewInit {
             `translate(${width / 2}, ${elementHeight - margin.left / 4})`)
         .style('text-anchor', 'middle')
         .style('font-size', '12px')
-        .text('Duration (minutes)');
+        .text(`Duration (${this.durationUnit})`);
 
     this.svg.append('text')
         .attr('id', 'graph-title')

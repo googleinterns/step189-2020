@@ -1,11 +1,28 @@
+/**
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
+import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../duration.utils';
 
 export interface Item {
-  duration:
-      number;  // Minutes between completed stage and first non-empty stage
+  duration: number;     // Time between last stage and first non-empty stage
   probability: number;  // Rank of the duration divided by number of points
+  endState: number;     // Tag of the last state
 }
 
 /**
@@ -26,16 +43,18 @@ export const COMPLETED_BLUE = '#00bfa5';
 export const STROKE_COLOR = '#167364';
 
 /**
- * Calculates the duration between the completed stage and the first non-empty
- * stage. Assigns the probability as the rank of the duration value over the
- * total number of points. The duration and probability are defined in an
- * interface and all points stored as an array of CdfData interfaces.
+ * Calculates the duration (in the best unit) between the completed stage and
+ * the first non-empty stage. Assigns the probability as the rank of the
+ * duration value over the total number of points. The duration and probability
+ * are defined in an interface and all points stored as an array of Item
+ * interfaces.
  *
  * @param pushInfos Array of pushes for a single push def
  * @return Array of Items sorted by increasing duration
  */
 export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
-  const durations: number[] = [];
+  const divisor = UNIT_CONVERSION[findDurationUnit(pushInfos)];
+  const pushes: Item[] = [];
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
       return;
@@ -53,30 +72,28 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
       return;
     }
 
-    if (finalState === COMPLETED_STATE_TAG) {
-      // Find the start time of the first non-empty stage.
-      let firstStateStart: number|Long = -1;
-      for (const state of states) {
-        if (state.stage && state.startTimeNsec) {
-          firstStateStart = state.startTimeNsec;
-          break;
-        }
-      }
-      if (firstStateStart !== -1) {
-        const duration = (+pushEndTime - +firstStateStart) / NANO_TO_MINUTES;
-        durations.push(duration);
-      }
+    const startEnd: DurationItem|undefined = findDuration(pushInfo);
+    if (startEnd) {
+      pushes.push({
+        duration: (+startEnd.endNsec - +startEnd.startNsec) / divisor,
+        probability: 0,
+        endState: finalState
+      } as Item);
     }
   });
-
-  const sortedArray: number[] = durations.sort((n1, n2) => n1 - n2);
+  const completed = pushes.filter(d => d.endState === 5);
+  const sortedArray: Item[] =
+      completed.sort((n1, n2) => n1.duration - n2.duration);
 
   const data: Item[] = [];
   const durationLength = sortedArray.length;
   for (let i = 0; i < durationLength; i++) {
-    const duration = sortedArray[i];
-    const probability = (i + 1) / durationLength;
-    data.push({duration, probability} as Item);
+    const push = sortedArray[i];
+    data.push({
+      duration: push.duration,
+      probability: (i + 1) / durationLength,
+      endState: push.endState
+    } as Item);
   }
   return data;
 }
