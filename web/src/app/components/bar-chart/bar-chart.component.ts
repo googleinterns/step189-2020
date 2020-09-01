@@ -356,8 +356,9 @@ export class BarChartComponent implements AfterViewInit {
     brushBars.selectAll('rect').transition().duration(500);
 
     // This function shows the tooltip and tags when the user hovers over a
-    // bar, or the empty area above it. It is declared locally because we want
-    // to use `this` to access the variables declared for this class.
+    // bar, or the empty area above it. The function here is a callback, so we
+    // use an arrow function to make `this` indicate the current object instead
+    // of the context in which the callback is invoked.
     const showHoverInformation = (d: Item, i: number) => {
       // Locate x and y position of the bar.
       const barX = this.xScaleFocus(d.startTime);
@@ -376,8 +377,9 @@ export class BarChartComponent implements AfterViewInit {
     };
 
     // This function removes the tooltip and tags when the user's cursor
-    // leaves a bar, or the empty area above it. It is declared locally because
-    // we want to use `this` to access the variables declared for this class.
+    // leaves a bar, or the empty area above it. The function here is a
+    // callback, so we use an arrow function to make `this` indicate the current
+    // object instead of the context in which the callback is invoked.
     const hideHoverInformation = (d: Item, i: number) => {
       // Remove highlight from the bar and reset the x labels.
       d3.select(d3.event.currentTarget).attr('fill-opacity', 1);
