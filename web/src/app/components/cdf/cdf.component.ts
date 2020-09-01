@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AfterViewChecked, Component, ElementRef, Input, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
@@ -29,17 +29,34 @@ import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CDFComponent implements AfterViewChecked {
+export class CDFComponent implements AfterViewChecked, AfterViewInit {
   @ViewChild('cdf') private CDFContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[]|null;
   @Input() currentPush!: step189_2020.IPushInfo|null;
-  @Input() showDots: boolean;
+  @Input() showDots!: boolean;
 
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
-  private showDotsBoolean = true;
+  private showDotsBoolean: boolean;
 
+  ngAfterViewChecked() {
+    if (this.showDotsBoolean === this.showDots) {
+      return;
+    }
+    if (!this.svg) {
+      return;
+    }
+    this.showDotsBoolean = this.showDots;
+    console.log(this.showDots);
+    if (!this.showDotsBoolean) {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
+    }
+    else {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
+    }
+
+  }
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration. Adds lines
@@ -89,18 +106,14 @@ export class CDFComponent implements AfterViewChecked {
    *   </g>
    * </svg>
    */
-  ngAfterViewChecked(): void {
+  ngAfterViewInit(): void {
     if (!this.pushInfos) {
       return;
     }
     if (!this.currentPush) {
       return;
     }
-    if (this.showDotsBoolean === this.showDots) {
-      return;
-    }
-    this.showDotsBoolean = this.showDots
-    console.log(this.showDots)
+    this.showDotsBoolean = this.showDots;
     this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
 
@@ -255,11 +268,6 @@ export class CDFComponent implements AfterViewChecked {
         .attr('font-size', '10px')
         .text((d: Item) => `${d.probability * 100}%`);
 
-    const dotplotContainer =
-        this.svg.append('g')
-            .attr('id', 'dotplot-container')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
     let yPosition = generateYPosition(radius * 2 + 0.1, xScale, xVals);
@@ -319,6 +327,9 @@ export class CDFComponent implements AfterViewChecked {
           .attr('fill', 'black');
     }
 
+    if (!this.showDotsBoolean) {
+      cdfChart.selectAll('.dots').attr('opacity', 0);
+    }
     const lineY =
         cdfChart.append('line')
             .attr('class', 'click-line-y')
@@ -545,5 +556,4 @@ export class CDFComponent implements AfterViewChecked {
       const ylabelbg = d3.select('.y-label-bg').style('opacity', 0);
     });
   }
-
 }
