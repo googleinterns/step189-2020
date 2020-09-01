@@ -53,9 +53,23 @@ export class CDFComponent implements AfterViewInit {
    *     <g id='y-axis-right'></g>
    *     <path id='cdf-area'></path>
    *     <path id='cdf-stroke'></path>
+   *     <clipPath id='area-clip'></clipPath>
+   *     <path class='cdf-clipped'></path>
+   *     <circle class='dots'></circle> [...]
+   *     <line class='click-line-y'></line>
+   *     <line class='click-line-x'></line>
+   *     <text class='click-line-y-text'></text>
+   *     <text class='click-line-x-text'></text>
+   *     <rect class='x-label-bg'></rect>
+   *     <text class='x-label'></text>
+   *     <rect class='y-label-bg'></rect>
+   *     <text class='y-label'></text>
+   *     <line class='v-ruler'></line>
+   *     <line class='h-ruler'></line>
+   *     <circle class='marker'></circle>
+   *     <g id='x-axis'></g>
+   *     <text id='x-axis-label'></text>
    *   </g>
-   *   <g id='x-axis'></g>
-   *   <text id='x-axis-label'></text>
    *   <text id='graph-title'></text>
    *   <g id='percentile-lines'>
    *     <line class='percentile-line'></line>
@@ -157,19 +171,16 @@ export class CDFComponent implements AfterViewInit {
     // Remove axis' vertical line and keep the tick marks
     yAxisRight.select('.domain').remove();
 
-    const xAxis =
-        this.svg.append('g')
-            .attr('id', 'x-axis')
-            .attr(
-                'transform',
-                `translate(${margin.left}, ${elementHeight - margin.bottom})`)
-            .call(d3.axisBottom(xScale));
+    const xAxis = cdfChart.append('g')
+                      .attr('id', 'x-axis')
+                      .attr('transform', `translate(0, ${height})`)
+                      .call(d3.axisBottom(xScale));
 
-    this.svg.append('text')
+    cdfChart.append('text')
         .attr('id', 'x-axis-label')
         .attr(
             'transform',
-            `translate(${width / 2}, ${elementHeight - margin.left / 4})`)
+            `translate(${width / 2}, ${height + margin.left / 1.5})`)
         .style('text-anchor', 'middle')
         .style('font-size', '12px')
         .text(`Duration (${this.durationUnit})`);
@@ -278,7 +289,7 @@ export class CDFComponent implements AfterViewInit {
 
     cdfChart.datum(extendedData)
         .append('path')
-        .attr('class', 'cdf-curve')
+        .attr('class', 'cdf-clipped')
         .attr(
             'd',
             d3.area<Item>()
@@ -436,6 +447,7 @@ export class CDFComponent implements AfterViewInit {
         .attr('x', -labelsize[0] / 2)
         .attr('y', 0)
         .attr('opacity', 0)
+        .style('font-weight', 'bold')
         .attr('fill', 'black')
         .style('font-size', `${labelFontSize}px`);
 
