@@ -32,7 +32,7 @@ export const UNIT_CONVERSION: {[unit: string]: number} = {
   minutes: NANO_TO_MINUTES,
   hours: NANO_TO_HOURS,
   days: NANO_TO_DAYS,
-  weeks: NANO_TO_WEEKS
+  weeks: NANO_TO_WEEKS,
 };
 
 /**
