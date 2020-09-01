@@ -283,7 +283,7 @@ export class BarChartComponent implements AfterViewInit {
 
   /**
    * This function updates the focus bar chart and the brush bar chart based on
-   * the data of the dropdown selection. The function display the most recent
+   * the data of the dropdown selection. The function displays the most recent
    * `DEFAULT_NUM_BARS` by default. It also implements an interactive brush to
    * display a selected area of the bar chart. If the user selects
    * 'Show all pushes', the function updates both charts with all pushes;
@@ -355,7 +355,7 @@ export class BarChartComponent implements AfterViewInit {
     // Apply transition to all elements.
     brushBars.selectAll('rect').transition().duration(500);
 
-    // The function that shows the tooltip and tags when the user hovers over a
+    // This function shows the tooltip and tags when the user hovers over a
     // bar, or the empty area above it. It is declared locally to prevent the
     // use of `this` in the callback function.
     const showHoverInformation = (d: Item, i: number) => {
@@ -375,7 +375,7 @@ export class BarChartComponent implements AfterViewInit {
       this.initialTooltip(d, barX, barY);
     };
 
-    // The function that remove the tooltip and tags when the user's cursor
+    // This function removes the tooltip and tags when the user's cursor
     // leaves a bar, or the empty area above it. It is declared locally to
     // prevent the use of `this` in the callback function.
     const hideHoverInformation = (d: Item, i: number) => {
@@ -476,7 +476,7 @@ export class BarChartComponent implements AfterViewInit {
                         BarChartComponent.COLOR_WHITE) {
                       return BarChartComponent.COLOR_DARK_GRAY;
                     }
-                    return BarChartComponent.STATE_TO_COLOR[d.state];
+                    return 'none';
                   })
               .on('mouseover', showHoverInformation)
               .on('mouseleave', hideHoverInformation);
@@ -538,7 +538,13 @@ export class BarChartComponent implements AfterViewInit {
       if (!d3.event.sourceEvent || !d3.event.selection) {
         return;
       }
-
+      // Remove hover tooltip and tag while brushing on bars.
+      if (this.tooltip) {
+        this.tooltip.remove();
+      }
+      if (this.tag) {
+        this.tag.selectAll('text').remove();
+      }
       const newInput: string[] = [];
       let brushArea = d3.event.selection;
       // Set the area of selection to the entire xScaleFocus if selection
@@ -705,9 +711,9 @@ export class BarChartComponent implements AfterViewInit {
   }
 
   /**
-   * The function that adds tag content, which is the time duration for the
-   * push, and startTime. The time duration is added on top of the hovered bar,
-   * and the startTime is bolded on the x axis of the focus bar chart.
+   * This function adds tag content, which is the time duration for the push,
+   * and startTime. The time duration is added on top of the hovered bar, and
+   * the startTime is bolded on the x axis of the focus bar chart.
    *
    * @param d: Item that the bar represents
    * @param barX: x position of the bar
@@ -733,22 +739,24 @@ export class BarChartComponent implements AfterViewInit {
 
     // Bold the start time on x axis.
     this.tag.append('text')
-        .attr('dx', (barX + this.xScaleFocus.bandwidth() / 2 + 3) + 'px')
+        .attr('dx', (barX + this.xScaleFocus.bandwidth() / 2 + 3.5) + 'px')
         .attr('dy', 280 + 'px')
         .attr(
             'transform',
-            'rotate(-90 ' + (barX + this.xScaleFocus.bandwidth() / 2 + 3) +
+            'rotate(-90 ' + (barX + this.xScaleFocus.bandwidth() / 2 + 3.5) +
                 ',' + 280 + ')')
-        .attr('style', 'font-weight: bold;')
-        .style('color', BarChartComponent.COLOR_DARK_GRAY)
+        // .attr('style', 'font-weight: bold;')
+        .style('stroke', BarChartComponent.COLOR_DARK_GRAY)
+        .style('stroke-width', '0.5px')
+        .style('fill', BarChartComponent.COLOR_DARK_GRAY)
         .style('font', '10px sans-serif')
-        .style('line-height', '1.7')
+        .style('line-height', '1.3')
         .style('text-anchor', 'end')
         .text(d.startTime);
   }
 
   /**
-   * The fucntion that initialize the tooltip on top of the duration tag.
+   * This fucntion initializes the tooltip on top of the duration tag.
    *
    * @param d: Item that the bar represents
    * @param barX: x position of the bar
@@ -770,6 +778,7 @@ export class BarChartComponent implements AfterViewInit {
         .style('color', 'white')
         .style('border-radius', '2px')
         .style('padding', '6px')
+        .style('box-shadow', '0 0 7px rgba(0,0,0,.3)')
         .style('line-height', '1.5')
         .style('font', '12px sans-serif')
         .style('display', 'inline');
