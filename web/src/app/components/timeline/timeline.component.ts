@@ -32,7 +32,14 @@ interface Item {
   row: number;        // Row number corresponds to y-position on timeline
 }
 
-type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+/**
+ * Selection types. The first item in the d3.Selection<...> is the element
+ * type, which varies depending on what we are selecting for, and the second
+ * element represents the Datum, which in our case is an Item.
+ */
+type d3SVGSVGElement = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+type d3SVGLineElement = d3.Selection<SVGLineElement, Item[], null, undefined>;
+type d3SVGTextElement = d3.Selection<SVGTextElement, Item[], null, undefined>;
 
 @Component({
   selector: 'app-timeline',
@@ -73,12 +80,14 @@ export class TimelineComponent implements AfterViewInit {
     19: TimelineComponent.COLOR_RED
   };
 
-  // Note that we use the non-null assertion operator ('!') on `this.svg`
-  // in order to reassure the compiler that it will never be null or undefined.
+  // Note that we use the non-null assertion operator ('!') in order to reassure
+  // the compiler that our variables will never be null or undefined.
   @ViewChild('timeline') private timelineContainer!: ElementRef;
   @Input() private pushInfos!: step189_2020.IPushInfo[]|null;
   private data: Item[] = [];
-  private svg!: d3SVG;
+  private svg!: d3SVGSVGElement;
+  private line!: d3SVGLineElement;
+  private lineLabel!: d3SVGTextElement;
   private x: d3.ScaleTime<number, number> = d3.scaleTime();
   private newX = d3.scaleTime();
   private isZoomed = false;
@@ -235,6 +244,25 @@ export class TimelineComponent implements AfterViewInit {
             .style('font', '11px sans-serif');
       }
 
+  private moveLine =
+      (x: number) => {
+        this.line.attr('transform', `translate(${x} 0)`);
+
+        let diff = 0;
+        if (x > this.width - 50) {
+          diff = this.width - x - 50;
+        } else if (x < 50) {
+          diff = 50 - x;
+        }
+
+        const xScale =
+            this.isZoomed ? this.newX : this.x;  // New axis if scaled
+        this.lineLabel.attr('transform', `translate(${x + diff} 0)`)
+            .text(formatDate(xScale.invert(x), 'yyyy-MM-dd HH:mm:ss', 'en-US'))
+            .style('font-size', '10px')
+            .attr('class', 'b system-sans-serif');
+      }
+
   /**
    * Creates a scrollable timeline with bars representing the duration of
    * pushes. Every time this function is called, the previous timeline SVG is
@@ -357,6 +385,12 @@ export class TimelineComponent implements AfterViewInit {
                       'width',
                       (d: Item) =>
                           updatedScale(d.endTime) - updatedScale(d.startTime));
+
+              // Move line and line marker on zoom.
+              const mouseCoords =
+                  d3.mouse(this.svg.node() as d3.ContainerElement);
+              const x = mouseCoords[0];
+              this.moveLine(x);
             });
 
     // Set up timeline chart components. The structure of the SVG tree
@@ -364,7 +398,7 @@ export class TimelineComponent implements AfterViewInit {
     // for each interval, the width of which is determined by its
     // respective start and end time.
     this.svg =
-        (d3.select(element).append('svg') as d3SVG)
+        (d3.select(element).append('svg') as d3SVGSVGElement)
             .attr('width', this.width + margin.left + margin.right)
             .attr('height', this.height + margin.top + margin.bottom)
             .attr('viewBox', `0 0 ${this.width} ${this.height}`)
@@ -480,46 +514,33 @@ export class TimelineComponent implements AfterViewInit {
         });
 
     // Add vertical line to track mouse movement.
-    const line = this.svg.append('line')
-                     .attr('class', 'line-marker')
-                     .attr('y2', this.height + 25)
-                     .attr('stroke', 'rgba(0,0,0,0.2)')
-                     .style('pointer-events', 'none')
-                     .style('opacity', 0);
+    this.line = this.svg.append('line')
+                    .attr('class', 'line-marker')
+                    .attr('y2', this.height + 25)
+                    .attr('stroke', 'rgba(0,0,0,0.2)')
+                    .style('pointer-events', 'none')
+                    .style('opacity', 0);
 
-    const lineLabel = this.svg.append('text')
-                          .attr('class', 'line-marker')
-                          .attr('y', this.height + 40)
-                          .attr('text-anchor', 'middle')
-                          .style('opacity', 0);
+    this.lineLabel = this.svg.append('text')
+                         .attr('class', 'line-marker')
+                         .attr('y', this.height + 40)
+                         .attr('text-anchor', 'middle')
+                         .style('opacity', 0);
 
     this.svg.on('mouseover', () => {
-      line.style('opacity', 1);
-      lineLabel.style('opacity', 1);
+      this.line.style('opacity', 1);
+      this.lineLabel.style('opacity', 1);
     });
 
     this.svg.on(
         'mouseleave', () => {  // Hide line marker when cursor is off SVG
-          line.style('opacity', 0);
-          lineLabel.style('opacity', 0);
+          this.line.style('opacity', 0);
+          this.lineLabel.style('opacity', 0);
         });
 
     this.svg.on('mousemove', () => {
       const [x, y] = d3.mouse(d3.event.currentTarget);
-      line.attr('transform', `translate(${x} 0)`);
-
-      // Move the lineLabel while always keeping it in the frame of timeline.
-      let diff = 0;
-      if (x > this.width - 50) {
-        diff = this.width - x - 50;
-      } else if (x < 50) {
-        diff = 50 - x;
-      }
-      const xScale = this.isZoomed ? this.newX : this.x;  // New axis if scaled
-      lineLabel.attr('transform', `translate(${x + diff} 0)`)
-          .text(formatDate(xScale.invert(x), 'yyyy-MM-dd HH:mm:ss', 'en-US'))
-          .style('font-size', '10px')
-          .attr('class', 'b system-sans-serif');
+      this.moveLine(x);
 
       // Move the tooltip above cursor if we near the x-axis and to the left
       // of the cursor if we near the right edge of the timeline.
