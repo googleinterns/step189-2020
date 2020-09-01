@@ -142,7 +142,8 @@ export class CDFComponent implements AfterViewInit {
     const cdfChart =
         this.svg.append('g')
             .attr('id', 'cdf-chart')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+            .attr('transform', `translate(${margin.left}, ${margin.top})`)
+            .datum(extendedData);
 
     const yAxisLeft =
         cdfChart.append('g')
@@ -193,8 +194,7 @@ export class CDFComponent implements AfterViewInit {
         .style('font-size', '16px')
         .text('CDF of completed push durations');
 
-    cdfChart.datum(extendedData)
-        .append('path')
+    cdfChart.append('path')
         .attr('id', 'cdf-area')
         .attr('fill', COMPLETED_BLUE)
         .attr(
@@ -205,8 +205,7 @@ export class CDFComponent implements AfterViewInit {
                 .y0(yScale(0))
                 .curve(d3.curveStepAfter));
 
-    cdfChart.datum(extendedData)
-        .append('path')
+    cdfChart.append('path')
         .attr('fill', 'none')
         .attr(
             'd',
@@ -285,8 +284,7 @@ export class CDFComponent implements AfterViewInit {
                          .attr('width', xScale(startValue))
                          .attr('height', height);
 
-    cdfChart.datum(extendedData)
-        .append('path')
+    cdfChart.append('path')
         .attr('class', 'cdf-clipped')
         .attr(
             'd',
@@ -356,7 +354,7 @@ export class CDFComponent implements AfterViewInit {
         .text(`${getProbabilityForDuration(this.data, startValue).toFixed(2)}%`)
         .attr('opacity', 0);
 
-    cdfChart.on('click', (d: unknown, i: number): void => {
+    cdfChart.on('click', (d: Item[], i: number): void => {
       if (!d) {
         return;
       }
@@ -364,7 +362,7 @@ export class CDFComponent implements AfterViewInit {
       const xValue = xScale.invert(coordinates[0]);
       if (xValue > minDuration) {
         startValue = xValue;
-        const yValue = getProbabilityForDuration(d as Item[], startValue);
+        const yValue = getProbabilityForDuration(d, startValue);
         d3.select(d3.event.currentTarget)
             .select('.area-clip-rect')
             .attr('width', xScale(startValue));
@@ -484,7 +482,7 @@ export class CDFComponent implements AfterViewInit {
         .attr('fill', circleColor)
         .style('opacity', 0);
 
-    cdfChart.on('mousemove', (d: unknown, i: number): void => {
+    cdfChart.on('mousemove', (d: Item[], i: number): void => {
       const mouseX = xScale.invert(d3.mouse(d3.event.currentTarget)[0]);
       const vruler = d3.select('.v-ruler');
       const hruler = d3.select('.h-ruler');
@@ -498,7 +496,7 @@ export class CDFComponent implements AfterViewInit {
       if (checkX) {
         const xVal = d3.mouse(d3.event.currentTarget)[0];
         const xInverted = xScale.invert(xVal);
-        const yVal = yScale(getProbabilityForDuration(d as Item[], xInverted));
+        const yVal = yScale(getProbabilityForDuration(d, xInverted));
 
         marker.attr('cx', xVal).attr('cy', yVal);
         hruler.attr('y1', yVal).attr('y2', yVal);
@@ -529,7 +527,7 @@ export class CDFComponent implements AfterViewInit {
       }
     });
 
-    cdfChart.on('mouseleave', (d: unknown, i: number): void => {
+    cdfChart.on('mouseleave', () => {
       d3.select('.v-ruler').style('opacity', 0);
       d3.select('.h-ruler').style('opacity', 0);
       d3.select('.marker').style('opacity', 0);
