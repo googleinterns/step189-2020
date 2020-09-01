@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
+import {AfterViewChecked, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
@@ -29,10 +29,11 @@ import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CDFComponent implements AfterViewInit {
+export class CDFComponent implements AfterViewChecked {
   @ViewChild('cdf') private CDFContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[]|null;
   @Input() currentPush!: step189_2020.IPushInfo|null;
+  @Input() showDots: boolean;
 
   private data: Item[] = [];
   private svg: d3SVG|undefined;
@@ -87,13 +88,14 @@ export class CDFComponent implements AfterViewInit {
    *   </g>
    * </svg>
    */
-  ngAfterViewInit(): void {
+  ngAfterViewChecked(): void {
     if (!this.pushInfos) {
       return;
     }
     if (!this.currentPush) {
       return;
     }
+    console.log(this.showDots)
     this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
 

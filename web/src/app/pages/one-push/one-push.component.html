@@ -11,11 +11,12 @@
                 [currentPush]='pushInfo | async'>
 </app-bar-chart>
 
-<mat-slide-toggle [(ngModel)]='showcdf'>Show CDF</mat-slide-toggle>
+<mat-slide-toggle [(ngModel)]='showDots'>Show dots</mat-slide-toggle>
 
-<app-cdf *ngIf='showcdf && (pushInfos | async)'
+<app-cdf *ngIf='pushInfos | async'
         [pushInfos]='pushInfos | async'
-        [currentPush]='pushInfo | async'>
+        [currentPush]='pushInfo | async'
+        [showDots]='showDots'>
 </app-cdf>
 
 
