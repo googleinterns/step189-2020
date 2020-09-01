@@ -20,6 +20,7 @@ import * as d3 from 'd3';
 import {HumanizeDuration, HumanizeDurationLanguage, HumanizeDurationOptions} from 'humanize-duration-ts';
 
 import {step189_2020} from '../../../proto/step189_2020';
+import {DARK_GRAY, LIGHT_GRAY, MED_GRAY, STATE_TO_COLOR} from '../colors';
 
 /**
  * Item holds all required data for one interval on the timeline.
@@ -37,6 +38,7 @@ interface Item {
  * type, which varies depending on what we are selecting for, and the second
  * element represents the Datum, which in our case is an Item.
  */
+type d3SVGGElement = d3.Selection<SVGGElement, Item[], null, undefined>;
 type d3SVGSVGElement = d3.Selection<SVGSVGElement, Item[], null, undefined>;
 type d3SVGLineElement = d3.Selection<SVGLineElement, Item[], null, undefined>;
 type d3SVGTextElement = d3.Selection<SVGTextElement, Item[], null, undefined>;
@@ -52,33 +54,10 @@ export class TimelineComponent implements AfterViewInit {
       new HumanizeDurationLanguage();
   private static readonly HUMANIZER: HumanizeDuration =
       new HumanizeDuration(TimelineComponent.LANG_SERVICE);
-  private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
-  private static readonly COLOR_DARK_GRAY: string = '#a9a9a9';
-  private static readonly COLOR_RED: string = '#eee';
   private static readonly FIVE_MINUTES: number = 300000;
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
   private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
-  private static readonly STATE_TO_COLOR: {[index: number]: string} = {
-    1: TimelineComponent.COLOR_RED,
-    3: '#2196f3',
-    4: '#d50000',
-    5: '#34a853',
-    6: '#d50000',
-    7: '#2196f3',
-    8: '#2196f3',
-    9: '#d50000',
-    10: '#2196f3',
-    11: '#2196f3',
-    12: '#d50000',
-    13: '#2196f3',
-    14: TimelineComponent.COLOR_RED,
-    15: '#2196f3',
-    16: '#d50000',
-    17: TimelineComponent.COLOR_RED,
-    18: '#34a853',
-    19: TimelineComponent.COLOR_RED
-  };
 
   // Note that we use the non-null assertion operator ('!') in order to reassure
   // the compiler that our variables will never be null or undefined.
@@ -370,11 +349,10 @@ export class TimelineComponent implements AfterViewInit {
                                    .tickSize(-this.height - 6)
                                    .tickPadding(10);
 
-              (this.svg.select('.x-axis') as
-               d3.Selection<SVGGElement, Item[], null, undefined>)
+              (this.svg.select('.x-axis') as d3SVGGElement)
                   .call(newXAxis)
                   .selectAll('line')
-                  .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
+                  .style('stroke', MED_GRAY);
 
               this.svg.select('path.domain').remove();  // Remove axes borders
 
@@ -414,7 +392,7 @@ export class TimelineComponent implements AfterViewInit {
         .attr('transform', `translate(0 ${this.height})`)
         .call(xAxis)
         .selectAll('line')
-        .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
+        .style('stroke', MED_GRAY);
 
     this.svg.select('path.domain').remove();  // Remove axes borders
 
@@ -471,20 +449,17 @@ export class TimelineComponent implements AfterViewInit {
             .attr(
                 'transform',
                 (d: Item) => `translate(0, ${groupHeight * d.row})`)
-            .attr(
-                'style',
-                (d: Item) =>
-                    `fill: ${TimelineComponent.STATE_TO_COLOR[d.state]}`)
+            .attr('style', (d: Item) => `fill: ${STATE_TO_COLOR[d.state]}`)
             .attr(
                 'stroke',
                 (d: Item) => {
                   // If state color is light gray and has a duration less than
                   // five minutes, set border to a dark gray for visibility.
-                  const color = TimelineComponent.STATE_TO_COLOR[d.state];
+                  const color = STATE_TO_COLOR[d.state];
                   const duration = d.endTime - d.startTime;
-                  return (color === TimelineComponent.COLOR_RED &&
+                  return (color === LIGHT_GRAY &&
                           duration < TimelineComponent.FIVE_MINUTES) ?
-                      TimelineComponent.COLOR_DARK_GRAY :
+                      DARK_GRAY :
                       color;
                 })
             .attr('stroke-width', '0.025em');
