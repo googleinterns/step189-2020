@@ -227,7 +227,7 @@ export class TimelineComponent implements AfterViewInit {
   /**
    * Move the line and its corresponding line marker below the x-axis so that
    * it stays wherever the mouse is, even during drag.
-   * 
+   *
    * @param x The x-coordinate of the mouse relative to the encasing SVG.
    */
   private moveLine =
