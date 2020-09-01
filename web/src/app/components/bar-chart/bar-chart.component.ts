@@ -104,8 +104,7 @@ export class BarChartComponent implements AfterViewInit {
   private totalDuration: number[] = [];
   private svg: d3SVG|undefined;
   private focus: d3G|undefined;  // Top bar chart for display.
-  // tslint:disable-next-line: no-any
-  private brush: any;  // Bottom bar chart for brushing.
+  private brush: d3G|undefined;  // Bottom bar chart for brushing.
   private points: d3Circle|undefined;
   private boxplot: d3G|undefined;
   private tag: d3G|undefined;
@@ -349,7 +348,7 @@ export class BarChartComponent implements AfterViewInit {
     brushBars.attr('class', 'brush-bars')
         .enter()
         .append('rect')
-        .attr('x', (d: Item) => this.xScaleBrush(d.startTime))
+        .attr('x', (d: Item) => this.xScaleBrush(d.startTime) as number)
         .attr('width', this.xScaleBrush.bandwidth())
         .attr('y', (d: Item) => this.yScaleBrush(d.durationHours))
         .attr(
@@ -617,7 +616,8 @@ export class BarChartComponent implements AfterViewInit {
             .on('brush',
                 brushDown);  // Update the focus bar chart based on selection.
 
-    this.brush.append('g')
+    (this.brush.append('g') as
+     d3.Selection<SVGGElement, unknown, null, unknown>)
         .attr('class', 'brush')
         .call(brushSelector)
         .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
