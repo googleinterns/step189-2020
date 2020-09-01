@@ -38,6 +38,7 @@ export class CDFComponent implements AfterViewChecked {
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
+  private showDotsBoolean;
 
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
@@ -95,6 +96,10 @@ export class CDFComponent implements AfterViewChecked {
     if (!this.currentPush) {
       return;
     }
+    if (this.showDotsBoolean === this.showDots) {
+      return;
+    }
+    this.showDotsBoolean = this.showDots
     console.log(this.showDots)
     this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
