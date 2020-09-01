@@ -60,13 +60,13 @@ export class CDFComponent implements AfterViewInit {
    *     <line class='click-line-x'></line>
    *     <text class='click-line-y-text'></text>
    *     <text class='click-line-x-text'></text>
-   *     <rect class='x-label-bg'></rect>
-   *     <text class='x-label'></text>
-   *     <rect class='y-label-bg'></rect>
-   *     <text class='y-label'></text>
-   *     <line class='v-ruler'></line>
-   *     <line class='h-ruler'></line>
-   *     <circle class='marker'></circle>
+   *     <rect class='hover x-label-bg'></rect>
+   *     <text class='hover x-label'></text>
+   *     <rect class='hover y-label-bg'></rect>
+   *     <text class='hover y-label'></text>
+   *     <line class='hover v-ruler'></line>
+   *     <line class='hover h-ruler'></line>
+   *     <circle class='hover marker'></circle>
    *     <g id='x-axis'></g>
    *     <text id='x-axis-label'></text>
    *   </g>
@@ -413,7 +413,7 @@ export class CDFComponent implements AfterViewInit {
     const labelFontSize = labelHeight / 2;
 
     cdfChart.append('rect')
-        .attr('class', 'x-label-bg')
+        .attr('class', 'hover x-label-bg')
         .attr('x', 0)
         .attr('y', height)
         .attr('height', labelHeight)
@@ -423,7 +423,7 @@ export class CDFComponent implements AfterViewInit {
 
     cdfChart.append('text')
         .attr('text-anchor', 'middle')
-        .attr('class', 'x-label')
+        .attr('class', 'hover x-label')
         .attr('x', 0)
         .attr('y', height + 5 + labelFontSize)
         .attr('opacity', 0)
@@ -432,7 +432,7 @@ export class CDFComponent implements AfterViewInit {
         .attr('fill', 'black');
 
     cdfChart.append('rect')
-        .attr('class', 'y-label-bg')
+        .attr('class', 'hover y-label-bg')
         .attr('x', -labelWidth)
         .attr('y', 0)
         .attr('height', labelHeight)
@@ -442,7 +442,7 @@ export class CDFComponent implements AfterViewInit {
 
     cdfChart.append('text')
         .attr('text-anchor', 'middle')
-        .attr('class', 'y-label')
+        .attr('class', 'hover y-label')
         .attr('x', -labelWidth / 2)
         .attr('y', 0)
         .attr('opacity', 0)
@@ -455,7 +455,7 @@ export class CDFComponent implements AfterViewInit {
         .attr('x2', 0)
         .attr('y1', height)
         .attr('y2', 0)
-        .attr('class', 'v-ruler')
+        .attr('class', 'hover v-ruler')
         .attr('stroke', 'grey')
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', '5,2')
@@ -466,14 +466,14 @@ export class CDFComponent implements AfterViewInit {
         .attr('x2', width)
         .attr('y1', 0)
         .attr('y2', 0)
-        .attr('class', 'h-ruler')
+        .attr('class', 'hover h-ruler')
         .attr('stroke', 'grey')
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', '5,2')
         .attr('opacity', 0);
 
     cdfChart.append('circle')
-        .attr('class', 'marker')
+        .attr('class', 'hover marker')
         .attr('cx', 0)
         .attr('cy', 0)
         .attr('r', 5)
@@ -484,57 +484,32 @@ export class CDFComponent implements AfterViewInit {
 
     cdfChart.on('mousemove', (d: Item[], i: number): void => {
       const mouseX = xScale.invert(d3.mouse(d3.event.currentTarget)[0]);
-      const vruler = d3.select('.v-ruler');
-      const hruler = d3.select('.h-ruler');
-      const marker = d3.select('.marker');
-      const xlabel = d3.select('.x-label');
-      const xlabelbg = d3.select('.x-label-bg');
-      const ylabel = d3.select('.y-label');
-      const ylabelbg = d3.select('.y-label-bg');
-      const checkX = (mouseX >= minDuration) && (mouseX <= maxExtendedDuration);
 
-      if (checkX) {
+      if (mouseX >= minDuration && mouseX <= maxExtendedDuration) {
         const xVal = d3.mouse(d3.event.currentTarget)[0];
         const xInverted = xScale.invert(xVal);
         const yVal = yScale(getProbabilityForDuration(d, xInverted));
 
-        marker.attr('cx', xVal).attr('cy', yVal);
-        hruler.attr('y1', yVal).attr('y2', yVal);
-        vruler.attr('x1', xVal).attr('x2', xVal);
+        d3.select('.marker').attr('cx', xVal).attr('cy', yVal);
+        d3.select('.h-ruler').attr('y1', yVal).attr('y2', yVal);
+        d3.select('.v-ruler').attr('x1', xVal).attr('x2', xVal);
 
         const xText = d3.format(',.1f')(xInverted);
         const yText = d3.format(',.1%')(yScale.invert(yVal));
-        xlabel.attr('x', +marker.attr('cx')).text(xText);
-        xlabelbg.attr('x', +marker.attr('cx') - labelWidth / 2);
-        ylabel.attr('y', +marker.attr('cy') + labelHeight / 5).text(yText);
-        ylabelbg.attr('y', +marker.attr('cy') - labelHeight / 2);
+        d3.select('.x-label').attr('x', xVal).text(xText);
+        d3.select('.x-label-bg').attr('x', xVal - labelWidth / 2);
+        d3.select('.y-label').attr('y', yVal + labelHeight / 5).text(yText);
+        d3.select('.y-label-bg').attr('y', yVal - labelHeight / 2);
 
-        marker.style('opacity', 1);
-        hruler.style('opacity', 1);
-        vruler.style('opacity', 1);
-        xlabel.style('opacity', 1);
-        xlabelbg.style('opacity', 1);
-        ylabel.style('opacity', 1);
-        ylabelbg.style('opacity', 1);
+        d3.selectAll('.hover').style('opacity', 1);
+
       } else {
-        marker.style('opacity', 0);
-        hruler.style('opacity', 0);
-        vruler.style('opacity', 0);
-        xlabel.style('opacity', 0);
-        xlabelbg.style('opacity', 0);
-        ylabel.style('opacity', 0);
-        ylabelbg.style('opacity', 0);
+        d3.selectAll('.hover').style('opacity', 0);
       }
     });
 
     cdfChart.on('mouseleave', () => {
-      d3.select('.v-ruler').style('opacity', 0);
-      d3.select('.h-ruler').style('opacity', 0);
-      d3.select('.marker').style('opacity', 0);
-      d3.select('.x-label').style('opacity', 0);
-      d3.select('.x-label-bg').style('opacity', 0);
-      d3.select('.y-label').style('opacity', 0);
-      d3.select('.y-label-bg').style('opacity', 0);
+      d3.selectAll('.hover').style('opacity', 0);
     });
   }
 }
