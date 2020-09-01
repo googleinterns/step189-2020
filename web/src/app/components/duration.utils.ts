@@ -21,16 +21,18 @@ export interface DurationItem {
   endNsec: number|Long;    // nsec time of the last state
 }
 
-const NANO_TO_DAYS = (10 ** 9) * 60 * 60 * 24;
-const NANO_TO_HOURS: number = (10 ** 9) * 60 * 60;
-const NANO_TO_MINUTES: number = (10 ** 9) * 60;
 const NANO_TO_SECONDS: number = (10 ** 9);
+const NANO_TO_MINUTES: number = (10 ** 9) * 60;
+const NANO_TO_HOURS: number = (10 ** 9) * 60 * 60;
+const NANO_TO_DAYS = (10 ** 9) * 60 * 60 * 24;
+const NANO_TO_WEEKS = (10 ** 9) * 60 * 60 * 24 * 7;
 
 export const UNIT_CONVERSION: {[unit: string]: number} = {
   seconds: NANO_TO_SECONDS,
   minutes: NANO_TO_MINUTES,
   hours: NANO_TO_HOURS,
-  days: NANO_TO_DAYS
+  days: NANO_TO_DAYS,
+  weeks: NANO_TO_WEEKS
 };
 
 /**
@@ -38,15 +40,12 @@ export const UNIT_CONVERSION: {[unit: string]: number} = {
  * the pushInfos.
  *
  * @param pushInfos Array of pushes for a single push def
- * @return one of [seconds, minutes, hours, days]
+ * @return one of [seconds, minutes, hours, days, weeks]
  */
 export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
-  const unitCounter: {[unit: string]: number} = {
-    seconds: 0,
-    minutes: 0,
-    hours: 0,
-    days: 0
-  };
+  const unitCounter:
+      {[unit: string]:
+           number} = {seconds: 0, minutes: 0, hours: 0, days: 0, weeks: 0};
 
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
@@ -72,7 +71,7 @@ export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
     const startEnd: DurationItem|undefined = findDuration(pushInfo);
     if (startEnd) {
       const nsecDuration = (+pushEndTime - +startEnd.startNsec);
-      for (const unit of ['days', 'hours', 'minutes', 'seconds']) {
+      for (const unit of ['weeks', 'days', 'hours', 'minutes', 'seconds']) {
         if ((nsecDuration / UNIT_CONVERSION[unit]) > 1) {
           unitCounter[unit] += 1;
           break;
