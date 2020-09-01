@@ -11,6 +11,7 @@ import {BarChartComponent} from './components/bar-chart/bar-chart.component';
 import {ButtonRowComponent} from './components/button-row/button-row.component';
 import {ButtonComponent} from './components/button/button.component';
 import {CDFComponent} from './components/cdf/cdf.component';
+import {TimelineComponent} from './components/timeline/timeline.component';
 import {PageNameComponent} from './components/page-name/page-name.component';
 import {AllPushesComponent} from './pages/all-pushes/all-pushes.component';
 import {MyPushesComponent} from './pages/my-pushes/my-pushes.component';
@@ -21,7 +22,7 @@ import {DateNsecPipe} from './pipes/date-nsec.pipe';
   declarations: [
     AppComponent, AllPushesComponent, BarChartComponent, ButtonComponent,
     ButtonRowComponent, CDFComponent, DateNsecPipe, MyPushesComponent,
-    OnePushComponent, PageNameComponent
+    OnePushComponent, PageNameComponent, TimelineComponent
   ],
   imports: [
     AppRoutingModule, BrowserModule, HttpClientModule, BrowserAnimationsModule,

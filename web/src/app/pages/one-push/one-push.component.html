@@ -13,12 +13,10 @@
 
 <mat-slide-toggle [(ngModel)]='showcdf'>Show CDF</mat-slide-toggle>
 
-<div *ngIf='showcdf'> 
-    <app-cdf *ngIf='pushInfos | async'
-         [pushInfos]='pushInfos | async'
-         [currentPush]='pushInfo | async'>
-    </app-cdf>
-</div>
+<app-cdf *ngIf='showcdf && (pushInfos | async)'
+        [pushInfos]='pushInfos | async'
+        [currentPush]='pushInfo | async'>
+</app-cdf>
 
 
 
