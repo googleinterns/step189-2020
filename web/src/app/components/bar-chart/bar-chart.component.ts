@@ -43,12 +43,13 @@ interface Item {
  * that they can be updated with different methods using dropdown menu and
  * brush selector.
  */
-type d3SVG = d3.Selection<SVGSVGElement, undefined, null, undefined>;
-type d3G = d3.Selection<SVGGElement, undefined, null, undefined>;
+type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+type d3G = d3.Selection<SVGGElement, Item[], null, undefined>;
+type d3Circle = d3.Selection<SVGCircleElement, Item, SVGGElement, Item[]>;
+type d3HTML = d3.Selection<HTMLDivElement, Item, null, undefined>;
+type d3Rect = d3.Selection<SVGRectElement, Item, SVGGElement, Item[]>;
 type d3ScaleLinear = d3.ScaleLinear<number, number>;
 type d3ScaleBand = d3.ScaleBand<string>;
-type d3HTML = d3.Selection<HTMLDivElement, undefined, null, undefined>;
-type d3Circle = d3.Selection<SVGCircleElement, Item, SVGGElement, undefined>;
 
 @Component({
   selector: 'app-bar-chart',
@@ -101,12 +102,9 @@ export class BarChartComponent implements AfterViewInit {
 
   private dataAll: Item[] = [];
   private dataComplete: Item[] = [];
-  private totalDuration: number[] = [];
   private svg: d3SVG|undefined;
-  // tslint:disable-next-line: no-any
-  private focus: any;  // Top bar chart for display.
-  // tslint:disable-next-line: no-any
-  private brush: any;  // Bottom bar chart for brushing.
+  private focus: d3G|undefined;
+  private brush: d3G|undefined;
   private points: d3Circle|undefined;
   private boxplot: d3G|undefined;
   private tag: d3G|undefined;
@@ -132,10 +130,7 @@ export class BarChartComponent implements AfterViewInit {
 
   /**
    * This function populates pushID, state, startTime and durationHours of
-   * given pushes. It generates dataAll and dataComplete for the two bar charts
-   * and fills durationsHours for totalDuration and completeDuration for the
-   * future boxplot. DataAll and dataComplete arrays are sorted in ascending
-   * order by startTime.
+   * given pushes. It generates dataAll and dataComplete for the two bar charts.
    *
    * @param pushInfos: Array for one push def
    */
@@ -182,7 +177,6 @@ export class BarChartComponent implements AfterViewInit {
             BarChartComponent.NANO_TO_SECS / BarChartComponent.SECS_TO_HRS;
         const thePush:
             Item = {pushID, state: endState, startTime, durationHours};
-        this.totalDuration.push(durationHours);
         this.dataAll.push(thePush);
 
         if (endState === 5) {
@@ -345,12 +339,17 @@ export class BarChartComponent implements AfterViewInit {
     if (!this.brush) {
       return;
     }
-    const brushBars = this.brush.selectAll('rect').data(dataSelected);
+    const brushBars =
+      (this.brush.selectAll('rect') as d3Rect)
+      .data(dataSelected)
+      .enter();
 
-    brushBars.attr('class', 'brush-bars')
-        .enter()
+    brushBars
         .append('rect')
-        .attr('x', (d: Item) => this.xScaleBrush(d.startTime))
+        .attr('x', (d: Item) => {
+          const x = this.xScaleBrush(d.startTime);
+          return !x ? null : x; // Return `null` if x is `undefined`.
+        })
         .attr('width', this.xScaleBrush.bandwidth())
         .attr('y', (d: Item) => this.yScaleBrush(d.durationHours))
         .attr(
@@ -365,7 +364,7 @@ export class BarChartComponent implements AfterViewInit {
               BarChartComponent.COLOR_WHITE) {
             return BarChartComponent.COLOR_DARK_GRAY;
           }
-          return BarChartComponent.STATE_TO_COLOR[d.state];
+          return 'none';
         });
 
     // Apply transition to all elements.
@@ -459,9 +458,9 @@ export class BarChartComponent implements AfterViewInit {
         const modNum =
             Math.round((inputData.length / BarChartComponent.DEFAULT_MAX_BARS));
         this.xAxisFocus.call(
-            d3.axisBottom(this.xScaleFocus)
+             d3.axisBottom(this.xScaleFocus)
                 .tickValues(this.xScaleFocus.domain().filter(
-                    (x: string, i: number, arr: string[]) => !(i % modNum)))
+                    (x: string, i: number) => !(i % modNum)))
                 .tickSizeOuter(0));
       } else {
         this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0));
@@ -473,12 +472,17 @@ export class BarChartComponent implements AfterViewInit {
           .attr('transform', 'rotate(-90)')
           .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
 
-      const focusBars = this.focus.selectAll('rect').data(inputData);
+      const focusBars = (this.focus.selectAll('rect') as d3Rect)
+          .data(inputData)
+          .enter();
+
       const solidBars =
-          focusBars.attr('class', 'new-bars')
-              .enter()
+          focusBars
               .append('rect')
-              .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
+              .attr('x', (d: Item) => {
+                const x = this.xScaleFocus(d.startTime);
+                return !x ? null : x; // Return `null` if x is `undefined`.
+              })
               .attr('width', this.xScaleFocus.bandwidth())
               .attr('y', (d: Item) => this.yScaleFocus(d.durationHours))
               .attr(
@@ -503,10 +507,12 @@ export class BarChartComponent implements AfterViewInit {
               .on('mouseleave', hideHoverInformation);
 
       // Add transparent bars for hover convience.
-      focusBars.attr('class', 'trans-bars')
-          .enter()
+      focusBars
           .append('rect')  // Add a transparent rect for each element.
-          .attr('x', (d: Item) => this.xScaleFocus(d.startTime))
+          .attr('x', (d: Item) => {
+            const x = this.xScaleFocus(d.startTime);
+            return !x ? null : x; // Return `null` if x is `undefined`.
+          })
           .attr('width', this.xScaleFocus.bandwidth())
           .attr('y', (d: Item) => this.yScaleFocus(maxFocusDuration))
           .attr(
@@ -615,7 +621,8 @@ export class BarChartComponent implements AfterViewInit {
             .on('brush',
                 brushDown);  // Update the focus bar chart based on selection.
 
-    this.brush.append('g')
+    (this.brush.append('g') as
+    d3.Selection<SVGGElement, unknown, null, unknown>)
         .attr('class', 'brush')
         .call(brushSelector)
         .call(brushSelector.move, [firstItemPosition, lastItemPosition]);
