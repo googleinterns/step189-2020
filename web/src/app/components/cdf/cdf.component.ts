@@ -38,7 +38,7 @@ export class CDFComponent implements AfterViewChecked {
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
-  private showDotsBoolean;
+  private showDotsBoolean = true;
 
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
@@ -545,4 +545,5 @@ export class CDFComponent implements AfterViewChecked {
       const ylabelbg = d3.select('.y-label-bg').style('opacity', 0);
     });
   }
+
 }
