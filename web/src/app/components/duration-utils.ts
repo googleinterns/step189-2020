@@ -43,7 +43,6 @@ export const UNIT_CONVERSION: {[unit: string]: number} = {
  * @return one of [seconds, minutes, hours, days, weeks]
  */
 export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
-<<<<<<< HEAD
   const unitCounter: {[unit: string]: number} = {
     seconds: 0,
     minutes: 0,
@@ -51,10 +50,6 @@ export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
     days: 0,
     weeks: 0,
   };
-=======
-  const unitCounter:
-      {[unit: string]: number} = {seconds: 0, minutes: 0, hours: 0, days: 0};
->>>>>>> cee1570 (rebase on main)
 
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
