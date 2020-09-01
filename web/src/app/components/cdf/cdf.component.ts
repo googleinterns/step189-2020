@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
@@ -29,15 +29,34 @@ import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CDFComponent implements AfterViewInit {
+export class CDFComponent implements AfterViewChecked, AfterViewInit {
   @ViewChild('cdf') private CDFContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[]|null;
   @Input() currentPush!: step189_2020.IPushInfo|null;
+  @Input() showDots!: boolean;
 
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
+  private showDotsBoolean: boolean;
 
+  ngAfterViewChecked() {
+    if (this.showDotsBoolean === this.showDots) {
+      return;
+    }
+    if (!this.svg) {
+      return;
+    }
+    this.showDotsBoolean = this.showDots;
+    console.log(this.showDots);
+    if (!this.showDotsBoolean) {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
+    }
+    else {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
+    }
+
+  }
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration. Adds lines
@@ -93,6 +112,7 @@ export class CDFComponent implements AfterViewInit {
     if (!this.currentPush) {
       return;
     }
+    this.showDotsBoolean = this.showDots;
     this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
 
@@ -133,7 +153,6 @@ export class CDFComponent implements AfterViewInit {
     if (!maxExtendedDuration) {
       return;
     }
-
 
     this.svg = (d3.select(element).append('svg') as d3SVG)
                    .attr('width', elementWidth)
@@ -308,6 +327,9 @@ export class CDFComponent implements AfterViewInit {
           .attr('fill', 'black');
     }
 
+    if (!this.showDotsBoolean) {
+      cdfChart.selectAll('.dots').attr('opacity', 0);
+    }
     const lineY =
         cdfChart.append('line')
             .attr('class', 'click-line-y')
