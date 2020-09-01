@@ -75,7 +75,6 @@ export class CDFComponent implements AfterViewInit {
    *     <line class='percentile-line'></line>
    *     <text class='percentile-text'></text>
    *   </g>
-   *   <g id='dotplot-container'></g>
    *   <g id='current-push-line'> (Only if the visited push is completed)
    *     <defs>
    *       <marker id='arrow'></marker>
@@ -129,6 +128,7 @@ export class CDFComponent implements AfterViewInit {
       probability: 1,
       endState: 5
     });
+
     const maxExtendedDuration = d3.max(extendedData, d => d.duration);
     if (!maxExtendedDuration) {
       return;
@@ -247,11 +247,6 @@ export class CDFComponent implements AfterViewInit {
         .attr('class', 'percentile-text')
         .attr('font-size', '10px')
         .text((d: Item) => `${d.probability * 100}%`);
-
-    const dotplotContainer =
-        this.svg.append('g')
-            .attr('id', 'dotplot-container')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
