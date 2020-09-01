@@ -142,7 +142,8 @@ export class CDFComponent implements AfterViewInit {
     const cdfChart =
         this.svg.append('g')
             .attr('id', 'cdf-chart')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+            .attr('transform', `translate(${margin.left}, ${margin.top})`)
+            .datum(extendedData);
 
     const yAxisLeft =
         cdfChart.append('g')
@@ -193,8 +194,7 @@ export class CDFComponent implements AfterViewInit {
         .style('font-size', '16px')
         .text('CDF of completed push durations');
 
-    cdfChart.datum(extendedData)
-        .append('path')
+    cdfChart.append('path')
         .attr('id', 'cdf-area')
         .attr('fill', COMPLETED_BLUE)
         .attr(
@@ -205,8 +205,7 @@ export class CDFComponent implements AfterViewInit {
                 .y0(yScale(0))
                 .curve(d3.curveStepAfter));
 
-    cdfChart.datum(extendedData)
-        .append('path')
+    cdfChart.append('path')
         .attr('fill', 'none')
         .attr(
             'd',
@@ -356,7 +355,7 @@ export class CDFComponent implements AfterViewInit {
         .text(`${getProbabilityForDuration(this.data, startValue).toFixed(2)}%`)
         .attr('opacity', 0);
 
-    cdfChart.on('click', (d: unknown, i: number): void => {
+    cdfChart.on('click', (d: Item[], i: number): void => {
       if (!d) {
         return;
       }
@@ -364,7 +363,7 @@ export class CDFComponent implements AfterViewInit {
       const xValue = xScale.invert(coordinates[0]);
       if (xValue > minDuration) {
         startValue = xValue;
-        const yValue = getProbabilityForDuration(d as Item[], startValue);
+        const yValue = getProbabilityForDuration(d, startValue);
         d3.select(d3.event.currentTarget)
             .select('.area-clip-rect')
             .attr('width', xScale(startValue));
