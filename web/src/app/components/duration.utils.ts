@@ -43,9 +43,13 @@ export const UNIT_CONVERSION: {[unit: string]: number} = {
  * @return one of [seconds, minutes, hours, days, weeks]
  */
 export function findDurationUnit(pushInfos: step189_2020.IPushInfo[]): string {
-  const unitCounter:
-      {[unit: string]:
-           number} = {seconds: 0, minutes: 0, hours: 0, days: 0, weeks: 0};
+  const unitCounter: {[unit: string]: number} = {
+    seconds: 0,
+    minutes: 0,
+    hours: 0,
+    days: 0,
+    weeks: 0,
+  };
 
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
