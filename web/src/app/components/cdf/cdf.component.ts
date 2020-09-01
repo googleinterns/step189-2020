@@ -270,7 +270,10 @@ export class CDFComponent implements AfterViewInit {
     addCurrentPushLine(
         this.currentPush, currentPushLine, this.data, height, xScale, yScale);
 
-    // Mouse click
+    // Sets up and handles mouse click. The vertical and horizontal lines and
+    // the percentages are placed on the graph where the mouse clicked. The area
+    // of the graph to the left of the click becomes a lighter color and the
+    // dots to the left of the click become grey.
     let startValue = minDuration + 1e-6;
 
     const clipRect = cdfChart.append('clipPath')
@@ -401,19 +404,22 @@ export class CDFComponent implements AfterViewInit {
       }
     });
 
-    // hover
+    // Sets up and handles mouse hovering. The vertical and horizontal rulers, x
+    // and y labels and backgrounds are placed in the correct position when the
+    // mouse is over the graph
     const highlightColor = '#b9edc4';
     const strokeColor = '#167364';
     const circleColor = '#a0aade';
-    const labelsize = [40, 25];
-    const labelFontSize = labelsize[1] / 2;
+    const labelWidth = 40;
+    const labelHeight = 25;
+    const labelFontSize = labelHeight / 2;
 
     cdfChart.append('rect')
         .attr('class', 'x-label-bg')
         .attr('x', 0)
         .attr('y', height)
-        .attr('height', labelsize[1])
-        .attr('width', labelsize[0])
+        .attr('height', labelHeight)
+        .attr('width', labelWidth)
         .attr('fill', highlightColor)
         .attr('opacity', 0);
 
@@ -429,17 +435,17 @@ export class CDFComponent implements AfterViewInit {
 
     cdfChart.append('rect')
         .attr('class', 'y-label-bg')
-        .attr('x', -labelsize[0])
+        .attr('x', -labelWidth)
         .attr('y', 0)
-        .attr('height', labelsize[1])
-        .attr('width', labelsize[0])
+        .attr('height', labelHeight)
+        .attr('width', labelWidth)
         .attr('fill', highlightColor)
         .attr('opacity', 0);
 
     cdfChart.append('text')
         .attr('text-anchor', 'middle')
         .attr('class', 'y-label')
-        .attr('x', -labelsize[0] / 2)
+        .attr('x', -labelWidth / 2)
         .attr('y', 0)
         .attr('opacity', 0)
         .style('font-weight', 'bold')
@@ -501,9 +507,9 @@ export class CDFComponent implements AfterViewInit {
         const xText = d3.format(',.1f')(xInverted);
         const yText = d3.format(',.1%')(yScale.invert(yVal));
         xlabel.attr('x', +marker.attr('cx')).text(xText);
-        xlabelbg.attr('x', +marker.attr('cx') - labelsize[0] / 2);
-        ylabel.attr('y', +marker.attr('cy') + labelsize[1] / 5).text(yText);
-        ylabelbg.attr('y', +marker.attr('cy') - labelsize[1] / 2);
+        xlabelbg.attr('x', +marker.attr('cx') - labelWidth / 2);
+        ylabel.attr('y', +marker.attr('cy') + labelHeight / 5).text(yText);
+        ylabelbg.attr('y', +marker.attr('cy') - labelHeight / 2);
 
         marker.style('opacity', 1);
         hruler.style('opacity', 1);
@@ -524,13 +530,13 @@ export class CDFComponent implements AfterViewInit {
     });
 
     cdfChart.on('mouseleave', (d: unknown, i: number): void => {
-      const vruler = d3.select('.v-ruler').style('opacity', 0);
-      const hruler = d3.select('.h-ruler').style('opacity', 0);
-      const marker = d3.select('.marker').style('opacity', 0);
-      const xlabel = d3.select('.x-label').style('opacity', 0);
-      const xlabelbg = d3.select('.x-label-bg').style('opacity', 0);
-      const ylabel = d3.select('.y-label').style('opacity', 0);
-      const ylabelbg = d3.select('.y-label-bg').style('opacity', 0);
+      d3.select('.v-ruler').style('opacity', 0);
+      d3.select('.h-ruler').style('opacity', 0);
+      d3.select('.marker').style('opacity', 0);
+      d3.select('.x-label').style('opacity', 0);
+      d3.select('.x-label-bg').style('opacity', 0);
+      d3.select('.y-label').style('opacity', 0);
+      d3.select('.y-label-bg').style('opacity', 0);
     });
   }
 }
