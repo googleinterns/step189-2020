@@ -356,15 +356,15 @@ export class BarChartComponent implements AfterViewInit {
     brushBars.selectAll('rect').transition().duration(500);
 
     // This function shows the tooltip and tags when the user hovers over a
-    // bar, or the empty area above it. It is declared locally to prevent the
-    // use of `this` in the callback function.
+    // bar, or the empty area above it. It is declared locally because we want
+    // to use `this` to access the variables declared for this class.
     const showHoverInformation = (d: Item, i: number) => {
       // Locate x and y position of the bar.
       const barX = this.xScaleFocus(d.startTime);
       const barY = this.yScaleFocus(d.durationHours);
       // Highlight the bar when hover over it and blur the x labels.
       d3.select(d3.event.currentTarget).attr('fill-opacity', 0.70);
-      d3.select('.axis-xFocus').selectAll('text').style('opacity', 0.50);
+      d3.select('.axis-xFocus').selectAll('text').style('opacity', 0.65);
       if (!this.points) {
         return;
       }
@@ -376,8 +376,8 @@ export class BarChartComponent implements AfterViewInit {
     };
 
     // This function removes the tooltip and tags when the user's cursor
-    // leaves a bar, or the empty area above it. It is declared locally to
-    // prevent the use of `this` in the callback function.
+    // leaves a bar, or the empty area above it. It is declared locally because
+    // we want to use `this` to access the variables declared for this class.
     const hideHoverInformation = (d: Item, i: number) => {
       // Remove highlight from the bar and reset the x labels.
       d3.select(d3.event.currentTarget).attr('fill-opacity', 1);
@@ -411,7 +411,8 @@ export class BarChartComponent implements AfterViewInit {
       }
       this.focus.selectAll('rect').remove();
 
-      const maxFocusDuration = d3.max(inputData, (d: Item) => d.durationHours);
+      const maxFocusDuration =
+          d3.max(inputData, (d: Item) => Math.ceil(d.durationHours));
       if (!maxFocusDuration) {
         return;
       }
@@ -419,12 +420,17 @@ export class BarChartComponent implements AfterViewInit {
       // Upate the xScaleFocus, yScaleFocus, xAxisFocus and yAxisFocus
       // based on the selected data for the focus chart.
       this.xScaleFocus.domain(inputData.map((d: Item) => d.startTime));
-      this.yScaleFocus.domain([0, maxFocusDuration]);
+      this.yScaleFocus.domain([0, maxFocusDuration])
+          .nice();  // Optimal the number of ticks we want to show.
 
       if (!this.yAxis) {
         return;
       }
       this.yAxis.call(d3.axisLeft(this.yScaleFocus));
+
+
+      // Remove the horizontal line of y axis to follow the convention.
+      this.yAxis.select('.domain').remove();
 
       // If the focus chart has more than `DEFAULT_MAX_BARS`, set the ticks and
       // labels on xAxisFocus to be always smaller than `DEFAULT_MAX_BARS`.
@@ -434,11 +440,11 @@ export class BarChartComponent implements AfterViewInit {
       if (inputData.length > BarChartComponent.DEFAULT_MAX_BARS) {
         const modNum =
             Math.round((inputData.length / BarChartComponent.DEFAULT_MAX_BARS));
-        this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus)
-                                 .tickValues(this.xScaleFocus.domain().filter(
-                                     (x: string, i: number, arr: string[]) =>
-                                     !(i % modNum)))
-                                 .tickSizeOuter(0));
+        this.xAxisFocus.call(
+            d3.axisBottom(this.xScaleFocus)
+                .tickValues(this.xScaleFocus.domain().filter(
+                    (x: string, i: number, arr: string[]) => !(i % modNum)))
+                .tickSizeOuter(0));
       } else {
         this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus).tickSizeOuter(0));
       }
@@ -448,9 +454,6 @@ export class BarChartComponent implements AfterViewInit {
           .attr('dy', '-5px')
           .attr('transform', 'rotate(-90)')
           .style('fill', BarChartComponent.COLOR_LIGHT_GRAY);
-
-      // Remove the horizontal line of y axis to follow the convention.
-      this.yAxis.select('.domain').remove();
 
       const focusBars = this.focus.selectAll('rect').data(inputData);
       const solidBars =
@@ -498,11 +501,10 @@ export class BarChartComponent implements AfterViewInit {
                 d3.select(solidBars.nodes()[i]).attr('fill-opacity', 0.7);
                 showHoverInformation(d, i);
               })
-          .on('mouseleave',
-              (d: Item, i: number) => {
-                d3.select(solidBars.nodes()[i]).attr('fill-opacity', 1);
-                hideHoverInformation(d, i);
-              });
+          .on('mouseleave', (d: Item, i: number) => {
+            d3.select(solidBars.nodes()[i]).attr('fill-opacity', 1);
+            hideHoverInformation(d, i);
+          });
 
       // Apply transition to all elements.
       focusBars.selectAll('rect').transition().duration(500);
