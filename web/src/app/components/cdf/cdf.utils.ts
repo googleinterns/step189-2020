@@ -224,6 +224,7 @@ export function generateYPosition(
  * If the current push does not end with a completed stage, then no line or
  * arrow is appended to the chart.
  *
+ * @param durationUnit unit of time that the majority of push durations take
  * @param currentPush push information for the push that the page is on
  * @param currentPushLine d3 SVG G element
  * @param xScale d3 function that applies a scaling factor on raw x values to
@@ -233,8 +234,9 @@ export function generateYPosition(
  *     probabilities to correctly place them on the graph
  */
 export function addCurrentPushLine(
-    currentPush: step189_2020.IPushInfo, currentPushLine: d3G, data: Item[],
-    height: number, xScale: d3.ScaleLinear<number, number>,
+    durationUnit: string, currentPush: step189_2020.IPushInfo,
+    currentPushLine: d3G, data: Item[], height: number,
+    xScale: d3.ScaleLinear<number, number>,
     yScale: d3.ScaleLinear<number, number>): void {
   const states = currentPush.stateInfo;
   if (!states) {
@@ -253,19 +255,13 @@ export function addCurrentPushLine(
     return;
   }
 
-  // Find the start time of the first non-empty stage.
-  let firstStateStart: number|Long = -1;
-  for (const state of states) {
-    if (state.stage && state.startTimeNsec) {
-      firstStateStart = state.startTimeNsec;
-      break;
-    }
-  }
-  if (firstStateStart === -1) {
+  const startEnd: DurationItem|undefined = findDuration(currentPush);
+  if (!startEnd) {
     return;
   }
 
-  const duration = (+pushEndTime - +firstStateStart) / NANO_TO_MINUTES;
+  const duration =
+      (+startEnd.endNsec - +startEnd.startNsec) / UNIT_CONVERSION[durationUnit];
 
   const markerSize = 2.5;
   const markerPath = [[0, 0], [0, markerSize], [markerSize, markerSize / 2]];

@@ -50,8 +50,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
     this.showDotsBoolean = this.showDots;
     if (!this.showDotsBoolean) {
       this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
-    }
-    else {
+    } else {
       this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
     }
   }
@@ -284,7 +283,8 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     addCurrentPushLine(
-        this.currentPush, currentPushLine, this.data, height, xScale, yScale);
+        this.durationUnit, this.currentPush, currentPushLine, this.data, height,
+        xScale, yScale);
 
     // Sets up and handles mouse click. The vertical and horizontal lines and
     // the percentages are placed on the graph where the mouse clicked. The area
