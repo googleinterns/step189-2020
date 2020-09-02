@@ -502,7 +502,6 @@ export class CDFComponent implements AfterViewInit {
         d3.select('.y-label-bg').attr('y', yVal - labelHeight / 2);
 
         d3.selectAll('.hover').style('opacity', 1);
-
       } else {
         d3.selectAll('.hover').style('opacity', 0);
       }
