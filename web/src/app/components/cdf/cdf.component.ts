@@ -38,7 +38,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
-  private showDotsBoolean: boolean;
+  private showDotsBoolean: boolean = true;
 
   ngAfterViewChecked() {
     if (this.showDotsBoolean === this.showDots) {
@@ -48,7 +48,6 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
       return;
     }
     this.showDotsBoolean = this.showDots;
-    console.log(this.showDots);
     if (!this.showDotsBoolean) {
       this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
     }
@@ -324,12 +323,10 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
           .attr('cx', cx)
           .attr('r', radius)
           .attr('cy', cy)
-          .attr('fill', 'black');
+          .attr('fill', 'black')
+          .attr('opacity', 0);
     }
 
-    if (!this.showDotsBoolean) {
-      cdfChart.selectAll('.dots').attr('opacity', 0);
-    }
     const lineY =
         cdfChart.append('line')
             .attr('class', 'click-line-y')
