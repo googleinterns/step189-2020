@@ -17,7 +17,7 @@
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
-import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../duration.utils';
+import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../duration-utils';
 
 export interface Item {
   duration: number;     // Time between last stage and first non-empty stage
