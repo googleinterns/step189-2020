@@ -38,9 +38,9 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
-  private showDotsBoolean: boolean = true;
+  private showDotsBoolean = true;
 
-  ngAfterViewChecked() {
+  ngAfterViewChecked(): void {
     if (this.showDotsBoolean === this.showDots) {
       return;
     }
@@ -54,7 +54,6 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
     else {
       this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
     }
-
   }
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against

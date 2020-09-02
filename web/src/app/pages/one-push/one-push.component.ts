@@ -22,7 +22,6 @@ import {flatMap, map, shareReplay} from 'rxjs/operators';
 
 import {step189_2020} from '../../../proto/step189_2020';
 
-
 @Component({
   selector: 'app-one-push',
   templateUrl: './one-push.component.html',
