@@ -22,27 +22,8 @@ import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../
 
 import {Item} from './bar-chart.component';
 
-/**
- * D3 types used by the bar chart.
- *
- * The d3.Selection has the default type Selection<GElement, Datum, PElement,
- * PDatum>, and we want to use it with Datum, Datum, PElement, PDatum being
- * `undefined` or `null`. The SVGSVGElement provides the access and all methods
- * to manipulate `<svg>` element, while SVGGElement corresponds to the `g`
- * element that the top bar chart and the bottom bar chart belong to.
- *
- * We separate the top bar chart and the bottom bar chart by `g` elements, so
- * that they can be updated with different methods using dropdown menu and
- * brush selector.
- */
-export type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
 export type d3G = d3.Selection<SVGGElement, Item[], null, undefined>;
-export type d3Circle =
-    d3.Selection<SVGCircleElement, Item, SVGGElement, Item[]>;
-export type d3HTML = d3.Selection<HTMLDivElement, Item, null, undefined>;
-export type d3Rect = d3.Selection<SVGRectElement, Item, SVGGElement, Item[]>;
 export type d3ScaleLinear = d3.ScaleLinear<number, number>;
-export type d3ScaleBand = d3.ScaleBand<string>;
 
 /**
  * Constants.

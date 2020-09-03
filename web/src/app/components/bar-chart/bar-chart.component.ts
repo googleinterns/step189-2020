@@ -22,7 +22,7 @@ import {LIGHT_GRAY, STATE_TO_COLOR} from '../colors';
 import {findDurationUnit} from '../duration-utils';
 
 import {addTag, generateLabels, populateData} from './utils';
-import {d3Circle, d3G, d3HTML, d3Rect, d3ScaleBand, d3ScaleLinear, d3SVG} from './utils';
+import {d3G, d3ScaleLinear} from './utils';
 import {ALL_PUSHES_OPTION, COLOR_DARK_GRAY, COLOR_LIGHT_GRAY, COLOR_WHITE_TRANS, DEFAULT_MAX_BARS, DEFAULT_NUM_BARS} from './utils';
 
 /**
@@ -34,6 +34,26 @@ export interface Item {
   startTime: string;  // Start time of the push, in `yyyy-MM-dd HH:mm:ss` format
   duration: number;   // Time between last stage and first non-empty stage
 }
+
+/**
+ * D3 types used by the bar chart.
+ *
+ * The d3.Selection has the default type Selection<GElement, Datum, PElement,
+ * PDatum>, and we want to use it with Datum, Datum, PElement, PDatum being
+ * `undefined` or `null`. The SVGSVGElement provides the access and all methods
+ * to manipulate `<svg>` element, while SVGGElement corresponds to the `g`
+ * element that the top bar chart and the bottom bar chart belong to.
+ *
+ * We separate the top bar chart and the bottom bar chart by `g` elements, so
+ * that they can be updated with different methods using dropdown menu and
+ * brush selector.
+ */
+type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+type d3Circle =
+    d3.Selection<SVGCircleElement, Item, SVGGElement, Item[]>;
+type d3HTML = d3.Selection<HTMLDivElement, Item, null, undefined>;
+type d3Rect = d3.Selection<SVGRectElement, Item, SVGGElement, Item[]>;
+type d3ScaleBand = d3.ScaleBand<string>;
 
 @Component({
   selector: 'app-bar-chart',
