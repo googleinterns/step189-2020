@@ -342,9 +342,9 @@ export class TimelineComponent implements AfterViewInit {
         (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
     const zoom =
         d3.zoom<SVGSVGElement, Item[]>()
-            .scaleExtent([0.75, maxZoomIn])  // Limit zoom out.
-            .translateExtent(
-                [[-100000, 0], [100000, 0]])  // Avoid scrolling too far.
+            .scaleExtent([1, maxZoomIn])  // Limit zoom out.
+            .translateExtent([[0, 0], [this.width, this.height]])
+            .extent([[0, 0], [this.width, this.height]])
             .on('zoom', () => {
               this.isZoomed = true;
               const transform = d3.event.transform;
@@ -375,7 +375,14 @@ export class TimelineComponent implements AfterViewInit {
               const mouseCoords =
                   d3.mouse(this.svg.node() as d3.ContainerElement);
               const x = mouseCoords[0];
+              const y = mouseCoords[1];
               this.moveLine(x);
+
+              // Move the tooltip on zoom.
+              const lineY = (y < this.height / 2) ? y + 125 : y + 10;
+              const lineX = (x > this.height / 2) ? x - 100 : x;
+
+              tooltip.style('left', lineX + 'px').style('top', lineY + 'px');
             });
 
     // Set up timeline chart components. The structure of the SVG tree
@@ -492,6 +499,7 @@ export class TimelineComponent implements AfterViewInit {
           d3.select(d3.event.currentTarget)
               .attr('filter', 'none')
               .attr('opacity', 1);
+          this.line.raise();  // Ensure that line will always be on top
           tooltip.style('opacity', '0');  // Hide tooltip
         });
 
