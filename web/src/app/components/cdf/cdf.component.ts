@@ -31,7 +31,7 @@ import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
 
 export class CDFComponent implements AfterViewInit {
   private static readonly NANO_TO_MINUTES: number = (10 ** 9) * 60;
-  private static readonly STATE_TO_COLOR: { [index: number]: string } = {
+  private static readonly STATE_TO_COLOR: {[index: number]: string} = {
     1: '#eee',
     3: '#ba68c8',
     4: '#ff6e40',
@@ -212,17 +212,16 @@ export class CDFComponent implements AfterViewInit {
         .text('CDF of push durations');
 
     const rectHeight = Math.floor(height / this.data.length) + 1;
-    console.log(rectHeight)
     for (let i = this.data.length - 1; i >= 0; i--) {
       const elem = this.data[i];
       cdfChart.append('rect')
-        .attr('class', 'rect-area')
-        .attr('fill', CDFComponent.STATE_TO_COLOR[elem.endState])
-        .attr('x', xScale(elem.duration))
-        .attr('y', yScale(elem.probability))
-        .attr('height', rectHeight)
-        .attr('width', width - xScale(elem.duration))
-        .attr('opacity', 1);
+          .attr('class', 'rect-area')
+          .attr('fill', CDFComponent.STATE_TO_COLOR[elem.endState])
+          .attr('x', xScale(elem.duration))
+          .attr('y', yScale(elem.probability))
+          .attr('height', rectHeight)
+          .attr('width', width - xScale(elem.duration))
+          .attr('opacity', 1);
     }
   }
 }

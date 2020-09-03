@@ -52,7 +52,8 @@ export const STROKE_COLOR = '#167364';
  * @param pushInfos Array of pushes for a single push def
  * @return Array of Items sorted by increasing duration
  */
-export function populateData(pushInfos: step189_2020.IPushInfo[], completedBool: boolean): Item[] {
+export function populateData(
+    pushInfos: step189_2020.IPushInfo[], completedBool: boolean): Item[] {
   const divisor = UNIT_CONVERSION[findDurationUnit(pushInfos)];
   let pushes: Item[] = [];
   pushInfos.forEach(pushInfo => {
@@ -85,7 +86,7 @@ export function populateData(pushInfos: step189_2020.IPushInfo[], completedBool:
     pushes = pushes.filter(d => d.endState === 5);
   }
   const sortedArray: Item[] =
-    pushes.sort((n1, n2) => n1.duration - n2.duration);
+      pushes.sort((n1, n2) => n1.duration - n2.duration);
 
   const data: Item[] = [];
   const durationLength = sortedArray.length;
