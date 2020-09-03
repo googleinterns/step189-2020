@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
@@ -29,15 +29,31 @@ import {COMPLETED_BLUE, d3SVG, Item, STROKE_COLOR} from './cdf.utils';
   styleUrls: ['./cdf.component.scss']
 })
 
-export class CDFComponent implements AfterViewInit {
+export class CDFComponent implements AfterViewChecked, AfterViewInit {
   @ViewChild('cdf') private CDFContainer!: ElementRef;
   @Input() pushInfos!: step189_2020.IPushInfo[]|null;
   @Input() currentPush!: step189_2020.IPushInfo|null;
+  @Input() showDots!: boolean;
 
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
+  private showDotsBoolean = false;
 
+  ngAfterViewChecked(): void {
+    if (this.showDotsBoolean === this.showDots) {
+      return;
+    }
+    if (!this.svg) {
+      return;
+    }
+    this.showDotsBoolean = this.showDots;
+    if (!this.showDotsBoolean) {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
+    } else {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
+    }
+  }
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration. Adds lines
@@ -93,6 +109,7 @@ export class CDFComponent implements AfterViewInit {
     if (!this.currentPush) {
       return;
     }
+    this.showDotsBoolean = this.showDots;
     this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos);
 
@@ -120,7 +137,7 @@ export class CDFComponent implements AfterViewInit {
                        .rangeRound([0, width])
                        .nice();
 
-    const yScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
+    const yScale = d3.scaleLinear().domain([0, 100]).rangeRound([height, 0]);
 
     const extendedData = Array.from(this.data);
     extendedData.push({
@@ -133,7 +150,6 @@ export class CDFComponent implements AfterViewInit {
     if (!maxExtendedDuration) {
       return;
     }
-
 
     this.svg = (d3.select(element).append('svg') as d3SVG)
                    .attr('width', elementWidth)
@@ -148,7 +164,7 @@ export class CDFComponent implements AfterViewInit {
     const yAxisLeft =
         cdfChart.append('g')
             .attr('id', 'y-axis-left')
-            .call(d3.axisLeft(yScale).ticks(10).tickFormat(d3.format(',.1f')));
+            .call(d3.axisLeft(yScale).ticks(10).tickFormat(d3.format(',.0f')));
 
     // Remove axis' vertical line and keep the tick marks
     yAxisLeft.select('.domain').remove();
@@ -161,13 +177,13 @@ export class CDFComponent implements AfterViewInit {
         .attr('dy', '1em')
         .style('text-anchor', 'middle')
         .style('font-size', '12px')
-        .text('Probability');
+        .text('Percentage (%)');
 
     const yAxisRight =
         cdfChart.append('g')
             .attr('id', 'y-axis-right')
             .attr('transform', `translate(${width}, 0)`)
-            .call(d3.axisRight(yScale).ticks(10).tickFormat(d3.format(',.1f')));
+            .call(d3.axisRight(yScale).ticks(10).tickFormat(d3.format(',.0f')));
 
     // Remove axis' vertical line and keep the tick marks
     yAxisRight.select('.domain').remove();
@@ -222,7 +238,7 @@ export class CDFComponent implements AfterViewInit {
             .attr('id', 'percentile-lines')
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const percentiles = generateQuantiles(this.data, [0.1, 0.5, 0.9], xScale);
+    const percentiles = generateQuantiles(this.data, [10, 50, 90], xScale);
 
     percentileLines.selectAll('.percentile-lines')
         .data(percentiles)
@@ -245,7 +261,7 @@ export class CDFComponent implements AfterViewInit {
         .attr('y', -10)
         .attr('class', 'percentile-text')
         .attr('font-size', '10px')
-        .text((d: Item) => `${d.probability * 100}%`);
+        .text((d: Item) => `${d.probability}%`);
 
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
@@ -267,7 +283,8 @@ export class CDFComponent implements AfterViewInit {
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     addCurrentPushLine(
-        this.currentPush, currentPushLine, this.data, height, xScale, yScale);
+        this.durationUnit, this.currentPush, currentPushLine, this.data, height,
+        xScale, yScale);
 
     // Sets up and handles mouse click. The vertical and horizontal lines and
     // the percentages are placed on the graph where the mouse clicked. The area
@@ -390,7 +407,7 @@ export class CDFComponent implements AfterViewInit {
             .attr('x', xScale(startValue) / 2)
             .attr('y', yScale(yValue) + 10)
             .text(`${
-                (getProbabilityForDuration(this.data, startValue) * 100)
+                (getProbabilityForDuration(this.data, startValue))
                     .toFixed(1)}%`)
             .attr('opacity', 1);
         d3.select(d3.event.currentTarget)
@@ -495,10 +512,12 @@ export class CDFComponent implements AfterViewInit {
         d3.select('.v-ruler').attr('x1', xVal).attr('x2', xVal);
 
         const xText = d3.format(',.1f')(xInverted);
-        const yText = d3.format(',.1%')(yScale.invert(yVal));
+        const yText = d3.format(',.0f')(yScale.invert(yVal));
         d3.select('.x-label').attr('x', xVal).text(xText);
         d3.select('.x-label-bg').attr('x', xVal - labelWidth / 2);
-        d3.select('.y-label').attr('y', yVal + labelHeight / 5).text(yText);
+        d3.select('.y-label')
+            .attr('y', yVal + labelHeight / 5)
+            .text(`${yText}%`);
         d3.select('.y-label-bg').attr('y', yVal - labelHeight / 2);
 
         d3.selectAll('.hover').style('opacity', 1);
