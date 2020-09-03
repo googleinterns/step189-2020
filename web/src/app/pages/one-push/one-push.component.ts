@@ -29,7 +29,7 @@ import {step189_2020} from '../../../proto/step189_2020';
   styleUrls: ['./one-push.component.scss']
 })
 export class OnePushComponent {
-  showDots = false;
+  showDots = true;
   readonly pushHandle: Observable<string>;
   readonly pushDefName: Observable<string>;
   readonly pushInfos: Observable<step189_2020.IPushInfo[]>;

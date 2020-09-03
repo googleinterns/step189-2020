@@ -20,13 +20,25 @@ import {DateNsecPipe} from './pipes/date-nsec.pipe';
 
 @NgModule({
   declarations: [
-    AppComponent, AllPushesComponent, BarChartComponent, ButtonComponent,
-    ButtonRowComponent, CDFComponent, DateNsecPipe, MyPushesComponent,
-    OnePushComponent, PageNameComponent, TimelineComponent
+    AllPushesComponent,
+    AppComponent,
+    BarChartComponent,
+    ButtonComponent,
+    ButtonRowComponent,
+    CDFComponent,
+    DateNsecPipe,
+    MyPushesComponent,
+    OnePushComponent,
+    PageNameComponent,
+    TimelineComponent,
   ],
   imports: [
-    AppRoutingModule, BrowserModule, HttpClientModule, BrowserAnimationsModule,
-    MatSlideToggleModule, FormsModule
+    AppRoutingModule,
+    BrowserModule,
+    BrowserAnimationsModule,
+    FormsModule,
+    HttpClientModule,
+    MatSlideToggleModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -20,6 +20,7 @@ import * as d3 from 'd3';
 import {HumanizeDuration, HumanizeDurationLanguage, HumanizeDurationOptions} from 'humanize-duration-ts';
 
 import {step189_2020} from '../../../proto/step189_2020';
+import {DARK_GRAY, LIGHT_GRAY, MED_GRAY, STATE_TO_COLOR} from '../colors';
 
 /**
  * Item holds all required data for one interval on the timeline.
@@ -32,7 +33,15 @@ interface Item {
   row: number;        // Row number corresponds to y-position on timeline
 }
 
-type d3SVG = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+/**
+ * Selection types. The first item in the d3.Selection<...> is the element
+ * type, which varies depending on what we are selecting for, and the second
+ * element represents the Datum, which in our case is an Item.
+ */
+type d3SVGGElement = d3.Selection<SVGGElement, Item[], null, undefined>;
+type d3SVGSVGElement = d3.Selection<SVGSVGElement, Item[], null, undefined>;
+type d3SVGLineElement = d3.Selection<SVGLineElement, Item[], null, undefined>;
+type d3SVGTextElement = d3.Selection<SVGTextElement, Item[], null, undefined>;
 
 @Component({
   selector: 'app-timeline',
@@ -45,38 +54,23 @@ export class TimelineComponent implements AfterViewInit {
       new HumanizeDurationLanguage();
   private static readonly HUMANIZER: HumanizeDuration =
       new HumanizeDuration(TimelineComponent.LANG_SERVICE);
-  private static readonly COLOR_LIGHT_GRAY: string = '#d3d3d3';
+  private static readonly MIN_VISIBLE_DURATION: number = 5 * 60 * 60 * 1000;
+  private static readonly HALF_LABEL_WIDTH: number = 50;
   private static readonly MIN_INTERVAL_HEIGHT: number = 25;
-  private static readonly MSEC_PER_MIN: number = 60 * (10 ** 3);
+  private static readonly MSEC_PER_MIN: number = 60 * 1000;
   private static readonly NSEC_PER_MSEC: number = 10 ** 6;
-  private static readonly STATE_TO_COLOR: {[index: number]: string} = {
-    1: '#eee',
-    3: '#2196f3',
-    4: '#d50000',
-    5: '#34a853',
-    6: '#d50000',
-    7: '#2196f3',
-    8: '#2196f3',
-    9: '#d50000',
-    10: '#2196f3',
-    11: '#2196f3',
-    12: '#d50000',
-    13: '#2196f3',
-    14: '#eee',
-    15: '#2196f3',
-    16: '#d50000',
-    17: '#eee',
-    18: '#34a853',
-    19: '#eee'
-  };
 
-  // Note that we use the non-null assertion operator ('!') on `this.svg`
-  // in order to reassure the compiler that it will never be null or undefined.
+  // Note that we use the non-null assertion operator ('!') in order to reassure
+  // the compiler that our variables will never be null or undefined.
   @ViewChild('timeline') private timelineContainer!: ElementRef;
   @Input() private pushInfos!: step189_2020.IPushInfo[]|null;
   private data: Item[] = [];
-  private svg!: d3SVG;
+  private svg!: d3SVGSVGElement;
+  private line!: d3SVGLineElement;
+  private lineLabel!: d3SVGTextElement;
   private x: d3.ScaleTime<number, number> = d3.scaleTime();
+  private newX = d3.scaleTime();
+  private isZoomed = false;
   private height = 0;
   private width = 0;
   private numRows = 0;
@@ -214,7 +208,7 @@ export class TimelineComponent implements AfterViewInit {
   /**
    * Create tooltip to display each interval's content.
    *
-   * @param el Encasing element that holds the tooltip
+   * @param el Encasing element that holds the tooltip.
    */
   private styleTooltip =
       (el: d3.Selection<HTMLDivElement, unknown, null, undefined>) => {
@@ -228,6 +222,31 @@ export class TimelineComponent implements AfterViewInit {
             .style('padding', '10px')
             .style('line-height', '1.3')
             .style('font', '11px sans-serif');
+      }
+
+  /**
+   * Move the line and its corresponding line marker below the x-axis so that
+   * it stays wherever the mouse is, even during drag.
+   *
+   * @param x The x-coordinate of the mouse relative to the encasing SVG.
+   */
+  private moveLine =
+      (x: number) => {
+        this.line.attr('transform', `translate(${x} 0)`);
+
+        let diff = 0;
+        if (x > this.width - TimelineComponent.HALF_LABEL_WIDTH) {
+          diff = this.width - x - TimelineComponent.HALF_LABEL_WIDTH;
+        } else if (x < TimelineComponent.HALF_LABEL_WIDTH) {
+          diff = TimelineComponent.HALF_LABEL_WIDTH - x;
+        }
+
+        const xScale =
+            this.isZoomed ? this.newX : this.x;  // New axis if scaled
+        this.lineLabel.attr('transform', `translate(${x + diff} 0)`)
+            .text(formatDate(xScale.invert(x), 'yyyy-MM-dd HH:mm:ss', 'en-US'))
+            .style('font-size', '10px')
+            .attr('class', 'b system-sans-serif');
       }
 
   /**
@@ -246,14 +265,14 @@ export class TimelineComponent implements AfterViewInit {
    *          <g class='tick' .../>
    *            [...]
    *          <g class='tick' .../>
-   *       <defs/> // clipPath defining how much of timeline is visible
+   *       <defs/> // Holds filter for drop-shadows
    *       <rect class=’chart-bounds’/> // Defines where zoom is possible
    *       <line class=’group-section’/> // Horizontal rows
    *         [...]
    *       <line class=’group-section’/>
-   *       <g clip-path=’url(#chart-content)/>
-   *         [...] // clipPaths defining how much of lines can be seen
-   *       <g clip-path=’url(#chart-content)/>
+   *       <g/>
+   *         [...] // Rects for intervals
+   *       <g/>
    *     </g>
    *   </svg>
    *   <div/> // tooltip content. Opacity is 0 when not hovering over interval
@@ -278,14 +297,22 @@ export class TimelineComponent implements AfterViewInit {
     const elementWidth = element.clientWidth;
     let elementHeight = element.clientHeight;
 
+    const margin = {top: 0, right: 0, bottom: 45, left: 0};
+
     if (elementHeight > TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows) {
       // Resize height if the current allocated interval height is too small
       // to see clearly and comfortably.
       element.style.height =
-          (TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows) + 'px';
+          (TimelineComponent.MIN_INTERVAL_HEIGHT * this.numRows +
+           margin.bottom) +
+          'px';
       elementHeight = element.clientHeight;
     }
 
+    this.width = elementWidth - margin.left - margin.right;
+    this.height = elementHeight - margin.top - margin.bottom;
+
+    // Establish the timeline's bottom axis.
     const minTimePoint =
         this.data
             .reduce((prev, cur) => {
@@ -299,12 +326,6 @@ export class TimelineComponent implements AfterViewInit {
                              })
                              .endTime;
 
-    const margin = {top: 0, right: 0, bottom: 20, left: 0};
-
-    this.width = elementWidth - margin.left - margin.right;
-    this.height = elementHeight - margin.top - margin.bottom;
-
-    // Establish the timeline's bottom axis.
     this.x = d3.scaleTime()
                  .domain([new Date(minTimePoint), new Date(maxTimePoint)])
                  .range([0, this.width]);
@@ -321,23 +342,26 @@ export class TimelineComponent implements AfterViewInit {
         (maxTimePoint - minTimePoint) / TimelineComponent.MSEC_PER_MIN;
     const zoom =
         d3.zoom<SVGSVGElement, Item[]>()
-            .scaleExtent([0.75, maxZoomIn])  // Limit zoom out.
-            .translateExtent(
-                [[-100000, 0], [100000, 0]])  // Avoid scrolling too far.
+            .scaleExtent([1, maxZoomIn])  // Limit zoom out.
+            .translateExtent([[0, 0], [this.width, this.height]])
+            .extent([[0, 0], [this.width, this.height]])
             .on('zoom', () => {
+              this.isZoomed = true;
               const transform = d3.event.transform;
               const updatedScale = transform.rescaleX(this.x);
+              this.newX = updatedScale;
 
               // Redraw the x-axis on every zoom action.
               const newXAxis = d3.axisBottom(updatedScale)
                                    .tickSize(-this.height - 6)
                                    .tickPadding(10);
 
-              (this.svg.select('.x-axis') as
-               d3.Selection<SVGGElement, Item[], null, undefined>)
+              (this.svg.select('.x-axis') as d3SVGGElement)
                   .call(newXAxis)
                   .selectAll('line')
-                  .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
+                  .style('stroke', MED_GRAY);
+
+              this.svg.select('path.domain').remove();  // Remove axes borders
 
               (this.svg.selectAll('rect.interval') as
                d3.Selection<SVGRectElement, Item, SVGSVGElement, Item[]>)
@@ -346,6 +370,19 @@ export class TimelineComponent implements AfterViewInit {
                       'width',
                       (d: Item) =>
                           updatedScale(d.endTime) - updatedScale(d.startTime));
+
+              // Move line and line marker on zoom.
+              const mouseCoords =
+                  d3.mouse(this.svg.node() as d3.ContainerElement);
+              const x = mouseCoords[0];
+              const y = mouseCoords[1];
+              this.moveLine(x);
+
+              // Move the tooltip on zoom.
+              const lineY = (y < this.height / 2) ? y + 125 : y + 10;
+              const lineX = (x > this.height / 2) ? x - 100 : x;
+
+              tooltip.style('left', lineX + 'px').style('top', lineY + 'px');
             });
 
     // Set up timeline chart components. The structure of the SVG tree
@@ -353,7 +390,7 @@ export class TimelineComponent implements AfterViewInit {
     // for each interval, the width of which is determined by its
     // respective start and end time.
     this.svg =
-        (d3.select(element).append('svg') as d3SVG)
+        (d3.select(element).append('svg') as d3SVGSVGElement)
             .attr('width', this.width + margin.left + margin.right)
             .attr('height', this.height + margin.top + margin.bottom)
             .attr('viewBox', `0 0 ${this.width} ${this.height}`)
@@ -369,24 +406,39 @@ export class TimelineComponent implements AfterViewInit {
         .attr('transform', `translate(0 ${this.height})`)
         .call(xAxis)
         .selectAll('line')
-        .style('stroke', TimelineComponent.COLOR_LIGHT_GRAY);
+        .style('stroke', MED_GRAY);
 
-    this.svg
-        .append('defs')  // Determine what can be seen of the component
-        .append('clipPath')
-        .attr('id', 'chart-content')
-        .append('rect')
-        .attr('x', 0)
-        .attr('y', 0)
-        .attr('height', this.height)
-        .attr('width', this.width);
+    this.svg.select('path.domain').remove();  // Remove axes borders
+
+    const defs =
+        this.svg.append('defs');  // Holds special definitions (e.g. filter)
 
     this.svg.append('rect')
-        .attr('class', 'chart-bounds o-025')
+        .attr('class', 'chart-bounds o-0')
         .attr('x', 0)
         .attr('y', 0)
         .attr('height', this.height)
         .attr('width', this.width);
+
+    // Define filter to create shadow around each interval, to be set visible
+    // only on hover.
+    const filter = defs.append('filter')
+                       .attr('id', 'drop-shadow')
+                       .attr('filterUnits', 'userSpaceOnUse');
+
+    filter.append('feGaussianBlur')
+        .attr('in', 'SourceAlpha')
+        .attr('stdDeviation', 1)
+        .attr('result', 'coloredBlur');
+
+    const feComponentTransfer = filter.append('feComponentTransfer');
+    feComponentTransfer.append('feFuncA')
+        .attr('type', 'linear')
+        .attr('slope', 100);
+
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
     // Insert timeline interval bars with their y-position determined by their
     // row index. In this case, `selectAll()` returns an empty selection since
@@ -394,30 +446,37 @@ export class TimelineComponent implements AfterViewInit {
     // subsequently attaches data to the selection, with the first item in
     // data corresponding to the first slot in the selection, and so on.
     const groupHeight = this.height / this.numRows;
-    const groupIntervalItems =
-        this.svg.selectAll('.group-interval-item')
+    const intervalBarHeight = 0.8 * groupHeight;  // Space between each interval
+    const intervalBarMargin = (groupHeight - intervalBarHeight) / 2;
+    const intervals =
+        this.svg.selectAll('.interval-item')
             .data(this.data)
             .enter()
-            .append('g')
-            .attr('clip-path', 'url(#chart-content)')
+            .append('rect')
+            .attr('class', 'interval pointer')
+            .attr('width', (d: Item) => this.x(d.endTime) - this.x(d.startTime))
+            .attr('height', intervalBarHeight)
+            .attr('rx', 2)
+            .attr('ry', 2)
+            .attr('y', intervalBarMargin)
+            .attr('x', (d: Item) => this.x(d.startTime))
             .attr(
                 'transform',
                 (d: Item) => `translate(0, ${groupHeight * d.row})`)
+            .attr('style', (d: Item) => `fill: ${STATE_TO_COLOR[d.state]}`)
             .attr(
-                'style',
-                (d: Item) =>
-                    `fill: ${TimelineComponent.STATE_TO_COLOR[d.state]}`);
-
-    const intervalBarHeight = 0.8 * groupHeight;  // Space between each interval
-    const intervalBarMargin = (groupHeight - intervalBarHeight) / 2;
-    groupIntervalItems.append('rect')
-        .attr('class', 'interval pointer')
-        .attr('width', (d: Item) => this.x(d.endTime) - this.x(d.startTime))
-        .attr('height', intervalBarHeight)
-        .attr('rx', 2)
-        .attr('ry', 2)
-        .attr('y', intervalBarMargin)
-        .attr('x', (d: Item) => this.x(d.startTime));
+                'stroke',
+                (d: Item) => {
+                  // If state color is light gray and has a duration less than
+                  // five minutes, set border to a dark gray for visibility.
+                  const color = STATE_TO_COLOR[d.state];
+                  const duration = d.endTime - d.startTime;
+                  return (color === LIGHT_GRAY &&
+                          duration < TimelineComponent.MIN_VISIBLE_DURATION) ?
+                      DARK_GRAY :
+                      color;
+                })
+            .attr('stroke-width', '0.025em');
 
     // Create the tooltip and set its opacity to 0 when not hovering over a
     // set of data, such that it only appears when the cursor is directly on top
@@ -426,29 +485,59 @@ export class TimelineComponent implements AfterViewInit {
     const tooltip = d3.select(tooltipDiv).call(this.styleTooltip);
     element.appendChild(tooltipDiv);
 
-    groupIntervalItems
+    intervals
         .on('mouseover',
             (d: Item) => {
               d3.select(d3.event.currentTarget)
-                  .select('rect')
-                  .attr('fill-opacity', 0.50);
+                  .raise()
+                  .attr('opacity', 0.7)
+                  .attr('filter', 'url(#drop-shadow)');
+
               tooltip.html(this.getTooltipContent(d)).style('opacity', 1);
             })
         .on('mouseleave', () => {
           d3.select(d3.event.currentTarget)
-              .select('rect')
-              .attr('fill-opacity', 1);
-          tooltip.style('opacity', 0);  // Hide tooltip
+              .attr('filter', 'none')
+              .attr('opacity', 1);
+          this.line.raise();  // Ensure that line will always be on top
+          tooltip.style('opacity', '0');  // Hide tooltip
+        });
+
+    // Add vertical line to track mouse movement.
+    this.line = this.svg.append('line')
+                    .attr('class', 'line-marker')
+                    .attr('y2', this.height + 25)
+                    .attr('stroke', 'rgba(0,0,0,0.2)')
+                    .style('pointer-events', 'none')
+                    .style('opacity', 0);
+
+    this.lineLabel = this.svg.append('text')
+                         .attr('class', 'line-marker')
+                         .attr('y', this.height + 40)
+                         .attr('text-anchor', 'middle')
+                         .style('opacity', 0);
+
+    this.svg.on('mouseover', () => {
+      this.line.style('opacity', 1);
+      this.lineLabel.style('opacity', 1);
+    });
+
+    this.svg.on(
+        'mouseleave', () => {  // Hide line marker when cursor is off SVG
+          this.line.style('opacity', 0);
+          this.lineLabel.style('opacity', 0);
         });
 
     this.svg.on('mousemove', () => {
-      let [x, y] = d3.mouse(d3.event.currentTarget);
-      y += 120;  // Set how much below cursor the tooltip will appear
-      if (x > +d3.event.currentTarget.width / 2) {
-        x -= 100;
-      }
+      const [x, y] = d3.mouse(d3.event.currentTarget);
+      this.moveLine(x);
 
-      tooltip.style('left', x + 'px').style('top', y + 'px');
+      // Move the tooltip above cursor if we near the x-axis and to the left
+      // of the cursor if we near the right edge of the timeline.
+      const lineY = (y < this.height / 2) ? y + 125 : y + 10;
+      const lineX = (x > this.height / 2) ? x - 100 : x;
+
+      tooltip.style('left', lineX + 'px').style('top', lineY + 'px');
     });
   }
 }

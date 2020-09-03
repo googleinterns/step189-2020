@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
@@ -55,7 +55,22 @@ export class CDFComponent implements AfterViewInit {
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
+  private showDotsBoolean = false;
 
+  ngAfterViewChecked(): void {
+    if (this.showDotsBoolean === this.showDots) {
+      return;
+    }
+    if (!this.svg) {
+      return;
+    }
+    this.showDotsBoolean = this.showDots;
+    if (!this.showDotsBoolean) {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
+    } else {
+      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
+    }
+  }
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration. Adds lines
@@ -78,13 +93,13 @@ export class CDFComponent implements AfterViewInit {
    *     <line class='click-line-x'></line>
    *     <text class='click-line-y-text'></text>
    *     <text class='click-line-x-text'></text>
-   *     <rect class='x-label-bg'></rect>
-   *     <text class='x-label'></text>
-   *     <rect class='y-label-bg'></rect>
-   *     <text class='y-label'></text>
-   *     <line class='v-ruler'></line>
-   *     <line class='h-ruler'></line>
-   *     <circle class='marker'></circle>
+   *     <rect class='hover x-label-bg'></rect>
+   *     <text class='hover x-label'></text>
+   *     <rect class='hover y-label-bg'></rect>
+   *     <text class='hover y-label'></text>
+   *     <line class='hover v-ruler'></line>
+   *     <line class='hover h-ruler'></line>
+   *     <circle class='hover marker'></circle>
    *     <g id='x-axis'></g>
    *     <text id='x-axis-label'></text>
    *   </g>
@@ -93,7 +108,6 @@ export class CDFComponent implements AfterViewInit {
    *     <line class='percentile-line'></line>
    *     <text class='percentile-text'></text>
    *   </g>
-   *   <g id='dotplot-container'></g>
    *   <g id='current-push-line'> (Only if the visited push is completed)
    *     <defs>
    *       <marker id='arrow'></marker>
@@ -112,6 +126,7 @@ export class CDFComponent implements AfterViewInit {
     if (!this.currentPush) {
       return;
     }
+    this.showDotsBoolean = this.showDots;
     this.durationUnit = findDurationUnit(this.pushInfos);
     this.data = populateData(this.pushInfos, false);
 
@@ -139,7 +154,7 @@ export class CDFComponent implements AfterViewInit {
                        .rangeRound([0, width])
                        .nice();
 
-    const yScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
+    const yScale = d3.scaleLinear().domain([0, 100]).rangeRound([height, 0]);
 
     const extendedData = Array.from(this.data);
     extendedData.push({
@@ -153,6 +168,11 @@ export class CDFComponent implements AfterViewInit {
     }
 
 
+    const maxExtendedDuration = d3.max(extendedData, d => d.duration);
+    if (!maxExtendedDuration) {
+      return;
+    }
+
     this.svg = (d3.select(element).append('svg') as d3SVG)
                    .attr('width', elementWidth)
                    .attr('height', elementHeight);
@@ -160,12 +180,13 @@ export class CDFComponent implements AfterViewInit {
     const cdfChart =
         this.svg.append('g')
             .attr('id', 'cdf-chart')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+            .attr('transform', `translate(${margin.left}, ${margin.top})`)
+            .datum(extendedData);
 
     const yAxisLeft =
         cdfChart.append('g')
             .attr('id', 'y-axis-left')
-            .call(d3.axisLeft(yScale).ticks(10).tickFormat(d3.format(',.1f')));
+            .call(d3.axisLeft(yScale).ticks(10).tickFormat(d3.format(',.0f')));
 
     // Remove axis' vertical line and keep the tick marks
     yAxisLeft.select('.domain').remove();
@@ -178,13 +199,13 @@ export class CDFComponent implements AfterViewInit {
         .attr('dy', '1em')
         .style('text-anchor', 'middle')
         .style('font-size', '12px')
-        .text('Probability');
+        .text('Percentage (%)');
 
     const yAxisRight =
         cdfChart.append('g')
             .attr('id', 'y-axis-right')
             .attr('transform', `translate(${width}, 0)`)
-            .call(d3.axisRight(yScale).ticks(10).tickFormat(d3.format(',.1f')));
+            .call(d3.axisRight(yScale).ticks(10).tickFormat(d3.format(',.0f')));
 
     // Remove axis' vertical line and keep the tick marks
     yAxisRight.select('.domain').remove();

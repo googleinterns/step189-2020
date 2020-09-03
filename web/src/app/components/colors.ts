@@ -49,3 +49,4 @@ export const STATE_TO_COLOR: {[index: number]: string} = {
   25: ORANGE,
   29: RED
 };
+
