@@ -17,7 +17,7 @@
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
-import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../duration.utils';
+import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../duration-utils';
 
 export interface Item {
   duration: number;     // Time between last stage and first non-empty stage
@@ -52,9 +52,9 @@ export const STROKE_COLOR = '#167364';
  * @param pushInfos Array of pushes for a single push def
  * @return Array of Items sorted by increasing duration
  */
-export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
+export function populateData(pushInfos: step189_2020.IPushInfo[], completedBool: boolean): Item[] {
   const divisor = UNIT_CONVERSION[findDurationUnit(pushInfos)];
-  const pushes: Item[] = [];
+  let pushes: Item[] = [];
   pushInfos.forEach(pushInfo => {
     if (!pushInfo) {
       return;
@@ -81,9 +81,11 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
       } as Item);
     }
   });
-  const completed = pushes.filter(d => d.endState === 5);
+  if (completedBool) {
+    pushes = pushes.filter(d => d.endState === 5);
+  }
   const sortedArray: Item[] =
-      completed.sort((n1, n2) => n1.duration - n2.duration);
+    pushes.sort((n1, n2) => n1.duration - n2.duration);
 
   const data: Item[] = [];
   const durationLength = sortedArray.length;
