@@ -21,12 +21,19 @@ import {step189_2020} from '../../../proto/step189_2020';
 import {LIGHT_GRAY, STATE_TO_COLOR} from '../colors';
 import {findDurationUnit} from '../duration-utils';
 
-import {addTag, generateLabels, populateData} from './bar-chart.utils';
-import {d3Circle, d3HTML, d3G, d3Rect, d3ScaleBand, d3ScaleLinear, d3SVG,
-    Item} from './bar-chart.utils';
-import {ALL_PUSHES_OPTION, COLOR_DARK_GRAY, COLOR_LIGHT_GRAY,
-    COLOR_WHITE_TRANS, DEFAULT_NUM_BARS,
-    DEFAULT_MAX_BARS} from './bar-chart.utils';
+import {addTag, generateLabels, populateData} from './utils';
+import {d3Circle, d3G, d3HTML, d3Rect, d3ScaleBand, d3ScaleLinear, d3SVG} from './utils';
+import {ALL_PUSHES_OPTION, COLOR_DARK_GRAY, COLOR_LIGHT_GRAY, COLOR_WHITE_TRANS, DEFAULT_MAX_BARS, DEFAULT_NUM_BARS} from './utils';
+
+/**
+ * Item includes all data used by the single in the bar chart.
+ */
+export interface Item {
+  pushID: string;     // Push ID string
+  state: number;      // Tag of the push end state
+  startTime: string;  // Start time of the push, in `yyyy-MM-dd HH:mm:ss` format
+  duration: number;   // Time between last stage and first non-empty stage
+}
 
 @Component({
   selector: 'app-bar-chart',
@@ -114,8 +121,8 @@ export class BarChartComponent implements AfterViewInit {
     this.width = elementWidth;
 
     const svg = (d3.select(element).append('svg') as d3SVG)
-                   .attr('width', elementWidth)
-                   .attr('height', elementHeight);
+                    .attr('width', elementWidth)
+                    .attr('height', elementHeight);
 
     this.focus = svg.append('g')
                      .attr('id', 'focus-bar-chart')
@@ -202,9 +209,9 @@ export class BarChartComponent implements AfterViewInit {
 
     const valueSelected =
         (document.getElementById('selections') as HTMLSelectElement).value;
-    const dataSelected =
-        (valueSelected === ALL_PUSHES_OPTION) ?
-        this.dataAll : this.dataAll.filter(d => d.state === 5);
+    const dataSelected = (valueSelected === ALL_PUSHES_OPTION) ?
+        this.dataAll :
+        this.dataAll.filter(d => d.state === 5);
     if (!dataSelected) {
       return;
     }
@@ -240,9 +247,13 @@ export class BarChartComponent implements AfterViewInit {
     brushBars.append('rect')
         .attr(
             'x',
+            // Becuase `d3.ScaleBand()` only takes in number or null type, we
+            // cannot just pass in the string startTime. We need to assign it
+            // to a const and check for `undefined`. If it is `undefined`,
+            // return null; otherwise, return the constant.
             (d: Item) => {
               const x = this.xScaleBrush(d.startTime);
-              return !x ? null : x;  // Return `null` if x is `undefined`.
+              return !x ? null : x;
             })
         .attr('width', this.xScaleBrush.bandwidth())
         .attr('y', (d: Item) => this.yScaleBrush(d.duration))
@@ -336,8 +347,7 @@ export class BarChartComponent implements AfterViewInit {
         return;
       }
       if (inputData.length > DEFAULT_MAX_BARS) {
-        const modNum =
-            Math.round((inputData.length / DEFAULT_MAX_BARS));
+        const modNum = Math.round(inputData.length / DEFAULT_MAX_BARS);
         this.xAxisFocus.call(d3.axisBottom(this.xScaleFocus)
                                  .tickValues(this.xScaleFocus.domain().filter(
                                      (x: string, i: number) => !(i % modNum)))
@@ -358,7 +368,8 @@ export class BarChartComponent implements AfterViewInit {
         return;
       }
       this.yAxis.call(d3.axisLeft(this.yScaleFocus));
-      // Remove the horizontal line of y axis to follow the convention.
+      // Remove the horizontal line of y axis to be consistent with the CDF
+      // chart.
       this.yAxis.select('.domain').remove();
 
       const focusBars =
@@ -369,7 +380,7 @@ export class BarChartComponent implements AfterViewInit {
                   'x',
                   (d: Item) => {
                     const x = this.xScaleFocus(d.startTime);
-                    return !x ? null : x;  // Return `null` if x is `undefined`.
+                    return !x ? null : x;
                   })
               .attr('width', this.xScaleFocus.bandwidth())
               .attr('y', (d: Item) => this.yScaleFocus(d.duration))
@@ -396,7 +407,7 @@ export class BarChartComponent implements AfterViewInit {
               'x',
               (d: Item) => {
                 const x = this.xScaleFocus(d.startTime);
-                return !x ? null : x;  // Return `null` if x is `undefined`.
+                return !x ? null : x;
               })
           .attr('width', this.xScaleFocus.bandwidth())
           .attr('y', (d: Item) => this.yScaleFocus(maxFocusDuration))
@@ -428,8 +439,7 @@ export class BarChartComponent implements AfterViewInit {
     changeFocus(
         (dataSelected.length > DEFAULT_NUM_BARS) ?
             dataSelected.slice(
-                dataSelected.length - DEFAULT_NUM_BARS,
-                dataSelected.length) :
+                dataSelected.length - DEFAULT_NUM_BARS, dataSelected.length) :
             dataSelected);
 
     // Local variable used by the brushDown function to prevent the use
@@ -487,8 +497,7 @@ export class BarChartComponent implements AfterViewInit {
     // focus bar.
     const lastItem =
         this.xScaleBrush(dataSelected[dataSelected.length - 1].startTime);
-    const firstItem =
-        (dataSelected.length > DEFAULT_NUM_BARS) ?
+    const firstItem = (dataSelected.length > DEFAULT_NUM_BARS) ?
         dataSelected[dataSelected.length - DEFAULT_NUM_BARS] :
         dataSelected[0];
     if (!lastItem) {
@@ -542,15 +551,13 @@ export class BarChartComponent implements AfterViewInit {
     if (!q3) {
       return;
     }
-    const dataLabels =
-        generateLabels([durationMin, q1, median, q3, durationMax],
-          this.yScaleFocus);
+    const dataLabels = generateLabels(
+        [durationMin, q1, median, q3, durationMax], this.yScaleFocus);
 
     const boxWidth = 30;
     // If more than `DEFAULT_MAX_BARS` are selected, set the circle radius to be
     // 1.4; otherwise, set the radius to 2.5.
-    const pointRadius =
-        (inputData.length > DEFAULT_MAX_BARS) ? 1.4 : 2.5;
+    const pointRadius = (inputData.length > DEFAULT_MAX_BARS) ? 1.4 : 2.5;
     const jitterWidth = boxWidth - 10;
     const center = this.width - 55;
 

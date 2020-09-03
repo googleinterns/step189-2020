@@ -13,21 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {formatDate} from '@angular/common';
 import * as d3 from 'd3';
 
 import {step189_2020} from '../../../proto/step189_2020';
 import {DurationItem, findDuration, findDurationUnit, UNIT_CONVERSION} from '../duration-utils';
 
-/**
- * Item includes all data used by the single in the bar chart.
- */
-export interface Item {
-  pushID: string;     // Push ID string
-  state: number;      // Tag of the push end state
-  startTime: string;  // Start time of the push, in `yyyy-MM-dd HH:mm:ss` format
-  duration: number;   // Time between last stage and first non-empty stage
-}
+import {Item} from './bar-chart.component';
 
 /**
  * D3 types used by the bar chart.
@@ -100,8 +93,8 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
     if (states.length <= 1) {
       return;
     }
-    const startTime = formatDate((+pushStartTime / NANO_TO_MILLI),
-        DATE_FORMAT, DATE_LOCALE);
+    const startTime =
+        formatDate((+pushStartTime / NANO_TO_MILLI), DATE_FORMAT, DATE_LOCALE);
     const pushStartEnd: DurationItem|undefined = findDuration(pushInfo);
     if (pushStartEnd) {
       pushes.push({
@@ -148,8 +141,8 @@ export function generateLabels(
  * @param barX: x position of the bar
  * @param barY: y position of the bar
  */
-export function addTag(d: Item, tag: d3G, bandwidth: number, barX: number,
-                       barY: number): void {
+export function addTag(
+    d: Item, tag: d3G, bandwidth: number, barX: number, barY: number): void {
   if (!barX) {
     return;
   }
@@ -170,8 +163,7 @@ export function addTag(d: Item, tag: d3G, bandwidth: number, barX: number,
       .attr('dy', 280 + 'px')
       .attr(
           'transform',
-          'rotate(-90 ' + (barX + bandwidth / 2 + 3.5) +
-              ',' + 280 + ')')
+          'rotate(-90 ' + (barX + bandwidth / 2 + 3.5) + ',' + 280 + ')')
       // .attr('style', 'font-weight: bold;')
       .style('stroke', COLOR_DARK_GRAY)
       .style('stroke-width', '0.35px')
