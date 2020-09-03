@@ -322,7 +322,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
           .attr('cx', cx)
           .attr('r', radius)
           .attr('cy', cy)
-          .attr('fill', 'black')
+          .attr('fill', 'black');
     }
 
     const lineY =
@@ -515,7 +515,9 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
         const yText = d3.format(',.0f')(yScale.invert(yVal));
         d3.select('.x-label').attr('x', xVal).text(xText);
         d3.select('.x-label-bg').attr('x', xVal - labelWidth / 2);
-        d3.select('.y-label').attr('y', yVal + labelHeight / 5).text(`${yText}%`);
+        d3.select('.y-label')
+            .attr('y', yVal + labelHeight / 5)
+            .text(`${yText}%`);
         d3.select('.y-label-bg').attr('y', yVal - labelHeight / 2);
 
         d3.selectAll('.hover').style('opacity', 1);
