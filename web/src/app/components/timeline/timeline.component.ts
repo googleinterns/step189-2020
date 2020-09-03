@@ -375,7 +375,14 @@ export class TimelineComponent implements AfterViewInit {
               const mouseCoords =
                   d3.mouse(this.svg.node() as d3.ContainerElement);
               const x = mouseCoords[0];
+              const y = mouseCoords[1];
               this.moveLine(x);
+
+              // Move the tooltip on zoom.
+              const lineY = (y < this.height / 2) ? y + 125 : y + 10;
+              const lineX = (x > this.height / 2) ? x - 100 : x;
+
+              tooltip.style('left', lineX + 'px').style('top', lineY + 'px');
             });
 
     // Set up timeline chart components. The structure of the SVG tree
