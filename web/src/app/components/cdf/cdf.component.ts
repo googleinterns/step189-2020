@@ -38,7 +38,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
   private data: Item[] = [];
   private svg: d3SVG|undefined;
   private durationUnit = '';
-  private showDotsBoolean = true;
+  private showDotsBoolean = false;
 
   ngAfterViewChecked(): void {
     if (this.showDotsBoolean === this.showDots) {
@@ -137,7 +137,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
                        .rangeRound([0, width])
                        .nice();
 
-    const yScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
+    const yScale = d3.scaleLinear().domain([0, 100]).rangeRound([height, 0]);
 
     const extendedData = Array.from(this.data);
     extendedData.push({
@@ -164,7 +164,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
     const yAxisLeft =
         cdfChart.append('g')
             .attr('id', 'y-axis-left')
-            .call(d3.axisLeft(yScale).ticks(10).tickFormat(d3.format(',.1f')));
+            .call(d3.axisLeft(yScale).ticks(10).tickFormat(d3.format(',.0f')));
 
     // Remove axis' vertical line and keep the tick marks
     yAxisLeft.select('.domain').remove();
@@ -177,13 +177,13 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
         .attr('dy', '1em')
         .style('text-anchor', 'middle')
         .style('font-size', '12px')
-        .text('Probability');
+        .text('Percentage (%)');
 
     const yAxisRight =
         cdfChart.append('g')
             .attr('id', 'y-axis-right')
             .attr('transform', `translate(${width}, 0)`)
-            .call(d3.axisRight(yScale).ticks(10).tickFormat(d3.format(',.1f')));
+            .call(d3.axisRight(yScale).ticks(10).tickFormat(d3.format(',.0f')));
 
     // Remove axis' vertical line and keep the tick marks
     yAxisRight.select('.domain').remove();
@@ -238,7 +238,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
             .attr('id', 'percentile-lines')
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    const percentiles = generateQuantiles(this.data, [0.1, 0.5, 0.9], xScale);
+    const percentiles = generateQuantiles(this.data, [10, 50, 90], xScale);
 
     percentileLines.selectAll('.percentile-lines')
         .data(percentiles)
@@ -261,7 +261,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
         .attr('y', -10)
         .attr('class', 'percentile-text')
         .attr('font-size', '10px')
-        .text((d: Item) => `${d.probability * 100}%`);
+        .text((d: Item) => `${d.probability}%`);
 
     let radius = 2.5;
     const xVals = this.data.map(d => d.duration);
@@ -323,7 +323,6 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
           .attr('r', radius)
           .attr('cy', cy)
           .attr('fill', 'black')
-          .attr('opacity', 0);
     }
 
     const lineY =
@@ -408,7 +407,7 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
             .attr('x', xScale(startValue) / 2)
             .attr('y', yScale(yValue) + 10)
             .text(`${
-                (getProbabilityForDuration(this.data, startValue) * 100)
+                (getProbabilityForDuration(this.data, startValue))
                     .toFixed(1)}%`)
             .attr('opacity', 1);
         d3.select(d3.event.currentTarget)
@@ -513,10 +512,10 @@ export class CDFComponent implements AfterViewChecked, AfterViewInit {
         d3.select('.v-ruler').attr('x1', xVal).attr('x2', xVal);
 
         const xText = d3.format(',.1f')(xInverted);
-        const yText = d3.format(',.1%')(yScale.invert(yVal));
+        const yText = d3.format(',.0f')(yScale.invert(yVal));
         d3.select('.x-label').attr('x', xVal).text(xText);
         d3.select('.x-label-bg').attr('x', xVal - labelWidth / 2);
-        d3.select('.y-label').attr('y', yVal + labelHeight / 5).text(yText);
+        d3.select('.y-label').attr('y', yVal + labelHeight / 5).text(`${yText}%`);
         d3.select('.y-label-bg').attr('y', yVal - labelHeight / 2);
 
         d3.selectAll('.hover').style('opacity', 1);

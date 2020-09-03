@@ -91,7 +91,7 @@ export function populateData(pushInfos: step189_2020.IPushInfo[]): Item[] {
     const push = sortedArray[i];
     data.push({
       duration: push.duration,
-      probability: (i + 1) / durationLength,
+      probability: (i + 1) * 100 / durationLength,
       endState: push.endState
     } as Item);
   }
@@ -152,7 +152,7 @@ function getDurationforProbability(data: Item[], probability: number): number {
 export function generateQuantiles(
     data: Item[], percentileLines: number[],
     xScale: d3.ScaleLinear<number, number>): Item[] {
-  if (percentileLines[0] < 0.01 || percentileLines[2] > .99) {
+  if (percentileLines[0] < 1 || percentileLines[2] > 99) {
     return [percentileLines[1]].map(
         d =>
             ({duration: getDurationforProbability(data, d), probability: d} as
@@ -172,7 +172,7 @@ export function generateQuantiles(
     quantiles = generateQuantiles(
         data,
         [
-          percentileLines[0] - .01, percentileLines[1], percentileLines[2] + .01
+          percentileLines[0] - 1, percentileLines[1], percentileLines[2] + 1
         ],
         xScale);
   }
