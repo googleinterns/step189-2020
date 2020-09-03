@@ -57,20 +57,6 @@ export class CDFComponent implements AfterViewInit {
   private durationUnit = '';
   private showDotsBoolean = false;
 
-  ngAfterViewChecked(): void {
-    if (this.showDotsBoolean === this.showDots) {
-      return;
-    }
-    if (!this.svg) {
-      return;
-    }
-    this.showDotsBoolean = this.showDots;
-    if (!this.showDotsBoolean) {
-      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 0);
-    } else {
-      this.svg.select('#cdf-chart').selectAll('.dots').attr('opacity', 1);
-    }
-  }
   /**
    * Creates a CDF chart by plotting the duration of completed pushes against
    * the probability of a push taking less time than that duration. Adds lines
@@ -162,12 +148,6 @@ export class CDFComponent implements AfterViewInit {
       probability: 1,
       endState: 5
     });
-    const maxExtendedDuration = d3.max(extendedData, d => d.duration);
-    if (!maxExtendedDuration) {
-      return;
-    }
-
-
     const maxExtendedDuration = d3.max(extendedData, d => d.duration);
     if (!maxExtendedDuration) {
       return;
