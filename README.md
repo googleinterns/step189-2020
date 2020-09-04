@@ -22,15 +22,25 @@ Each stage can go through several _states_ before completing.
 ## Timeline
 
 ### Demo
+
 ![Timeline demo](/images/timeline.gif?raw=true "GIF of timeline")
 
 ### Description
 
-The timeline tackles the first of our big questions: how do we compare pushes against each other? To solve this problem, we place all the pushes onto a timeline using the push’s start and end values to define its corresponding length. Placing pushes side by side allows users to easily spot patterns in their push history and efficiently zero in on areas where those patterns are broken.
+The timeline tackles the first of our big questions: how do we compare pushes against each other? To solve this problem, we place all the pushes onto a timeline using the push’s start and end timestamps to define its corresponding length. Placing pushes side by side allows users to easily spot patterns in their push history and efficiently zero in on areas where those patterns are broken.
 
-Intervals on the timeline are sorted by start time and optimally grouped into rows such that the maximum number of non-overlapping intervals are placed within one row. This ensures that the timeline is as vertically compact as possible.The color of the interval corresponds to the final stage of each push. Hovering over the interval produces a tooltip display with the push’s push ID, ending stage, start time, end time, and push duration (given in a human readable format).
+The intervals on the timeline are sorted by start time and optimally grouped into rows such that the maximum number of non-overlapping intervals are placed within one row. This ensures that the timeline is as vertically compact as possible. The color of an interval corresponds to the final stage of each push. Hovering over an interval produces a tooltip display with the push’s push ID, ending stage, start time, end time, and push duration (given in a human readable format).
 
-With regards to UI design, the goal was to keep the timeline as minimal and clean as possible while also conveying the maximum amount of data. The timeline has standard horizontal panning and zooming, which are both limited to the given domain. To clearly indicate hovering, the selected interval will drop in opacity while also gaining a noticeable gray border. To combat the problem of having miniscule pushes get lost in the sea of longer pushes, we set a thin border around each interval such that, even when zoomed all the way out, smaller pushes will still be visible. We also maintain the x-position by keeping a vertical line that tracks the movement of the mouse and has a corresponding label indicating the current x-axis value.
+With regards to UI design, the goal was to keep the timeline as minimal and
+clean as possible while also conveying the maximum amount of data. The timeline
+has standard horizontal panning and zooming, which are both limited to the given
+domain. To clearly indicate hovering, the selected interval will drop in opacity
+while also gaining a noticeable gray border. To combat the problem of having
+miniscule pushes get lost in the sea of longer pushes, we set a thin border
+around each interval such that, even when zoomed all the way out, smaller pushes
+will still be visible. We also highlight the current x-position by showing a
+vertical line that tracks the movement of the mouse and has a corresponding
+label indicating the current x-axis value.
 
 ### Future Development
 
