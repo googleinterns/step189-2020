@@ -29,13 +29,17 @@ TODO
 
 ## CDF chart
 
+### Demo
+
+![CDF chart](/images/final-cdf.gif?raw=true "GIF of final CDF chart")
+
+### Description
 The CDF chart plots the fraction of the pushes with a duration less than a value vs the durations of all the pushes in the push def. This is visualized as a step plot, such that each step represents a single push. There are dashed vertical lines indicating the 10th, 50th, and 90th percentiles to show to the user where the majority of the data lies. If the visited page represents a completed push, a vertical translucent line appears at the duration value of this push so the user can see how this current push’s duration compares to the durations of all the other completed pushes in the push def. 
 
 There is also a dot plot to show the exact values of the durations of the completed pushes in the push def. This shows the number of completed pushes as well as visualize the distribution of the durations. Since the dot plot can be distracting at times, when there are too many dots or when it blocks the CDF chart, the user can toggle between showing and hiding the dots.
 
 Some user interaction includes hovering and clicking. When the mouse hovers over the chart, rulers will appear to display the exact percentage and duration value of the mouse position. When the mouse clicks on the graph, the area to the left of that clicked x-value will become shaded, indicating that it is referring to the pushes with durations less than the clicked duration value. Both these features help the user better understand the CDF’s meaning.
 
-![CDF chart](/images/final-cdf.gif?raw=true "GIF of final CDF chart")
 ### What did not work and what’s next
 
 The completed CDF chart consists of only completed pushes. The open PR implements a static CDF chart with all the different end states, including completed and reverted. Each step is colored according to that push’s end state. However, because the durations of the pushes do not only depend on the end state, the colors in the graph are very distracting and do not work well together.
