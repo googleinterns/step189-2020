@@ -29,20 +29,20 @@ TODO
 
 ## CDF chart
 
-The CDF chart plots the fraction of the pushes with a duration less than a value vs the durations of all the pushes in the push def. This is visualized as a step plot, such that each step represents a single push. There are vertical lines indicating the 10th, 50th, and 90th percentiles to show to the user where the majority of the data lies. If the visited one push page represents a completed push, a vertical alpha channel appears at the duration value of this push so the user can see how this current push’s duration compares to the durations of all the other completed pushes in the push def. 
+The CDF chart plots the fraction of the pushes with a duration less than a value vs the durations of all the pushes in the push def. This is visualized as a step plot, such that each step represents a single push. There are dashed vertical lines indicating the 10th, 50th, and 90th percentiles to show to the user where the majority of the data lies. If the visited page represents a completed push, a vertical translucent line appears at the duration value of this push so the user can see how this current push’s duration compares to the durations of all the other completed pushes in the push def. 
 
-There is also a dot plot to show the exact values of the durations of the completed pushes in the push def. This helps show the number of completed pushes as well as visualize the distribution of the durations. Since the dot plot can be distracting at times, when there are too many dots or when it blocks the cdf chart, the user can toggle between showing and hiding the dots.
+There is also a dot plot to show the exact values of the durations of the completed pushes in the push def. This shows the number of completed pushes as well as visualize the distribution of the durations. Since the dot plot can be distracting at times, when there are too many dots or when it blocks the CDF chart, the user can toggle between showing and hiding the dots.
 
 Some user interaction includes hovering and clicking. When the mouse hovers over the chart, rulers will appear to display the exact percentage and duration value of the mouse position. When the mouse clicks on the graph, the area to the left of that clicked x-value will become shaded, indicating that it is referring to the pushes with durations less than the clicked duration value. Both these features help the user better understand the CDF’s meaning.
 
-![CDF chart](/images/final-cdf.gif?raw=true "Gif of final CDF chart")
+![CDF chart](/images/final-cdf.gif?raw=true "GIF of final CDF chart")
 ### What did not work and what’s next
 
 The completed CDF chart consists of only completed pushes. The open PR implements a static CDF chart with all the different end states, including completed and reverted. Each step is colored according to that push’s end state. However, because the durations of the pushes do not only depend on the end state, the colors in the graph are very distracting and do not work well together.
 
 ![CDF with all states](/images/all-states.png?raw=true "CDF with all states")
 
-When there are too many pushes in a push def, the dots in the dot plot go off the screen. Thus, the radius of the dots should not be fixed. When there are lots of pushes, the radius of the dots should be small to accommodate all the dots. This becomes a problem when there are lots of pushes so the radius of the dots becomes too small and the user can no longer see them. One option is to adjust the height of the CDF chart when the dots are too big for the original height. This way, the CDF area plot will be expanded but the dots will stay the same size, fixing the problem that the dots go off the screen. This option still needs to be explored to see if it is viable.
+When there are too many pushes in a push def, the dots in the dot plot go off the screen. Thus, the radius of the dots should not be fixed. When there are lots of pushes, the radius of the dots should be small to accommodate all the dots. This becomes a problem when there are so many pushes that the radius of the dots becomes too small for the user to see them. One option is to adjust the height of the CDF chart when the dots are too big for the original height. This way, the CDF area plot will be expanded but the dots will stay the same size, fixing the problem that the dots go off the screen. This option still needs to be explored to see if it is viable.
 
 To further address the question of how a current push compares to previous pushes, we want to compare an ongoing push to the previously completed push to let the user predict roughly how long it will take. While the push is in progress, a vertical line could move across the chart, starting from 0, moving to track the current time taken for the ongoing push.
 
