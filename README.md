@@ -2,9 +2,10 @@
 
 This internship project is about a service internal to Google that is responsible for dynamically pushing pieces of configuration or data to running processes.
 
-The two main questions this projected tried to address are:
-how do the start and end of all pushes in a push def line up against each other?
-how does a current push compare against previous pushes?
+The two main questions this project tries to address are:
+
+1. how do the start and end of all pushes in a push def line up against each other?
+2. how does a current push compare against previous pushes?
 
 ## Terminology
 
