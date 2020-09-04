@@ -25,12 +25,11 @@ TODO
 
 ## Bar chart
 
-The bar chart is a visulization element that helps with the second major question when the number of pushes is not very large. It features a boxplot that allows user to compare the current push to the previous ones.
-It shows a default number of most recent pushes when the user enters the page. 
+The bar chart is a visulization element that helps with the second major question when the number of pushes is not very large. It features a boxplot that allows user to compare the current push to the previous ones. It shows a default number of most recent pushes when the user enters the page. 
 
 ![Bar Chart](/images/barchart-static.png?raw=true "Bar Chart")
 
-The bar chart includes several interactive features: a selector to slide and select any portion to display, a drop down menu to switch between all pushes and completed pushes, and a tooltip that shows push information when the user hovers on a bar or the empty area above it.  
+The bar chart includes several interactive features: a selector to slide and select any portion to display, a drop down menu to switch between all pushes and completed pushes, and a tooltip that shows push information when the user hovers on a bar or the empty area above it.
 
 ### Featured box plot
 
