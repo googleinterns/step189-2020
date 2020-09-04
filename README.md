@@ -25,7 +25,14 @@ TODO
 
 ## Bar chart
 
-TODO
+The bar chart is a visulization element that helps with the second major question when the number of pushes is not very large. It features a boxplot that allows user to compare the current push to the previous ones.
+It shows a default number of most recent pushes when the user enters the page. 
+
+The bar chart includes several interactive features: a selector to slide and select any portion to display, a drop down menu to switch between all pushes and completed pushes, and a tooltip that shows push information when the user hovers on a bar or the empty area above it.  
+
+### Featured box plot
+
+ The bar chart also features a box plot that allows the user to compare the current push duration to the previous pushes and helps the user predict the completion time of an ongoing push. The box plot has five labels that show the minimum, first quantile(25%), median, third quantile(75%), and maximum duration of the pushes appeared in the bar chart.
 
 ## CDF chart
 
