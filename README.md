@@ -21,7 +21,10 @@ Each stage can go through several _states_ before completing.
 
 ## Timeline
 
+### Demo
+![Timeline demo](/images/timeline.gif?raw=true "GIF of timeline")
 
+### Description
 
 The timeline tackles the first of our big questions: how do we compare pushes against each other? To solve this problem, we place all the pushes onto a timeline using the push’s start and end values to define its corresponding length. Placing pushes side by side allows users to easily spot patterns in their push history and efficiently zero in on areas where those patterns are broken.
 
