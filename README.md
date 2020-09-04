@@ -36,7 +36,6 @@ There is also a dot plot to show the exact values of the durations of the comple
 Some user interaction includes hovering and clicking. When the mouse hovers over the chart, rulers will appear to display the exact percentage and duration value of the mouse position. When the mouse clicks on the graph, the area to the left of that clicked x-value will become shaded, indicating that it is referring to the pushes with durations less than the clicked duration value. Both these features help the user better understand the CDF’s meaning.
 
 ![CDF chart](/images/final-cdf.gif?raw=true "Gif of final CDF chart")
-
 ### What did not work and what’s next
 
 The completed CDF chart consists of only completed pushes. The open PR implements a static CDF chart with all the different end states, including completed and reverted. Each step is colored according to that push’s end state. However, because the durations of the pushes do not only depend on the end state, the colors in the graph are very distracting and do not work well together.
