@@ -40,16 +40,24 @@ Future development of the timeline component might include new features such as 
 As with any design project, the timeline would also benefit hugely from user feedback. A specific concern that would be worth exploring is whether or not the zoom functionality is intuitive to users when looking at the timeline; if not, it may be beneficial to add in manual zoom buttons.
 
 ## Bar chart
-
-The bar chart is a visulization element that helps with the second major question when the number of pushes is not very large. It features a boxplot that allows user to compare the current push to the previous ones. It shows a default number of most recent pushes when the user enters the page. 
-
+ 
+### Demo
+ 
 ![Bar Chart](/images/barchart.gif?raw=true "GIF of Bar Chart")
-
-The bar chart includes several interactive features: a selector to slide and select any portion to display, a drop down menu to switch between all pushes and completed pushes, and a tooltip that shows push information when the user hovers on a bar or the empty area above it.
-
+ 
+### Description
+ 
+The bar chart is a visualization element that helps with the second major question when the number of pushes is not very large. It displays the pushes in chronological order, because the pushes happened most recently is probably more important to the user. The _y_ axis of the bar chart is the duration of a single push, with the most common time unit of the pushes. The bar chart consists of a focus bar chart, a compressed bar chart with a selector, and a boxplot. It shows a default number of pushes when the user opens the page.
+ 
+There are several interactive features integrated in the barchart. The user can use the selector to slide among the bars and select any portion to display. The drop down menu lets the user to switch between all pushes and completed pushes. When the user hovers on a bar or the empty area above it, the bar will be highlighted and a tooltip with the push's pushID, end state, and start time will appear on top of the bar, as well as a tag with the duration of the push.
+ 
 ### Featured box plot
-
- The bar chart also features a box plot that allows the user to compare the current push duration to the previous pushes and helps the user predict the completion time of an ongoing push. The box plot has five labels that show the minimum, first quantile(25%), median, third quantile(75%), and maximum duration of the pushes appeared in the bar chart.
+ 
+The bar chart also features a box plot that allows the user to compare the current push duration to the previous pushes and helps the user predict the completion time of an ongoing push. The box plot contains five labels that show the minimum, first quantile(25%), median, third quantile(75%), and maximum duration of the pushes appeared in the focus bar chart. When the selector updates the focus bar chart or the selection of the drop down menu changes, the box plot will be updated with new input data. When user hovers over the bar chart, the corresponding data point in the box plot will be highlighted. The points in the boxplot will switch to a smaller radius to show the distribution better when there are too many data points.
+ 
+### Future Development
+ 
+Given the time limitation we have, there are a few possible improvements we could make with the bar chart. The labels on the _x_ axis are hard to see when the bars are clustered together. They would benefit from a reformat by eliminating the common year, month and date. An improvement to the box plot is to tie the points to a fixed position, so the user will not be distracted by the animation of distributing the points every update. The other improvement we could make is with the selector by changing its color and border to make it stand out more.
 
 ## CDF chart
 
