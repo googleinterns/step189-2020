@@ -47,7 +47,7 @@ As with any design project, the timeline would also benefit hugely from user fee
  
 ### Description
  
-The bar chart is a visualization element that helps with the second major question: how does a current push compare against previous pushes, when the number of pushes is not very large? It displays the pushes in chronological order, because the pushes happened most recently are probably more important to the user. The _y_ axis of the bar chart is the duration of a single push, with the most common time unit of the pushes. The bar chart consists of a focus bar chart, a compressed bar chart with a selector, and a box plot. The focus bar chart shows a default number of pushes when the user opens the page.
+The bar chart is a visualization element that helps with the second major question: how does a current push compare against previous pushes, when the number of pushes is not very large? The bar chart displays the pushes in chronological order, because the pushes happened most recently are probably more important to the user. The _y_ axis of the bar chart is the duration of a single push, with the most common time unit of the pushes. The bar chart consists of a focus bar chart, a compressed bar chart with a selector, and a box plot. The focus bar chart shows a default number of pushes when the user opens the page.
  
 There are several interactive features integrated in the bar chart. The user can use the selector to slide among the bars and select any portion to display. The drop down menu lets the user to switch between all pushes and completed pushes. When the user hovers on a bar or the empty area above it, the bar will be highlighted and a tooltip with the push's pushID, end state, and start time will appear on top of the bar, as well as a tag with the duration of the push.
  
@@ -57,7 +57,7 @@ The bar chart also features a box plot that allows the user to compare the curre
  
 ### Future Development
  
-Given the time limitation we have, there are a few possible improvements we couldn't make with the bar chart. The labels on the _x_ axis are hard to see when the bars are clustered together. They would benefit from a reformat by eliminating the common year, month and date. An improvement to the box plot is to tie the points to a fixed position, so the user will not be distracted by the animation of distributing the points every update. The other improvement we could make is with the selector by changing its color and border to make it stand out more.
+Given the time limitation we have, there are a few possible improvements we couldn't make. The labels on the _x_ axis are hard to see when the bars are clustered together. They would benefit from a reformat by eliminating the common year, month and date. An improvement to the box plot is to tie the points to a fixed position, so the user will not be distracted by the animation of distributing the points every update. The other improvement we could make is with the selector by changing its color and border to make it stand out more.
 
 ## CDF chart
 
