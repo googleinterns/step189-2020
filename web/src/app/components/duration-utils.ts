@@ -21,6 +21,7 @@ export interface DurationItem {
   endNsec: number|Long;    // nsec time of the last state
 }
 
+
 const NANO_TO_SECONDS: number = (10 ** 9);
 const NANO_TO_MINUTES: number = (10 ** 9) * 60;
 const NANO_TO_HOURS: number = (10 ** 9) * 60 * 60;
